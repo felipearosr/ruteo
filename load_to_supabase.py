@@ -24,13 +24,20 @@ load_dotenv()
 
 def get_db_connection():
     """Crear conexión a la base de datos Supabase."""
+    # Intentar usar puerto del pooler (6543) si está configurado, sino usar 5432
+    port = os.getenv('SUPABASE_DB_PORT', '6543')
+    host = os.getenv('SUPABASE_DB_HOST')
+    
+    print(f"Intentando conectar a {host}:{port}...")
+    
     return psycopg2.connect(
-        host=os.getenv('SUPABASE_DB_HOST'),
+        host=host,
         database=os.getenv('SUPABASE_DB_NAME'),
         user=os.getenv('SUPABASE_DB_USER'),
         password=os.getenv('SUPABASE_DB_PASSWORD'),
-        port=5432
+        port=int(port)
     )
+
 
 
 def load_infraestructura(conn):

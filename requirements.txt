@@ -3,4 +3,5 @@ geojson>=2.5
 shapely>=2.0
 psycopg2-binary>=2.9
 python-dotenv>=1.0
+supabase>=2.0
 
