@@ -118,6 +118,19 @@ La aplicación web implementada incluye:
 
 ## Arquitectura técnica
 
+**Diagrama de Base de Datos:**
+
+Ver el diagrama completo del esquema en [`sql/diagram.svg`](sql/diagram.svg) (también disponible como [`diagram.png`](sql/diagram.png))
+
+El diagrama muestra:
+- Tablas de infraestructura: `infra_nodos`, `infra_aristas`
+- Tablas de metadata: `meta_elevacion`, `meta_lluvia`, `meta_landcover`
+- Tablas de amenazas: `amenaza_dga`, `amenaza_inundaciones_hist`, `amenaza_reportes_ciudadanos`
+- Tipos de datos geoespaciales (GEOGRAPHY)
+- Índices GIST para consultas espaciales eficientes
+
+**Stack tecnológico:**
+
 - **Backend:** Supabase (PostgreSQL + PostGIS + pgRouting)
 - **ETL:** Python 3.11 con requests, geojson, shapely
 - **Web Frontend:** Next.js 14, React 18, TypeScript

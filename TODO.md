@@ -16,9 +16,11 @@ Estado del proyecto según la rúbrica de evaluación.
   - Índices GIST en todas las geometrías
   - Función `infra_calcular_longitudes_costs()` para calcular costos
 
-- [ ] `sql/diagram.png` - Imagen del diagrama de la base de datos
-  - **PENDIENTE:** Crear diagrama visual de las tablas y relaciones
-  - Herramientas sugeridas: dbdiagram.io, draw.io, DBeaver
+- [x] `sql/diagram.svg` - Diagrama visual de la base de datos
+  - Exportado desde Supabase Schema Visualizer
+  - Muestra todas las tablas con columnas y tipos de datos
+  - Formato SVG (vectorial, escalable sin pérdida de calidad)
+  - Ubicado en `sql/diagram.svg` y también disponible como `diagram.png`
 
 **Datos cargados en Supabase:**
 - 602,652 nodos
@@ -269,7 +271,7 @@ Adicionales no requeridos pero útiles:
 
 | Punto | Descripción | Estado |
 |-------|-------------|--------|
-| 0 | Diagrama BD + schema.sql | ⚠️ Falta diagrama visual |
+| 0 | Diagrama BD + schema.sql | ✅ Completo |
 | 1 | ETL Infraestructura | ✅ Completo |
 | 2 | ETL Metadata | ✅ Completo |
 | 3 | ETL Amenazas | ✅ Completo |
@@ -280,42 +282,40 @@ Adicionales no requeridos pero útiles:
 | 9 | main.py orquestador | ✅ Completo |
 | 10 | Docker | ✅ Completo |
 
-**Progreso: 9/10 puntos completos (90%)**
+**Progreso: 10/10 puntos completos (100%)** ✅🎉
 
-**Único pendiente:** Diagrama visual de la base de datos (el usuario lo tiene de Supabase)
+**¡Proyecto Fase 2 COMPLETADO!**
 
 ---
 
 ## 🚀 Próximos pasos prioritarios
 
-### Único pendiente para completar 100% la Fase 2:
+### ✅ ¡Fase 2 100% Completada!
 
-1. **Agregar diagrama visual de la base de datos** (`sql/diagram.png`)
-   - El usuario ya tiene el diagrama de Supabase
-   - Solo necesita copiarlo al repositorio como `sql/diagram.png`
+Todos los requisitos de la rúbrica han sido implementados y probados exitosamente.
 
-### Opcionales para mejorar el proyecto:
+### Mejoras opcionales sugeridas:
 
-2. **Optimizar carga de infraestructura en el mapa**
+1. **Optimizar carga de infraestructura en el mapa**
    - La red vial tiene 138K aristas, muy pesado para cargar todas
    - Implementar viewport-based loading (solo aristas visibles)
    - O usar tiles vectoriales
 
-3. **Agregar marcadores de origen/destino en el mapa**
+2. **Agregar marcadores de origen/destino en el mapa**
    - Permitir seleccionar nodos haciendo click en el mapa
    - Mostrar coordenadas de los nodos seleccionados
 
-4. **Implementar búsqueda de nodos más cercanos**
+3. **Implementar búsqueda de nodos más cercanos**
    - Dado un click en el mapa, encontrar el nodo más cercano
    - Usar PostGIS ST_Distance o KNN
 
-5. **Agregar métricas de la ruta**
+4. **Agregar métricas de la ruta**
    - Distancia total
    - Costo total
    - Tipos de vías utilizadas
    - Zonas de riesgo atravesadas
 
-6. **Desplegar en producción**
+5. **Desplegar en producción**
    - Usar Docker para desplegar en servidor
    - Configurar dominio y SSL
    - Optimizar build de Next.js para producción
@@ -345,4 +345,4 @@ Adicionales no requeridos pero útiles:
 
 ---
 
-**Última actualización:** 2025-01-17 - Docker completado y probado exitosamente (9/10 puntos, 90%)
+**Última actualización:** 2025-01-17 - ✅ **¡PROYECTO COMPLETADO 100%!** Diagrama agregado, todos los puntos de la rúbrica implementados.
