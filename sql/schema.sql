@@ -17,6 +17,8 @@ create table if not exists infra_nodos (
     -- campos de metadatos opcionales
     osm_id bigint,
     tags jsonb,
+    -- Fase 3: Probabilidad de falla del nodo (0.0 - 1.0)
+    p_fallo_nodo double precision default 0.0,
     created_at timestamptz default now()
 );
 
@@ -38,6 +40,8 @@ create table if not exists infra_aristas (
     cost double precision,
     -- costo inverso (para ruteo dirigido)
     reverse_cost double precision,
+    -- Fase 3: Probabilidad de falla de la arista (0.0 - 1.0)
+    p_fallo_arista double precision default 0.0,
     -- atributos adicionales
     highway text,
     maxspeed text,
@@ -138,6 +142,48 @@ begin
     where length_m is null or cost is null;
 end;
 $$ language plpgsql;
+
+-- Fase 3: Función para calcular costo resiliente considerando probabilidad de falla
+-- Formula: cost_resiliente = length_m * (1 + k * p_fallo_arista)
+-- donde k es un factor de penalización (default: 5.0)
+create or replace function infra_calcular_costo_resiliente(k double precision default 5.0) 
+returns table(
+    id bigint,
+    source bigint,
+    target bigint,
+    cost double precision,
+    reverse_cost double precision,
+    geom geometry
+) as $$
+begin
+    return query
+    select 
+        a.id,
+        a.source,
+        a.target,
+        a.length_m * (1.0 + k * coalesce(a.p_fallo_arista, 0.0)) as cost,
+        a.length_m * (1.0 + k * coalesce(a.p_fallo_arista, 0.0)) as reverse_cost,
+        a.geom
+    from infra_aristas a
+    where a.length_m is not null;
+end;
+$$ language plpgsql;
+
+-- Fase 3: Tabla para almacenar simulaciones de fallas activas
+-- Permite guardar el estado de una simulación para consultas posteriores
+create table if not exists sim_fallas_activas (
+    id bigserial primary key,
+    simulation_id uuid not null,
+    entity_type text not null check (entity_type in ('nodo', 'arista')),
+    entity_id bigint not null,
+    p_fallo double precision not null,
+    random_value double precision not null,
+    is_failed boolean not null,
+    created_at timestamptz default now()
+);
+
+create index if not exists sim_fallas_activas_sim_id_idx on sim_fallas_activas (simulation_id);
+create index if not exists sim_fallas_activas_entity_idx on sim_fallas_activas (entity_type, entity_id);
 
 -- Nota: Para usar pgrouting, se recomienda poblar las columnas source/target usando
 -- pgr_createTopology o calculando la topología externamente y cargando los ids.
