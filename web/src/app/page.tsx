@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { MapPin, Loader2 } from 'lucide-react';
 import { 
   Table, 
   TableBody, 
@@ -117,6 +118,7 @@ export default function HomePage() {
   const [simulationId, setSimulationId] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [geolocating, setGeolocating] = useState(false);
 
   useEffect(() => {
     // Cargar datos de amenazas
@@ -230,6 +232,77 @@ export default function HomePage() {
     }
   };
 
+  // Función de geolocalización HTML5
+  const useMyLocation = () => {
+    setGeolocating(true);
+    
+    if (!navigator.geolocation) {
+      alert('❌ Geolocalización no soportada por tu navegador');
+      setGeolocating(false);
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          // Encontrar nodo más cercano usando función de Supabase
+          const { data, error } = await supabase.rpc('find_nearest_node', {
+            lat: latitude,
+            lon: longitude
+          });
+          
+          if (error) {
+            throw new Error(error.message);
+          }
+          
+          if (data && data.length > 0) {
+            const nearestNode = data[0];
+            setSourceNode(nearestNode.id);
+            
+            alert(
+              `📍 Ubicación detectada:\\n\\n` +
+              `Coordenadas: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\\n` +
+              `Nodo más cercano: ${nearestNode.id}\\n` +
+              `Distancia: ${nearestNode.distance_m.toFixed(0)} metros`
+            );
+          } else {
+            alert('⚠️ No se encontró ningún nodo cercano a tu ubicación');
+          }
+        } catch (error: any) {
+          console.error('Error al buscar nodo cercano:', error);
+          alert(`❌ Error al buscar nodo cercano: ${error.message}`);
+        } finally {
+          setGeolocating(false);
+        }
+      },
+      (error) => {
+        let errorMessage = 'Error desconocido';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permiso de ubicación denegado. Por favor, habilita el acceso a la ubicación en tu navegador.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Información de ubicación no disponible.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Tiempo de espera agotado al obtener la ubicación.';
+            break;
+        }
+        
+        alert(`❌ Error de geolocalización:\\n${errorMessage}`);
+        setGeolocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   // Extraer coordenadas de geometría GeoJSON
   const extractCoords = (geom: any): [number, number][] => {
     if (!geom) return [];
@@ -291,12 +364,30 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="source">Nodo Origen</Label>
-                  <Input
-                    id="source"
-                    type="number"
-                    value={sourceNode}
-                    onChange={(e) => setSourceNode(parseInt(e.target.value) || 1)}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="source"
+                      type="number"
+                      value={sourceNode}
+                      onChange={(e) => setSourceNode(parseInt(e.target.value) || 1)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={useMyLocation}
+                      disabled={geolocating}
+                      title="Usar mi ubicación actual"
+                    >
+                      {geolocating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="target">Nodo Destino</Label>
