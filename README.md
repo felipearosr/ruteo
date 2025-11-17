@@ -66,15 +66,65 @@ Instrucciones rápidas:
 
    Este script carga automáticamente todos los archivos JSON/GeoJSON generados a las tablas de Supabase.
 
-6. Iniciar el servidor web Next.js:
+6. Configurar variables de entorno para la aplicación web:
+
+   Copia el archivo de ejemplo en la carpeta `web/`:
 
    ```zsh
    cd web
+   cp .env.local.example .env.local
+   # Edita .env.local con tus credenciales de Supabase
+   ```
+
+   El archivo `.env.local` debe contener:
+   - `NEXT_PUBLIC_SUPABASE_URL` — URL pública de Supabase (para el cliente)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Clave anónima de Supabase (para el cliente)
+   - `SUPABASE_DB_HOST` — Host de la BD (para las API routes)
+   - `SUPABASE_DB_PORT` — Puerto del pooler (6543)
+   - `SUPABASE_DB_USER` — Usuario de la BD
+   - `SUPABASE_DB_PASSWORD` — Contraseña de la BD
+
+7. Iniciar el servidor web Next.js:
+
+   ```zsh
+   cd web  # si no estás ya en la carpeta web
    npm install
    npm run dev
    ```
 
    El sitio estará disponible en http://localhost:3000
+
+## Funcionalidades de la aplicación web
+
+La aplicación web implementada incluye:
+
+- **Mapa interactivo** con OpenStreetMap centrado en Santiago, Chile
+- **Capas de metadata:**
+  - Elevación (puntos verdes)
+  - Precipitación/Lluvia (puntos cyan)
+  - Cobertura de suelo (puntos amarillos)
+- **Capas de amenazas:**
+  - Estaciones DGA (puntos azul oscuro)
+  - Inundaciones históricas (puntos rojos)
+  - Reportes ciudadanos (puntos naranjas)
+- **Cálculo de rutas:**
+  - Selección de nodos origen y destino
+  - Botón para calcular ruta usando pgr_dijkstra
+  - Visualización de la ruta calculada como línea azul en el mapa
+  - Información de segmentos de la ruta
+- **Controles de capas:**
+  - Checkboxes para activar/desactivar cada capa
+  - Popups informativos al hacer click en los marcadores
+
+## Arquitectura técnica
+
+- **Backend:** Supabase (PostgreSQL + PostGIS + pgRouting)
+- **ETL:** Python 3.11 con requests, geojson, shapely
+- **Web Frontend:** Next.js 14, React 18, TypeScript
+- **Mapa:** Leaflet 1.9.4 con react-leaflet
+- **Estilos:** Tailwind CSS 3.3
+- **Ruteo:** pgRouting (pgr_dijkstra) con algoritmo de Dijkstra
+- **Datos:** OpenStreetMap (Overpass API) para infraestructura vial
 
 ## Ejecutar con Docker
 
