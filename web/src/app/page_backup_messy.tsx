@@ -32,8 +32,6 @@ import {
   Zap, 
   TrendingUp,
   Loader2,
-  Check,
-  X
   AlertTriangle
 } from 'lucide-react';
 
@@ -181,14 +179,14 @@ export default function HomePage() {
         
         // Mostrar resultados
         alert(
-          `✅ Simulación activada:\\n\\n` +
-          `📊 Nodos:\\n` +
-          `   Total: ${data.summary.total_nodos}\\n` +
-          `   Fallidos: ${data.summary.nodos_failed} (${data.summary.nodos_failure_rate}%)\\n\\n` +
-          `📊 Aristas:\\n` +
-          `   Total: ${data.summary.total_aristas}\\n` +
-          `   Fallidas: ${data.summary.aristas_failed} (${data.summary.aristas_failure_rate}%)\\n\\n` +
-          `🔴 Total de fallas: ${data.summary.total_failed} de ${data.summary.total_entities} entidades\\n\\n` +
+          `✅ Simulación activada:\n\n` +
+          `📊 Nodos:\n` +
+          `   Total: ${data.summary.total_nodos}\n` +
+          `   Fallidos: ${data.summary.nodos_failed} (${data.summary.nodos_failure_rate}%)\n\n` +
+          `📊 Aristas:\n` +
+          `   Total: ${data.summary.total_aristas}\n` +
+          `   Fallidas: ${data.summary.aristas_failed} (${data.summary.aristas_failure_rate}%)\n\n` +
+          `🔴 Total de fallas: ${data.summary.total_failed} de ${data.summary.total_entities} entidades\n\n` +
           `ID: ${data.simulation_id.substring(0, 8)}...`
         );
       } else {
@@ -459,86 +457,6 @@ export default function HomePage() {
                   Estaciones DGA
                 </Label>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Simulación de Fallas */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Simulación de Fallas
-              </CardTitle>
-              <CardDescription>
-                Generar fallas aleatorias basadas en probabilidades
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                className="w-full" 
-                onClick={runSimulation}
-                disabled={simulationActive || isSimulating}
-                variant={simulationActive ? "secondary" : "default"}
-              >
-                {isSimulating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Simulando...
-                  </>
-                ) : simulationActive ? (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    Simulación Activa
-                  </>
-                ) : (
-                  <>
-                    <Zap className="mr-2 h-4 w-4" />
-                    Simular Fallas
-                  </>
-                )}
-              </Button>
-              
-              {simulationActive && simulationData && (
-                <div className="p-3 bg-muted rounded-md text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Nodos fallidos:</span>
-                    <Badge variant="destructive">
-                      {simulationData.nodos_failed}/{simulationData.total_nodos}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Aristas fallidas:</span>
-                    <Badge variant="destructive">
-                      {simulationData.aristas_failed}/{simulationData.total_aristas}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between font-semibold">
-                    <span>Total fallas:</span>
-                    <span className="text-destructive">{simulationData.total_failed}</span>
-                  </div>
-                </div>
-              )}
-              
-              {simulationActive && (
-                <Button 
-                  className="w-full" 
-                  onClick={clearSimulation}
-                  disabled={isSimulating}
-                  variant="destructive"
-                >
-                  {isSimulating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Limpiando...
-                    </>
-                  ) : (
-                    <>
-                      <X className="mr-2 h-4 w-4" />
-                      Limpiar Simulación
-                    </>
-                  )}
-                </Button>
-              )}
             </CardContent>
           </Card>
 
