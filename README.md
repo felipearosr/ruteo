@@ -6,13 +6,31 @@ con una instancia Supabase (Postgres + PostGIS + pgRouting).
 
 Instrucciones rápidas:
 
-1. Exporta las variables de entorno de Supabase necesarias (no subir credenciales al repo):
+1. Configurar credenciales de Supabase:
 
-	- SUPABASE_URL
-	- SUPABASE_DB_HOST
-	- SUPABASE_DB_NAME
-	- SUPABASE_DB_USER
-	- SUPABASE_DB_PASSWORD
+   Copia el archivo `.env.example` a `.env` y completa con tus credenciales reales:
+
+   ```zsh
+   cp .env.example .env
+   # Edita .env con tu editor favorito y completa las variables
+   ```
+
+   El archivo `.env` debe contener:
+   - `SUPABASE_URL` — URL de tu proyecto Supabase
+   - `SUPABASE_DB_HOST` — Host de la base de datos (ej: db.tu-proyecto.supabase.co)
+   - `SUPABASE_DB_NAME` — Nombre de la BD (generalmente `postgres`)
+   - `SUPABASE_DB_USER` — Usuario de la BD (generalmente `postgres`)
+   - `SUPABASE_DB_PASSWORD` — Contraseña de la BD
+
+   Alternativamente, exporta las variables en tu shell:
+
+   ```zsh
+   export SUPABASE_URL='https://tu-proyecto.supabase.co'
+   export SUPABASE_DB_HOST='db.tu-proyecto.supabase.co'
+   export SUPABASE_DB_NAME='postgres'
+   export SUPABASE_DB_USER='postgres'
+   export SUPABASE_DB_PASSWORD='tu-password'
+   ```
 
 2. Construir y levantar el contenedor (desde la carpeta `docker/`):
 
