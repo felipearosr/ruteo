@@ -1,0 +1,21 @@
+# Archivos generados y entornos virtuales
+__pycache__/
+.venv/
+venv/
+env/
+*.pyc
+
+# Node modules
+web/node_modules/
+
+# Datos sensibles y archivos de configuración locales
+.env
+.env.local
+*.pem
+
+# Build outputs
+web/.next/
+dist/
+
+# MacOS
+.DS_Store
