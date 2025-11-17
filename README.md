@@ -32,26 +32,58 @@ Instrucciones rápidas:
    export SUPABASE_DB_PASSWORD='tu-password'
    ```
 
-2. Construir y levantar el contenedor (desde la carpeta `docker/`):
+2. Instalar dependencias de Python:
+
+   ```zsh
+   pip install -r requirements.txt
+   ```
+
+3. Crear el esquema de la base de datos en Supabase:
+
+   **Opción A:** Usando psql (línea de comandos):
+   ```zsh
+   psql "postgresql://postgres:TU_PASSWORD@db.tu-proyecto.supabase.co:5432/postgres" -f sql/schema.sql
+   ```
+
+   **Opción B:** Desde el dashboard de Supabase:
+   - Ve a **SQL Editor** en tu proyecto
+   - Copia y pega el contenido de `sql/schema.sql`
+   - Click en **Run**
+
+4. Ejecutar los ETL para generar los datos:
+
+   ```zsh
+   python main.py
+   ```
+
+   Esto generará archivos JSON/GeoJSON en las carpetas `infraestructura/`, `metadata/` y `amenazas/`.
+
+5. Cargar los datos a Supabase:
+
+   ```zsh
+   python load_to_supabase.py
+   ```
+
+   Este script carga automáticamente todos los archivos JSON/GeoJSON generados a las tablas de Supabase.
+
+6. Iniciar el servidor web Next.js:
+
+   ```zsh
+   cd web
+   npm install
+   npm run dev
+   ```
+
+   El sitio estará disponible en http://localhost:3000
+
+## Ejecutar con Docker
+
+Alternativamente, puedes usar Docker:
 
 ```zsh
 docker compose -f docker/docker-compose.yml build
 docker compose -f docker/docker-compose.yml up
 ```
 
-3. Para ejecutar localmente los ETL sin Docker:
-
-```zsh
-python infraestructura/osm_infra_etl.py
-python metadata/elevacion_etl.py
-python metadata/lluvia_etl.py
-python metadata/landcover_etl.py
-python amenazas/dga_etl.py
-python amenazas/inundaciones_hist_etl.py
-python amenazas/reportes_ciudadanos_etl.py
-```
-
-4. Cargar los archivos JSON/GeoJSON a la base de datos Supabase usando los archivos `sql/*.sql` y
-	los loaders en `infraestructura/` y `metadata/`.
-
 Ver `copilot-instructions.md` para el resto de la especificación del proyecto.
+
