@@ -46,5 +46,16 @@ ENV NODE_ENV=production
 # Puerto por defecto (Next.js suele usar 3000)
 EXPOSE 3000
 
-# Punto de entrada: ejecutar main.py. Si se desea, se puede pasar otro comando al iniciar el contenedor.
-ENTRYPOINT ["python", "/app/main.py"]
+# Copiar script de inicio
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Variables de entorno recomendadas (pueden sobrescribirse en docker-compose o entorno de ejecución)
+ENV PYTHONUNBUFFERED=1
+ENV NODE_ENV=production
+
+# Puerto por defecto (Next.js suele usar 3000)
+EXPOSE 3000
+
+# Punto de entrada: ejecutar script de inicio
+ENTRYPOINT ["/usr/local/bin/start.sh"]

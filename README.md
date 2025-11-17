@@ -128,12 +128,95 @@ La aplicación web implementada incluye:
 
 ## Ejecutar con Docker
 
-Alternativamente, puedes usar Docker:
+Docker permite ejecutar todo el proyecto (ETL + servidor web) en un contenedor aislado.
+
+### Requisitos previos
+
+- Docker Engine 20.10+ instalado
+- Docker Compose v2 instalado
+
+### Pasos para ejecutar con Docker:
+
+1. **Configurar variables de entorno:**
+
+   Las variables de entorno se pueden configurar de dos formas:
+
+   **Opción A:** Crear archivo `.env` en la raíz (recomendado)
+   ```zsh
+   cp .env.docker.example .env
+   # Edita .env con tus credenciales de Supabase
+   ```
+
+   **Opción B:** Exportar variables en el shell
+   ```zsh
+   export SUPABASE_URL='https://tu-proyecto.supabase.co'
+   export SUPABASE_ANON_KEY='tu_anon_key'
+   export SUPABASE_DB_HOST='db.tu-proyecto.supabase.co'
+   export SUPABASE_DB_PORT='6543'
+   export SUPABASE_DB_USER='postgres.tu-proyecto'
+   export SUPABASE_DB_PASSWORD='tu_password'
+   ```
+
+2. **Construir la imagen Docker:**
+
+   ```zsh
+   docker compose -f docker/docker-compose.yml build
+   ```
+
+   Esto creará una imagen con:
+   - Python 3.11 + todas las dependencias ETL
+   - Node.js 20 + dependencias de Next.js
+   - Scripts de inicio automático
+
+3. **Ejecutar el contenedor:**
+
+   ```zsh
+   docker compose -f docker/docker-compose.yml up
+   ```
+
+   El contenedor ejecutará automáticamente:
+   1. **ETL:** Genera archivos JSON/GeoJSON (puede tardar si descarga datos de OSM)
+   2. **Servidor web:** Inicia Next.js en http://localhost:3000
+
+4. **Acceder a la aplicación:**
+
+   Abre tu navegador en: http://localhost:3000
+
+5. **Detener el contenedor:**
+
+   ```zsh
+   # Presiona Ctrl+C en la terminal donde está corriendo
+
+   # O en otra terminal:
+   docker compose -f docker/docker-compose.yml down
+   ```
+
+### Modo desarrollo con Docker
+
+Si quieres modificar código y ver los cambios reflejados sin reconstruir:
 
 ```zsh
-docker compose -f docker/docker-compose.yml build
+# El docker-compose.yml ya monta el código local en el contenedor
 docker compose -f docker/docker-compose.yml up
 ```
+
+Los cambios en archivos Python se reflejarán al reiniciar el contenedor.
+Los cambios en archivos de Next.js se recargarán automáticamente (hot reload).
+
+### Troubleshooting Docker
+
+**Error: "Variables de entorno no configuradas"**
+- Asegúrate de tener un archivo `.env` en la raíz del proyecto
+- O exporta las variables antes de ejecutar `docker compose`
+
+**Error: "504 Gateway Timeout" en ETL de OSM**
+- La API de Overpass puede estar sobrecargada
+- Esto es normal, el servidor web iniciará de todas formas
+- Los datos de OSM ya están en el repositorio como archivos .geojson
+
+**El puerto 3000 ya está en uso**
+- Detén cualquier servidor Next.js local: `pkill -f "next dev"`
+- O modifica el puerto en `docker-compose.yml`: `"3001:3000"`
 
 Ver `copilot-instructions.md` para el resto de la especificación del proyecto.
 

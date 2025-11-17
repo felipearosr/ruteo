@@ -14,12 +14,16 @@ services:
       - SUPABASE_ANON_KEY
       - SUPABASE_SERVICE_ROLE_KEY
       - SUPABASE_DB_HOST
+      - SUPABASE_DB_PORT
       - SUPABASE_DB_NAME
       - SUPABASE_DB_USER
       - SUPABASE_DB_PASSWORD
+      # Variables para Next.js (cliente web)
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       # Configuraciones de runtime opcionales
       - PYTHONUNBUFFERED=1
-      - NODE_ENV=production
+      - NODE_ENV=development
     ports:
       - "3000:3000"
     restart: unless-stopped

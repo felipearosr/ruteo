@@ -214,31 +214,39 @@ JOIN infra_aristas a ON r.edge = a.id;
 
 ---
 
-## ⚠️ 10. Contenedores Docker
+## ✅ 10. Contenedores Docker
 
-**Estado:** PARCIALMENTE COMPLETADO
+**Estado:** COMPLETADO
 
 Archivos creados:
-- [x] `docker/Dockerfile.app` - Imagen con Python 3.11 + Node.js 20
+- [x] `docker/Dockerfile.app` - Imagen multi-stage con Python 3.11 + Node.js 20
   - Instala dependencias de `requirements.txt`
   - Instala dependencias de `web/package.json`
-  - ENTRYPOINT: `python main.py`
-- [x] `docker/docker-compose.yml` - Servicio `app` con variables de entorno
-  - Monta el repositorio en `/app`
+  - Copia script de inicio `docker/start.sh`
+  - Ejecuta ETL y servidor Next.js automáticamente
+- [x] `docker/docker-compose.yml` - Orquestación con Docker Compose
+  - Servicio `app` que ejecuta ETL + Web
+  - Monta el repositorio en `/app` para desarrollo
   - Expone puerto 3000
-  - Declara variables para Supabase
+  - Configura variables de entorno para Supabase
+- [x] `docker/start.sh` - Script de inicio del contenedor
+  - Ejecuta `main.py` para generar datos ETL
+  - Inicia servidor Next.js en modo desarrollo
+  - Manejo de errores graceful
+- [x] `.env.docker.example` - Plantilla de variables de entorno para Docker
 
-**PENDIENTE:**
-- [ ] Probar que el contenedor construye correctamente
-  ```bash
-  docker compose -f docker/docker-compose.yml build
-  ```
-- [ ] Probar que el contenedor ejecuta `main.py` sin errores
-  ```bash
-  docker compose -f docker/docker-compose.yml up
-  ```
-- [ ] Verificar que el sitio web Next.js es accesible en el contenedor
-- [ ] Documentar en README cómo ejecutar todo el proyecto con Docker
+**Pruebas realizadas:**
+- ✅ Construcción de imagen exitosa (`docker compose build`)
+- ✅ Ejecución de contenedor verificada (`docker compose up`)
+- ✅ ETL se ejecuta automáticamente al iniciar
+- ✅ Servidor Next.js inicia correctamente en puerto 3000
+- ✅ Variables de entorno se pasan correctamente al contenedor
+- ✅ Hot reload funciona con volúmenes montados
+
+**Documentación:**
+- ✅ README actualizado con sección completa de Docker
+- ✅ Instrucciones de configuración de variables de entorno
+- ✅ Guía de troubleshooting para problemas comunes
 
 ---
 
@@ -247,10 +255,13 @@ Archivos creados:
 Adicionales no requeridos pero útiles:
 - [x] `.gitignore` - Ignora archivos generados, secrets, node_modules
 - [x] `requirements.txt` - Dependencias de Python
-- [x] `.env.example` - Plantilla de variables de entorno
-- [x] `README.md` - Instrucciones de uso del proyecto
+- [x] `.env.example` - Plantilla de variables de entorno (raíz)
+- [x] `.env.docker.example` - Plantilla de variables de entorno para Docker
+- [x] `web/.env.local.example` - Plantilla de variables de entorno para Next.js
+- [x] `README.md` - Instrucciones completas de uso del proyecto
 - [x] `check_data.py` - Script para verificar datos cargados en Supabase
 - [x] Scripts de carga alternativos (API REST en lugar de PostgreSQL directo)
+- [x] `docker_test.log` - Log de prueba de Docker
 
 ---
 
@@ -267,50 +278,47 @@ Adicionales no requeridos pero útiles:
 | 7 | Sitio Web Leaflet | ✅ Completo |
 | 8 | Ruta pgr_dijkstra | ✅ Completo |
 | 9 | main.py orquestador | ✅ Completo |
-| 10 | Docker | ⚠️ Archivos creados, falta probar |
+| 10 | Docker | ✅ Completo |
 
-**Progreso: 8/10 puntos completos (80%)**
+**Progreso: 9/10 puntos completos (90%)**
+
+**Único pendiente:** Diagrama visual de la base de datos (el usuario lo tiene de Supabase)
 
 ---
 
 ## 🚀 Próximos pasos prioritarios
 
-### Críticos para completar la Fase 2:
+### Único pendiente para completar 100% la Fase 2:
 
-1. **Crear diagrama de la base de datos** (`sql/diagram.png`)
-   - Usar herramienta online como dbdiagram.io
-   - Mostrar tablas, relaciones, tipos de datos
-
-2. **Probar contenedores Docker**
-   - Verificar build
-   - Verificar ejecución de ETL
-   - Verificar acceso al sitio web
-
-3. **Documentar ejecución Docker** en README
-   - Instrucciones paso a paso
-   - Variables de entorno necesarias
-   - Comandos de build y run
+1. **Agregar diagrama visual de la base de datos** (`sql/diagram.png`)
+   - El usuario ya tiene el diagrama de Supabase
+   - Solo necesita copiarlo al repositorio como `sql/diagram.png`
 
 ### Opcionales para mejorar el proyecto:
 
-4. **Optimizar carga de infraestructura en el mapa**
+2. **Optimizar carga de infraestructura en el mapa**
    - La red vial tiene 138K aristas, muy pesado para cargar todas
    - Implementar viewport-based loading (solo aristas visibles)
    - O usar tiles vectoriales
 
-5. **Agregar marcadores de origen/destino en el mapa**
+3. **Agregar marcadores de origen/destino en el mapa**
    - Permitir seleccionar nodos haciendo click en el mapa
    - Mostrar coordenadas de los nodos seleccionados
 
-6. **Implementar búsqueda de nodos más cercanos**
+4. **Implementar búsqueda de nodos más cercanos**
    - Dado un click en el mapa, encontrar el nodo más cercano
    - Usar PostGIS ST_Distance o KNN
 
-7. **Agregar métricas de la ruta**
+5. **Agregar métricas de la ruta**
    - Distancia total
    - Costo total
    - Tipos de vías utilizadas
    - Zonas de riesgo atravesadas
+
+6. **Desplegar en producción**
+   - Usar Docker para desplegar en servidor
+   - Configurar dominio y SSL
+   - Optimizar build de Next.js para producción
 
 ---
 
@@ -337,4 +345,4 @@ Adicionales no requeridos pero útiles:
 
 ---
 
-**Última actualización:** 2025-01-17 - Web completa implementada con visualización de capas y routing con pgr_dijkstra
+**Última actualización:** 2025-01-17 - Docker completado y probado exitosamente (9/10 puntos, 90%)
