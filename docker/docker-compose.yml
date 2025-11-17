@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.app
+    container_name: ruteo_app
+    # Montar el repositorio para desarrollo y para que main.py pueda encontrar archivos generados
+    volumes:
+      - ..:/app:delegated
+    environment:
+      # Variables para conectar a Supabase / PostgreSQL (NO poner secretos aquí en el repo)
+      - SUPABASE_URL
+      - SUPABASE_ANON_KEY
+      - SUPABASE_SERVICE_ROLE_KEY
+      - SUPABASE_DB_HOST
+      - SUPABASE_DB_NAME
+      - SUPABASE_DB_USER
+      - SUPABASE_DB_PASSWORD
+      # Configuraciones de runtime opcionales
+      - PYTHONUNBUFFERED=1
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    # Mantener el usuario root por simplicidad; en producción considerar usar un usuario no privilegiado
