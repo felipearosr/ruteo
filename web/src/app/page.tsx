@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, BookOpen } from 'lucide-react';
 import { 
   Table, 
   TableBody, 
@@ -303,6 +303,39 @@ export default function HomePage() {
     );
   };
 
+
+  // Cargar caso de ejemplo predefinido
+  const loadExample = () => {
+    // Configurar parámetros del caso de ejemplo
+    setSourceNode(1);
+    setTargetNode(100);
+    setK(5.0);
+    setLambdaRisk(5.0);
+    setRiskWeight(3.0);
+    
+    // Habilitar todas las rutas para comparación
+    setShowBaseline(true);
+    setShowResilient(true);
+    setShowGurobi(true);
+    setShowAstar(true);
+    
+    // Ejecutar comparación después de actualizar estados
+    setTimeout(() => {
+      compareRoutes();
+    }, 300);
+    
+    alert(
+      '📚 Ejemplo cargado\n\n' +
+      '🎯 Origen: Nodo 1\n' +
+      '🏁 Destino: Nodo 100\n' +
+      '⚙️ Parámetros:\n' +
+      '  • k = 5.0\n' +
+      '  • λ = 5.0\n' +
+      '  • risk_weight = 3.0\n\n' +
+      'Ejecutando comparación de rutas...'
+    );
+  };
+
   // Extraer coordenadas de geometría GeoJSON
   const extractCoords = (geom: any): [number, number][] => {
     if (!geom) return [];
@@ -449,6 +482,16 @@ export default function HomePage() {
                     Comparar Rutas
                   </>
                 )}
+              </Button>
+
+              <Button 
+                className="w-full mt-2" 
+                variant="secondary"
+                onClick={loadExample}
+                disabled={isLoading}
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Cargar Ejemplo
               </Button>
             </CardContent>
           </Card>
