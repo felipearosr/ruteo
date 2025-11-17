@@ -23,7 +23,7 @@ load_dotenv()
 
 # Configuración de lotes
 BATCH_SIZE = 100  # Número de aristas por lote
-MAX_FEATURES = 5000  # Máximo de features a procesar (para limitar en pruebas, None para todo)
+MAX_FEATURES = None  # Máximo de features a procesar (None para todo, 5000 para prueba)
 
 
 def get_supabase_client():
