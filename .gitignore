@@ -19,3 +19,10 @@ dist/
 
 # MacOS
 .DS_Store
+
+# Archivos generados por ETL
+*.geojson
+metadata/*.json
+amenazas/*.json
+infraestructura/*.geojson
+
