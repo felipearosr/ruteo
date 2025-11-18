@@ -493,6 +493,75 @@ export default function HomePage() {
                   value={riskWeight}
                   onChange={(e) => setRiskWeight(parseFloat(e.target.value) || 3.0)}
                 />
+
+
+              {/* Restricciones opcionales */}
+              <div className="pt-3 border-t space-y-2">
+                <Label className="text-xs text-gray-500 uppercase">Restricciones (Opcional)</Label>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="maxrisk" className="text-sm">
+                    Riesgo máximo acumulado
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="maxrisk"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="1"
+                      placeholder="Ej: 0.3 (30%)"
+                      value={maxRisk || ''}
+                      onChange={(e) => setMaxRisk(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="flex-1"
+                    />
+                    {maxRisk !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setMaxRisk(null)}
+                      >
+                        ✕
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Riesgo total máximo permitido (0.0-1.0). Dejar vacío para sin límite.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="maxdistance" className="text-sm">
+                    Distancia máxima (metros)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="maxdistance"
+                      type="number"
+                      step="100"
+                      min="0"
+                      placeholder="Ej: 10000 (10km)"
+                      value={maxDistance || ''}
+                      onChange={(e) => setMaxDistance(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="flex-1"
+                    />
+                    {maxDistance !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setMaxDistance(null)}
+                      >
+                        ✕
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Longitud máxima de ruta permitida. Dejar vacío para sin límite.
+                  </p>
+                </div>
+              </div>
               </div>
 
               <Button 
