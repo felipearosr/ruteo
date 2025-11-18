@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { AddressInput } from '@/components/AddressInput';
 import { MapPin, Loader2, BookOpen } from 'lucide-react';
 import { 
   Table, 
@@ -431,6 +432,34 @@ export default function HomePage() {
                     onChange={(e) => setTargetNode(parseInt(e.target.value) || 100)}
                   />
                 </div>
+
+
+              {/* Buscar por dirección */}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">
+                    O buscar origen por dirección:
+                  </Label>
+                  <AddressInput
+                    placeholder="Ej: Av. Providencia 1234, Santiago"
+                    onNodeSelected={(nodeId, address, distance) => {
+                      setSourceNode(nodeId);
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">
+                    O buscar destino por dirección:
+                  </Label>
+                  <AddressInput
+                    placeholder="Ej: Mall Parque Arauco, Las Condes"
+                    onNodeSelected={(nodeId, address, distance) => {
+                      setTargetNode(nodeId);
+                    }}
+                  />
+                </div>
+              </div>
               </div>
 
               <div className="space-y-2">
