@@ -10,19 +10,36 @@ Fecha: Noviembre 2025
 
 import os
 import sys
+import socket
 from typing import Dict, List, Tuple
 import psycopg2
 from psycopg2.extras import execute_values
 import math
 
+
+def get_db_connection():
+    """Get database connection parameters with IPv4 resolution"""
+    host = os.getenv('SUPABASE_DB_HOST')
+    port = int(os.getenv('SUPABASE_DB_PORT', 6543))
+    
+    # Force IPv4 resolution
+    try:
+        ipv4_host = socket.gethostbyname(host)
+    except socket.gaierror:
+        # Fallback to hardcoded IP if DNS fails
+        ipv4_host = '18.213.155.45'
+    
+    return {
+        'host': ipv4_host,
+        'port': port,
+        'database': 'postgres',
+        'user': os.getenv('SUPABASE_DB_USER'),
+        'password': os.getenv('SUPABASE_DB_PASSWORD'),
+    }
+
+
 # Configuración de conexión a Supabase
-DB_CONFIG = {
-    'host': os.getenv('SUPABASE_DB_HOST'),
-    'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
-    'database': 'postgres',
-    'user': os.getenv('SUPABASE_DB_USER'),
-    'password': os.getenv('SUPABASE_DB_PASSWORD'),
-}
+DB_CONFIG = get_db_connection()
 
 
 class ProbabilidadFalloCalculator:

@@ -19,24 +19,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AddressInput } from '@/components/AddressInput';
-import { MapPin, Loader2, BookOpen } from 'lucide-react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { toast } from 'sonner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  MapPin, 
-  Route as RouteIcon, 
-  Zap, 
+import {
+  MapPin,
+  Route as RouteIcon,
+  Zap,
   TrendingUp,
   Loader2,
   Check,
-  X
-  AlertTriangle
+  X,
+  AlertTriangle,
+  BookOpen
 } from 'lucide-react';
 
 // Importar Leaflet de forma dinámica
@@ -89,25 +90,27 @@ export default function HomePage() {
   const [inundaciones, setInundaciones] = useState<any[]>([]);
   const [reportes, setReportes] = useState<any[]>([]);
   const [dgaStations, setDgaStations] = useState<any[]>([]);
-  
+
   // Estado para rutas
   const [comparisonData, setComparisonData] = useState<ComparisonResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Controles de visualización de capas
-  const [showInundaciones, setShowInundaciones] = useState(true);
-  const [showReportes, setShowReportes] = useState(true);
-  const [showDGA, setShowDGA] = useState(false);
-  
+  const [showInundaciones, setShowInundaciones] = useState(false);
+  const [showReportes, setShowReportes] = useState(false);
+  const [showDgaStations, setShowDgaStations] = useState(false);
+  const [showDebugGraph, setShowDebugGraph] = useState(false);
+  const [debugGraphData, setDebugGraphData] = useState<any>(null);
+
   // Controles de visualización de rutas
   const [showBaseline, setShowBaseline] = useState(true);
   const [showResilient, setShowResilient] = useState(true);
   const [showGurobi, setShowGurobi] = useState(true);
   const [showAstar, setShowAstar] = useState(true);
-  
+
   // Parámetros de ruteo
-  const [sourceNode, setSourceNode] = useState(1);
-  const [targetNode, setTargetNode] = useState(100);
+  const [sourceNode, setSourceNode] = useState(640514);
+  const [targetNode, setTargetNode] = useState(723678);
   const [k, setK] = useState(5.0);
   const [lambdaRisk, setLambdaRisk] = useState(5.0);
   const [riskWeight, setRiskWeight] = useState(3.0);
@@ -118,27 +121,66 @@ export default function HomePage() {
   const [simulationActive, setSimulationActive] = useState(false);
   const [simulationId, setSimulationId] = useState<string | null>(null);
   const [simulationData, setSimulationData] = useState<any>(null);
+  const [simulationEntities, setSimulationEntities] = useState<any[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
   const [geolocating, setGeolocating] = useState(false);
 
+  // Funciones para cargar datos de amenazas
+  const loadInundaciones = async () => {
+    const { data } = await supabase.from('amenaza_inundaciones_hist').select('*');
+    if (data) setInundaciones(data);
+  };
+
+  const loadReportes = async () => {
+    const { data } = await supabase.from('amenaza_reportes_ciudadanos').select('*');
+    if (data) setReportes(data);
+  };
+
+  const loadDgaStations = async () => {
+    const { data } = await supabase.from('amenaza_dga').select('*');
+    if (data) setDgaStations(data);
+  };
+
   useEffect(() => {
-    // Cargar datos de amenazas
-    supabase.from('amenaza_inundaciones_hist').select('*').then(({ data }) => {
-      if (data) setInundaciones(data);
-    });
+    // Cargar amenazas al montar el componente
+    loadInundaciones();
+    loadReportes();
+    loadDgaStations();
+  }, []);
 
-    supabase.from('amenaza_reportes_ciudadanos').select('*').then(({ data }) => {
-      if (data) setReportes(data);
-    });
+  // Load debug graph data when toggled
+  useEffect(() => {
+    if (showDebugGraph && !debugGraphData) {
+      fetch('/debug_graph.json')
+        .then(res => res.json())
+        .then(data => setDebugGraphData(data))
+        .catch(err => console.error('Error loading debug graph:', err));
+    }
+  }, [showDebugGraph, debugGraphData]); // Added debugGraphData to dependencies to prevent re-fetching if already loaded
 
-    supabase.from('amenaza_dga').select('*').then(({ data }) => {
-      if (data) setDgaStations(data);
-    });
+  // Cargar ruta de ejemplo al inicio (desde cache)
+  useEffect(() => {
+    // Cargar ejemplo pre-calculado desde archivo estático
+    fetch('/example_route.json')
+      .then(res => res.json())
+      .then(data => {
+        setComparisonData(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Error loading cached example:', err);
+        // Fallback: calcular en vivo si falla la carga del cache
+        setTimeout(() => {
+          compareRoutes();
+        }, 500);
+      });
   }, []);
 
   const compareRoutes = async () => {
     setIsLoading(true);
-    
+
+    console.log('🚀 Starting route comparison:', { sourceNode, targetNode });
+
     try {
       const params = new URLSearchParams({
         source: sourceNode.toString(),
@@ -152,7 +194,14 @@ export default function HomePage() {
 
       const response = await fetch(`/api/route/compare?${params}`);
       const data = await response.json();
-      
+
+      console.log('✅ Routes received:', {
+        baseline: data.baseline?.route?.features?.length || 0,
+        resilient: data.resilient?.route?.features?.length || 0,
+        gurobi: data.gurobi?.route?.features?.length || 0,
+        astar: data.astar?.route?.features?.length || 0
+      });
+
       setComparisonData(data);
     } catch (err) {
       console.error('Error al comparar rutas:', err);
@@ -164,42 +213,46 @@ export default function HomePage() {
   // Funciones de simulación de fallas
   const runSimulation = async () => {
     setIsSimulating(true);
-    
+
     try {
       const response = await fetch('/api/simulate-failures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           seed: null, // null para random, o número para reproducibilidad
-          min_probability: 0.01 
+          min_probability: 0.01
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setSimulationId(data.simulation_id);
         setSimulationData(data.summary);
         setSimulationActive(true);
-        
-        // Mostrar resultados
-        alert(
-          `✅ Simulación activada:\\n\\n` +
-          `📊 Nodos:\\n` +
-          `   Total: ${data.summary.total_nodos}\\n` +
-          `   Fallidos: ${data.summary.nodos_failed} (${data.summary.nodos_failure_rate}%)\\n\\n` +
-          `📊 Aristas:\\n` +
-          `   Total: ${data.summary.total_aristas}\\n` +
-          `   Fallidas: ${data.summary.aristas_failed} (${data.summary.aristas_failure_rate}%)\\n\\n` +
-          `🔴 Total de fallas: ${data.summary.total_failed} de ${data.summary.total_entities} entidades\\n\\n` +
-          `ID: ${data.simulation_id.substring(0, 8)}...`
-        );
+
+        // Fetch detailed entities with geometry
+        const detailsResponse = await fetch(`/api/simulate-failures?simulation_id=${data.simulation_id}`);
+        const detailsData = await detailsResponse.json();
+
+        if (detailsData.success && detailsData.entities) {
+          setSimulationEntities(detailsData.entities);
+        }
+
+        toast.success('Simulacion activada', {
+          description: `${data.summary.total_failed} fallas generadas de ${data.summary.total_entities} entidades. Nodos: ${data.summary.nodos_failed}/${data.summary.total_nodos}, Aristas: ${data.summary.aristas_failed}/${data.summary.total_aristas}`,
+          duration: 5000,
+        });
       } else {
-        alert(`❌ Error: ${data.error}`);
+        toast.error('Error en simulacion', {
+          description: data.error,
+        });
       }
     } catch (error: any) {
-      console.error('Error en simulación:', error);
-      alert(`❌ Error al simular fallas: ${error.message}`);
+      console.error('Error en simulacion:', error);
+      toast.error('Error al simular fallas', {
+        description: error.message,
+      });
     } finally {
       setIsSimulating(false);
     }
@@ -207,27 +260,32 @@ export default function HomePage() {
 
   const clearSimulation = async () => {
     if (!simulationId) return;
-    
+
     setIsSimulating(true);
-    
+
     try {
       const response = await fetch(`/api/simulate-failures?simulation_id=${simulationId}`, {
         method: 'DELETE'
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         setSimulationActive(false);
         setSimulationId(null);
         setSimulationData(null);
-        alert('✅ Simulación eliminada correctamente');
+        setSimulationEntities([]);
+        toast.success('Simulacion eliminada correctamente');
       } else {
-        alert(`❌ Error: ${data.error}`);
+        toast.error('Error al limpiar simulacion', {
+          description: data.error,
+        });
       }
     } catch (error: any) {
-      console.error('Error al limpiar simulación:', error);
-      alert(`❌ Error al limpiar simulación: ${error.message}`);
+      console.error('Error al limpiar simulacion:', error);
+      toast.error('Error al limpiar simulacion', {
+        description: error.message,
+      });
     } finally {
       setIsSimulating(false);
     }
@@ -236,64 +294,66 @@ export default function HomePage() {
   // Función de geolocalización HTML5
   const useMyLocation = () => {
     setGeolocating(true);
-    
+
     if (!navigator.geolocation) {
-      alert('❌ Geolocalización no soportada por tu navegador');
+      toast.error('Geolocalizacion no soportada por tu navegador');
       setGeolocating(false);
       return;
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         try {
           // Encontrar nodo más cercano usando función de Supabase
           const { data, error } = await supabase.rpc('find_nearest_node', {
-            lat: latitude,
-            lon: longitude
+            p_lat: latitude,
+            p_lon: longitude
           });
-          
+
           if (error) {
             throw new Error(error.message);
           }
-          
+
           if (data && data.length > 0) {
             const nearestNode = data[0];
-            setSourceNode(nearestNode.id);
-            
-            alert(
-              `📍 Ubicación detectada:\\n\\n` +
-              `Coordenadas: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\\n` +
-              `Nodo más cercano: ${nearestNode.id}\\n` +
-              `Distancia: ${nearestNode.distance_m.toFixed(0)} metros`
-            );
+            setSourceNode(nearestNode.node_id);
+
+            toast.success('Ubicacion detectada', {
+              description: `Nodo mas cercano: ${nearestNode.node_id} (${nearestNode.distance_m.toFixed(0)} metros)`,
+              duration: 4000,
+            });
           } else {
-            alert('⚠️ No se encontró ningún nodo cercano a tu ubicación');
+            toast.warning('No se encontro ningun nodo cercano a tu ubicacion');
           }
         } catch (error: any) {
           console.error('Error al buscar nodo cercano:', error);
-          alert(`❌ Error al buscar nodo cercano: ${error.message}`);
+          toast.error('Error al buscar nodo cercano', {
+            description: error.message,
+          });
         } finally {
           setGeolocating(false);
         }
       },
       (error) => {
         let errorMessage = 'Error desconocido';
-        
+
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Permiso de ubicación denegado. Por favor, habilita el acceso a la ubicación en tu navegador.';
+            errorMessage = 'Permiso denegado. Habilita el acceso a la ubicacion en tu navegador.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Información de ubicación no disponible.';
+            errorMessage = 'Informacion de ubicacion no disponible.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Tiempo de espera agotado al obtener la ubicación.';
+            errorMessage = 'Tiempo de espera agotado.';
             break;
         }
-        
-        alert(`❌ Error de geolocalización:\\n${errorMessage}`);
+
+        toast.error('Error de geolocalizacion', {
+          description: errorMessage,
+        });
         setGeolocating(false);
       },
       {
@@ -307,40 +367,34 @@ export default function HomePage() {
 
   // Cargar caso de ejemplo predefinido
   const loadExample = () => {
-    // Configurar parámetros del caso de ejemplo
-    setSourceNode(1);
-    setTargetNode(100);
+    // Configurar parámetros del caso de ejemplo (usando nodos válidos conocidos)
+    setSourceNode(640514);
+    setTargetNode(723678);
     setK(5.0);
     setLambdaRisk(5.0);
     setRiskWeight(3.0);
-    
+
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
     setShowResilient(true);
     setShowGurobi(true);
     setShowAstar(true);
-    
+
     // Ejecutar comparación después de actualizar estados
     setTimeout(() => {
       compareRoutes();
     }, 300);
-    
-    alert(
-      '📚 Ejemplo cargado\n\n' +
-      '🎯 Origen: Nodo 1\n' +
-      '🏁 Destino: Nodo 100\n' +
-      '⚙️ Parámetros:\n' +
-      '  • k = 5.0\n' +
-      '  • λ = 5.0\n' +
-      '  • risk_weight = 3.0\n\n' +
-      'Ejecutando comparación de rutas...'
-    );
+
+    toast.info('Ejemplo cargado', {
+      description: 'Origen: Nodo 640514, Destino: Nodo 723678. Ejecutando comparacion de rutas...',
+      duration: 3000,
+    });
   };
 
   // Extraer coordenadas de geometría GeoJSON
   const extractCoords = (geom: any): [number, number][] => {
     if (!geom) return [];
-    
+
     if (typeof geom === 'object' && geom.coordinates) {
       if (geom.type === 'LineString') {
         return geom.coordinates.map((c: number[]) => [c[1], c[0]]);
@@ -349,7 +403,7 @@ export default function HomePage() {
         return [[geom.coordinates[1], geom.coordinates[0]]];
       }
     }
-    
+
     return [];
   };
 
@@ -422,7 +476,7 @@ export default function HomePage() {
                     </Button>
                   </div>
                 </div>
-                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="target">Nodo Destino</Label>
                   <Input
@@ -432,7 +486,7 @@ export default function HomePage() {
                     onChange={(e) => setTargetNode(parseInt(e.target.value) || 100)}
                   />
                 </div>
-
+              </div>
 
               {/* Buscar por dirección */}
               <div className="space-y-3">
@@ -459,7 +513,6 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-              </div>
               </div>
 
               <div className="space-y-2">
@@ -493,12 +546,12 @@ export default function HomePage() {
                   value={riskWeight}
                   onChange={(e) => setRiskWeight(parseFloat(e.target.value) || 3.0)}
                 />
-
+              </div>
 
               {/* Restricciones opcionales */}
               <div className="pt-3 border-t space-y-2">
                 <Label className="text-xs text-gray-500 uppercase">Restricciones (Opcional)</Label>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="maxrisk" className="text-sm">
                     Riesgo máximo acumulado
@@ -562,10 +615,9 @@ export default function HomePage() {
                   </p>
                 </div>
               </div>
-              </div>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={compareRoutes}
                 disabled={isLoading}
               >
@@ -582,8 +634,8 @@ export default function HomePage() {
                 )}
               </Button>
 
-              <Button 
-                className="w-full mt-2" 
+              <Button
+                className="w-full mt-2"
                 variant="secondary"
                 onClick={loadExample}
                 disabled={isLoading}
@@ -684,11 +736,22 @@ export default function HomePage() {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="dga"
-                  checked={showDGA}
-                  onCheckedChange={(checked) => setShowDGA(checked as boolean)}
+                  checked={showDgaStations}
+                  onCheckedChange={(checked) => setShowDgaStations(checked as boolean)}
                 />
                 <Label htmlFor="dga" className="text-sm">
                   Estaciones DGA
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="debug-graph"
+                  checked={showDebugGraph}
+                  onCheckedChange={(checked) => setShowDebugGraph(checked as boolean)}
+                />
+                <Label htmlFor="debug-graph" className="text-sm">
+                  🔍 Debug: Grafo (Nodos y Aristas)
                 </Label>
               </div>
             </CardContent>
@@ -706,8 +769,8 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={runSimulation}
                 disabled={simulationActive || isSimulating}
                 variant={simulationActive ? "secondary" : "default"}
@@ -729,7 +792,7 @@ export default function HomePage() {
                   </>
                 )}
               </Button>
-              
+
               {simulationActive && simulationData && (
                 <div className="p-3 bg-muted rounded-md text-sm space-y-1">
                   <div className="flex justify-between">
@@ -750,10 +813,10 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
-              
+
               {simulationActive && (
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={clearSimulation}
                   disabled={isSimulating}
                   variant="destructive"
@@ -861,28 +924,28 @@ export default function HomePage() {
 
           {/* Rutas */}
           {showBaseline && baselineCoords.length > 0 && (
-            <Polyline 
+            <Polyline
               positions={baselineCoords}
               pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.7 }}
             />
           )}
 
           {showResilient && resilientCoords.length > 0 && (
-            <Polyline 
+            <Polyline
               positions={resilientCoords}
               pathOptions={{ color: '#f97316', weight: 4, opacity: 0.7 }}
             />
           )}
 
           {showGurobi && gurobiCoords.length > 0 && (
-            <Polyline 
+            <Polyline
               positions={gurobiCoords}
               pathOptions={{ color: '#22c55e', weight: 4, opacity: 0.7 }}
             />
           )}
 
           {showAstar && astarCoords.length > 0 && (
-            <Polyline 
+            <Polyline
               positions={astarCoords}
               pathOptions={{ color: '#a855f7', weight: 4, opacity: 0.7 }}
             />
@@ -893,15 +956,15 @@ export default function HomePage() {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
             return (
-              <CircleMarker 
+              <CircleMarker
                 key={`inund-${idx}`}
                 center={coords[0]}
                 radius={8}
                 pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.5 }}
               >
                 <Popup>
-                  <b>Inundación Histórica</b><br/>
-                  Fecha: {item.fecha || 'N/A'}<br/>
+                  <b>Inundación Histórica</b><br />
+                  Fecha: {item.fecha || 'N/A'}<br />
                   Fuente: {item.fuente || 'N/A'}
                 </Popup>
               </CircleMarker>
@@ -913,15 +976,15 @@ export default function HomePage() {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
             return (
-              <CircleMarker 
+              <CircleMarker
                 key={`rep-${idx}`}
                 center={coords[0]}
                 radius={6}
                 pathOptions={{ color: 'orange', fillColor: 'orange', fillOpacity: 0.6 }}
               >
                 <Popup>
-                  <b>Reporte Ciudadano</b><br/>
-                  Tipo: {item.tipo || 'N/A'}<br/>
+                  <b>Reporte Ciudadano</b><br />
+                  Tipo: {item.tipo || 'N/A'}<br />
                   Fecha: {item.fecha_reporte || 'N/A'}
                 </Popup>
               </CircleMarker>
@@ -929,24 +992,133 @@ export default function HomePage() {
           })}
 
           {/* Estaciones DGA */}
-          {showDGA && dgaStations.map((item, idx) => {
-            const coords = extractCoords(item.geom);
+          {showDgaStations && dgaStations.map((station: any, idx) => {
+            const coords = extractCoords(station.geom);
             if (coords.length === 0) return null;
             return (
-              <CircleMarker 
+              <CircleMarker
                 key={`dga-${idx}`}
                 center={coords[0]}
                 radius={7}
                 pathOptions={{ color: 'darkblue', fillColor: 'lightblue', fillOpacity: 0.7 }}
               >
                 <Popup>
-                  <b>Estación DGA</b><br/>
-                  Código: {item.codigo_estacion || 'N/A'}<br/>
-                  Nivel: {item.nivel_agua_m || 'N/A'}m
+                  <b>Estación DGA</b><br />
+                  Nombre: {station.nombre_estacion || 'N/A'}<br />
+                  Código: {station.codigo_estacion || 'N/A'}<br />
+                  Nivel: {station.nivel_agua_m || 'N/A'}m
                 </Popup>
               </CircleMarker>
             );
           })}
+
+          {/* Debug Graph Layer - Nodes and Edges */}
+          {showDebugGraph && debugGraphData && debugGraphData.features && debugGraphData.features.map((feature: any, idx: number) => {
+            if (feature.properties.type === 'node') {
+              const coords = extractCoords(feature.geometry);
+              if (coords.length === 0) return null;
+              return (
+                <CircleMarker
+                  key={`debug-node-${idx}`}
+                  center={coords[0]}
+                  radius={2}
+                  pathOptions={{ color: 'gray', fillColor: 'gray', fillOpacity: 0.3, weight: 1 }}
+                >
+                  <Popup>
+                    <b>🔍 Nodo</b><br />
+                    ID: {feature.properties.id}
+                  </Popup>
+                </CircleMarker>
+              );
+            } else if (feature.properties.type === 'edge') {
+              const coords = extractCoords(feature.geometry);
+              if (coords.length === 0) return null;
+              return (
+                <Polyline
+                  key={`debug-edge-${idx}`}
+                  positions={coords}
+                  pathOptions={{ color: 'lightgray', weight: 1, opacity: 0.4 }}
+                >
+                  <Popup>
+                    <b>🔍 Arista</b><br />
+                    ID: {feature.properties.id}<br />
+                    Source: {feature.properties.source}<br />
+                    Target: {feature.properties.target}<br />
+                    Length: {feature.properties.length?.toFixed(2)}m
+                  </Popup>
+                </Polyline>
+              );
+            }
+            return null;
+          })}
+
+          {/* Visualización de Fallas Simuladas */}
+          {simulationActive && simulationEntities.map((entity, idx) => {
+            if (!entity.is_failed || !entity.geom) return null;
+
+            const coords = extractCoords(entity.geom);
+            if (coords.length === 0) return null;
+
+            if (entity.entity_type === 'nodo') {
+              return (
+                <CircleMarker
+                  key={`fail-node-${idx}`}
+                  center={coords[0]}
+                  radius={6}
+                  pathOptions={{ color: 'red', fillColor: 'darkred', fillOpacity: 0.9, weight: 2 }}
+                >
+                  <Popup>
+                    <b>❌ Nodo Fallido</b><br />
+                    ID: {entity.entity_id}<br />
+                    Probabilidad: {(entity.p_fallo * 100).toFixed(1)}%
+                  </Popup>
+                </CircleMarker>
+              );
+            } else if (entity.entity_type === 'arista') {
+              return (
+                <Polyline
+                  key={`fail-edge-${idx}`}
+                  positions={coords}
+                  pathOptions={{ color: 'red', weight: 4, opacity: 0.8, dashArray: '10, 10' }}
+                >
+                  <Popup>
+                    <b>❌ Arista Fallida</b><br />
+                    ID: {entity.entity_id}<br />
+                    Probabilidad: {(entity.p_fallo * 100).toFixed(1)}%
+                  </Popup>
+                </Polyline>
+              );
+            }
+            return null;
+          })}
+
+          {/* Marcador de nodo origen */}
+          {sourceNode && baselineCoords.length > 0 && (
+            <CircleMarker
+              center={baselineCoords[0]}
+              radius={15}
+              pathOptions={{ color: '#22c55e', fillColor: '#22c55e', fillOpacity: 0.8, weight: 3 }}
+            >
+              <Popup>
+                <b>🟢 Nodo Origen</b><br />
+                ID: {sourceNode}
+              </Popup>
+            </CircleMarker>
+          )}
+
+          {/* Marcador de nodo destino */}
+          {targetNode && baselineCoords.length > 0 && (
+            <CircleMarker
+              center={baselineCoords[baselineCoords.length - 1]}
+              radius={15}
+              pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.8, weight: 3 }}
+            >
+              <Popup>
+                <b>🔴 Nodo Destino</b><br />
+                ID: {targetNode}
+              </Popup>
+            </CircleMarker>
+          )}
         </MapContainer>
 
         {/* Leyenda en el mapa */}

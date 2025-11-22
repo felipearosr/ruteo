@@ -140,27 +140,24 @@ export function AddressInput({
     try {
       // Llamar a find_nearest_node
       const { data, error } = await supabase.rpc('find_nearest_node', {
-        lat: result.lat,
-        lon: result.lon
+        p_lat: result.lat,
+        p_lon: result.lon
       });
 
       if (error || !data || data.length === 0) {
-        alert(`❌ Error al buscar nodo cercano: ${error?.message || 'Sin resultados'}`);
+        console.error('Error al buscar nodo cercano:', error?.message || 'Sin resultados');
         setIsFindingNode(false);
         return;
       }
 
-      const { node_id, distance_meters } = data[0];
+      const nearestNode = data[0];
 
       // Callback al padre con el nodo seleccionado
-      onNodeSelected(node_id, result.display_name, distance_meters);
+      onNodeSelected(nearestNode.node_id, result.display_name, nearestNode.distance_m);
 
-      // Mostrar confirmación
-      alert(
-        `✅ Dirección encontrada\n\n` +
-        `📍 ${result.display_name}\n` +
-        `🎯 Nodo más cercano: ${node_id}\n` +
-        `📏 Distancia: ${distance_meters.toFixed(0)} metros`
+      console.log(
+        `Direccion encontrada: ${result.display_name}. ` +
+        `Nodo: ${nearestNode.node_id}, Distancia: ${nearestNode.distance_m.toFixed(0)}m`
       );
 
     } catch (err: any) {

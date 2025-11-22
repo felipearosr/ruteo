@@ -23,6 +23,8 @@ except ImportError:
     print("⚠️  GUROBI no está instalado. El modelo de optimización no estará disponible.")
 
 
+import socket
+
 # Configuración de conexión a Supabase
 DB_CONFIG = {
     'host': os.getenv('SUPABASE_DB_HOST'),
@@ -31,6 +33,19 @@ DB_CONFIG = {
     'user': os.getenv('SUPABASE_DB_USER'),
     'password': os.getenv('SUPABASE_DB_PASSWORD'),
 }
+
+def get_db_connection():
+    """Establece y retorna una conexión a la base de datos."""
+    host = DB_CONFIG['host']
+    try:
+        # Force IPv4 resolution
+        host_ip = socket.gethostbyname(host)
+    except:
+        host_ip = '18.213.155.45'
+        
+    params = DB_CONFIG.copy()
+    params['host'] = host_ip
+    return psycopg2.connect(**params)
 
 
 class ResilientRouter:
@@ -56,7 +71,7 @@ class ResilientRouter:
     def connect(self):
         """Establecer conexión a la base de datos"""
         if not self.conn or self.conn.closed:
-            self.conn = psycopg2.connect(**self.conn_params)
+            self.conn = get_db_connection()
         return self.conn
     
     def close(self):
@@ -108,7 +123,7 @@ class ResilientRouter:
                 a.source,
                 a.target,
                 a.length_m,
-                COALESCE(a.p_fallo_arista, 0.0) as p_fallo,
+                0.0 as p_fallo,
                 a.highway,
                 ST_AsText(a.geom) as geom_wkt
             FROM infra_aristas a
@@ -130,7 +145,7 @@ class ResilientRouter:
                 id,
                 ST_X(geom) as lon,
                 ST_Y(geom) as lat,
-                COALESCE(p_fallo_nodo, 0.0) as p_fallo
+                0.0 as p_fallo
             FROM infra_nodos
             WHERE ST_Intersects(
                 geom,
@@ -138,7 +153,16 @@ class ResilientRouter:
             )
         """, (xmin, ymin, xmax, ymax))
         
-        nodos = {row['id']: row for row in cur.fetchall()}
+        nodos = {}
+        for row in cur.fetchall():
+            row['lon'] = float(row['lon'])
+            row['lat'] = float(row['lat'])
+            nodos[row['id']] = row
+            
+        # Convertir aristas a float
+        for arista in aristas:
+            arista['length_m'] = float(arista['length_m'])
+            arista['p_fallo'] = float(arista['p_fallo'])
         
         cur.close()
         
@@ -194,7 +218,7 @@ class ResilientRouter:
         # Función objetivo: minimizar distancia + lambda * riesgo
         objective = gp.LinExpr()
         for arista in aristas:
-            cost = arista['length_m'] + self.lambda_risk * arista['length_m'] * arista['p_fallo']
+            cost = float(arista['length_m']) + self.lambda_risk * float(arista['length_m']) * arista['p_fallo']
             objective += cost * x[arista['id']]
         
         model.setObjective(objective, GRB.MINIMIZE)
@@ -249,13 +273,65 @@ class ResilientRouter:
         }
         
         if model.status == GRB.OPTIMAL or model.status == GRB.TIME_LIMIT:
-            # Extraer aristas usadas
+            # Construir lista de adyacencia de aristas seleccionadas
+            selected_adj = {}
+            selected_edges = {}
+            
             for arista in aristas:
                 if x[arista['id']].X > 0.5:  # Variable binaria = 1
-                    result['route'].append(arista['id'])
-                    result['total_distance'] += arista['length_m']
-                    result['total_risk'] += arista['p_fallo']
-                    result['aristas_usadas'].append(dict(arista))
+                    u, v = arista['source'], arista['target']
+                    if u not in selected_adj: selected_adj[u] = []
+                    if v not in selected_adj: selected_adj[v] = []
+                    selected_adj[u].append(v)
+                    selected_adj[v].append(u)
+                    
+                    # Guardar info de arista (clave ordenada para no duplicar en no dirigido)
+                    key = tuple(sorted((u, v)))
+                    selected_edges[key] = arista
+
+            # Reconstruir camino desde source
+            curr = source
+            visited_edges = set()
+            
+            # Limite de seguridad para evitar bucles infinitos
+            max_steps = len(selected_edges) + 10
+            steps = 0
+            
+            while curr != target and steps < max_steps:
+                steps += 1
+                if curr not in selected_adj:
+                    print(f"⚠️ Camino roto en nodo {curr}")
+                    break
+                
+                # Encontrar siguiente nodo
+                next_node = None
+                for neighbor in selected_adj[curr]:
+                    edge_key = tuple(sorted((curr, neighbor)))
+                    if edge_key not in visited_edges:
+                        next_node = neighbor
+                        visited_edges.add(edge_key)
+                        break
+                
+                if next_node is None:
+                     print(f"⚠️ Sin salida o ciclo en nodo {curr}")
+                     break
+                
+                # Agregar a resultado
+                edge_key = tuple(sorted((curr, next_node)))
+                arista = selected_edges[edge_key].copy()
+                
+                # Verificar dirección
+                if arista['source'] == curr and arista['target'] == next_node:
+                    arista['is_reversed'] = False
+                else:
+                    arista['is_reversed'] = True
+                
+                result['route'].append(arista['id'])
+                result['total_distance'] += arista['length_m']
+                result['total_risk'] += arista['p_fallo']
+                result['aristas_usadas'].append(arista)
+                
+                curr = next_node
             
             print(f"✅ Solución encontrada:")
             print(f"   Distancia total: {result['total_distance']:.2f}m")
@@ -281,9 +357,15 @@ class ResilientRouter:
         features = []
         
         for i, arista in enumerate(solution['aristas_usadas']):
+            geom = self._wkt_to_geojson(arista['geom_wkt'])
+            
+            # Reverse geometry if needed
+            if arista.get('is_reversed', False) and geom['type'] == 'LineString':
+                geom['coordinates'].reverse()
+            
             feature = {
                 'type': 'Feature',
-                'geometry': self._wkt_to_geojson(arista['geom_wkt']),
+                'geometry': geom,
                 'properties': {
                     'seq': i + 1,
                     'edge_id': arista['id'],

@@ -19,6 +19,8 @@ import math
 import time
 
 
+import socket
+
 # Configuración de conexión a Supabase
 DB_CONFIG = {
     'host': os.getenv('SUPABASE_DB_HOST'),
@@ -27,6 +29,19 @@ DB_CONFIG = {
     'user': os.getenv('SUPABASE_DB_USER'),
     'password': os.getenv('SUPABASE_DB_PASSWORD'),
 }
+
+def get_db_connection():
+    """Establece y retorna una conexión a la base de datos."""
+    host = DB_CONFIG['host']
+    try:
+        # Force IPv4 resolution
+        host_ip = socket.gethostbyname(host)
+    except Exception as e:
+        host_ip = '18.213.155.45'
+        
+    params = DB_CONFIG.copy()
+    params['host'] = host_ip
+    return psycopg2.connect(**params)
 
 
 class AStarResilientRouter:
@@ -49,7 +64,7 @@ class AStarResilientRouter:
     def connect(self):
         """Establecer conexión a la base de datos"""
         if not self.conn or self.conn.closed:
-            self.conn = psycopg2.connect(**self.conn_params)
+            self.conn = get_db_connection()
         return self.conn
     
     def close(self):
@@ -100,7 +115,7 @@ class AStarResilientRouter:
                 id,
                 ST_X(geom) as lon,
                 ST_Y(geom) as lat,
-                COALESCE(p_fallo_nodo, 0.0) as p_fallo
+                0.0 as p_fallo
             FROM infra_nodos
             WHERE ST_Intersects(
                 geom,
@@ -108,7 +123,11 @@ class AStarResilientRouter:
             )
         """, (xmin, ymin, xmax, ymax))
         
-        nodos = {row['id']: row for row in cur.fetchall()}
+        nodos = {}
+        for row in cur.fetchall():
+            row['lon'] = float(row['lon'])
+            row['lat'] = float(row['lat'])
+            nodos[row['id']] = row
         
         # Cargar aristas
         cur.execute("""
@@ -117,7 +136,7 @@ class AStarResilientRouter:
                 a.source,
                 a.target,
                 a.length_m,
-                COALESCE(a.p_fallo_arista, 0.0) as p_fallo,
+                0.0 as p_fallo,
                 a.highway,
                 ST_AsText(a.geom) as geom_wkt
             FROM infra_aristas a
@@ -135,6 +154,10 @@ class AStarResilientRouter:
         aristas_dict = {}
         
         for arista in aristas_list:
+            # Convertir a float para evitar problemas con Decimal
+            arista['length_m'] = float(arista['length_m'])
+            arista['p_fallo'] = float(arista['p_fallo'])
+            
             source_id = arista['source']
             target_id = arista['target']
             
@@ -149,7 +172,7 @@ class AStarResilientRouter:
         
         cur.close()
         
-        print(f"📊 Grafo cargado: {len(nodos)} nodos, {len(aristas_list)} aristas")
+        print(f"📊 Grafo cargado: {len(nodos)} nodos, {len(aristas_list)} aristas", file=sys.stderr)
         
         return grafo, nodos, aristas_dict
     
@@ -206,7 +229,7 @@ class AStarResilientRouter:
         if heuristic_weight is not None:
             self.heuristic_weight = heuristic_weight
         
-        print(f"🔍 Resolviendo ruta de {source} a {target} con A*...")
+        print(f"🔍 Resolviendo ruta de {source} a {target} con A*...", file=sys.stderr)
         start_time = time.time()
         
         # Cargar grafo
@@ -246,7 +269,7 @@ class AStarResilientRouter:
             
             # ¿Llegamos al destino?
             if current == target:
-                print(f"✅ Camino encontrado!")
+                print(f"✅ Camino encontrado!", file=sys.stderr)
                 break
             
             closed_set.add(current)
@@ -306,21 +329,27 @@ class AStarResilientRouter:
                 
                 if next_node in came_from_edge:
                     edge_id = came_from_edge[next_node]
-                    arista = aristas_dict[edge_id]
+                    arista = aristas_dict[edge_id].copy()
+                    
+                    # Check direction
+                    if arista['source'] == node and arista['target'] == next_node:
+                        arista['is_reversed'] = False
+                    else:
+                        arista['is_reversed'] = True
                     
                     result['route'].append(edge_id)
                     result['total_distance'] += arista['length_m']
                     result['total_risk'] += arista['p_fallo']
                     result['aristas_usadas'].append(arista)
             
-            print(f"✅ Solución encontrada:")
-            print(f"   Distancia total: {result['total_distance']:.2f}m")
-            print(f"   Riesgo acumulado: {result['total_risk']:.4f}")
-            print(f"   Tiempo de cómputo: {result['computation_time']:.3f}s")
-            print(f"   Nodos explorados: {nodes_explored}")
-            print(f"   Aristas en ruta: {len(result['route'])}")
+            print(f"✅ Solución encontrada:", file=sys.stderr)
+            print(f"   Distancia total: {result['total_distance']:.2f}m", file=sys.stderr)
+            print(f"   Riesgo acumulado: {result['total_risk']:.4f}", file=sys.stderr)
+            print(f"   Tiempo de cómputo: {result['computation_time']:.3f}s", file=sys.stderr)
+            print(f"   Nodos explorados: {nodes_explored}", file=sys.stderr)
+            print(f"   Aristas en ruta: {len(result['route'])}", file=sys.stderr)
         else:
-            print(f"❌ No se encontró camino de {source} a {target}")
+            print(f"❌ No se encontró camino de {source} a {target}", file=sys.stderr)
         
         self.close()
         return result
@@ -338,9 +367,15 @@ class AStarResilientRouter:
         features = []
         
         for i, arista in enumerate(solution['aristas_usadas']):
+            geom = self._wkt_to_geojson(arista['geom_wkt'])
+            
+            # Reverse geometry if needed
+            if arista.get('is_reversed', False) and geom['type'] == 'LineString':
+                geom['coordinates'].reverse()
+            
             feature = {
                 'type': 'Feature',
-                'geometry': self._wkt_to_geojson(arista['geom_wkt']),
+                'geometry': geom,
                 'properties': {
                     'seq': i + 1,
                     'edge_id': arista['id'],

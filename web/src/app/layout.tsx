@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Ruteo Resiliente - Fase 2',
+  title: 'Ruteo Resiliente - Fase 3',
   description: 'Sistema de ruteo resiliente contra inundaciones urbanas - Santiago, Chile',
 };
 
@@ -14,7 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

@@ -14,17 +14,17 @@ const { Pool } = pg;
 
 // Crear pool de conexiones para PostgreSQL directo
 const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: 'postgres',
-  user: process.env.SUPABASE_DB_USER,
+  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
+  port: parseInt(process.env.SUPABASE_DB_PORT || '5432'),
+  database: process.env.SUPABASE_DB_NAME || 'postgres',
+  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
   password: process.env.SUPABASE_DB_PASSWORD,
   ssl: { rejectUnauthorized: false }
 });
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  
+
   // Obtener parámetros de origen y destino
   const source = parseInt(searchParams.get('source') || '1');
   const target = parseInt(searchParams.get('target') || '100');
@@ -41,23 +41,26 @@ export async function GET(request: Request) {
           'features', COALESCE(json_agg(
             json_build_object(
               'type', 'Feature',
-              'geometry', ST_AsGeoJSON(a.geom)::json,
+              'geometry', CASE 
+                WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
+                ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
+              END,
               'properties', json_build_object(
                 'seq', r.seq,
                 'edge_id', r.edge,
                 'cost', r.cost,
                 'length_m', a.length_m,
-                'p_fallo', COALESCE(a.p_fallo_arista, 0.0),
+                'p_fallo', 0.0,
                 'highway', a.highway
               )
             ) ORDER BY r.seq
           ), '[]'::json)
         ) as route
       FROM pgr_dijkstra(
-        'SELECT id, source, target, cost FROM infra_aristas WHERE cost IS NOT NULL',
-        $1,
-        $2,
-        directed := false
+        'SELECT id, source, target, length_m as cost, length_m as reverse_cost FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0',
+        $1::BIGINT,
+        $2::BIGINT,
+        false
       ) r
       JOIN infra_aristas a ON r.edge = a.id;
     `;
@@ -114,7 +117,7 @@ export async function GET(request: Request) {
 
     console.error('Error en el endpoint de ruta baseline:', err);
     return NextResponse.json(
-      { 
+      {
         route: {
           type: 'FeatureCollection',
           features: []

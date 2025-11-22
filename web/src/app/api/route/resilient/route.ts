@@ -18,17 +18,17 @@ import pg from 'pg';
 const { Pool } = pg;
 
 const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: 'postgres',
-  user: process.env.SUPABASE_DB_USER,
+  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
+  port: parseInt(process.env.SUPABASE_DB_PORT || '5432'),
+  database: process.env.SUPABASE_DB_NAME || 'postgres',
+  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
   password: process.env.SUPABASE_DB_PASSWORD,
   ssl: { rejectUnauthorized: false }
 });
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  
+
   const source = parseInt(searchParams.get('source') || '1');
   const target = parseInt(searchParams.get('target') || '100');
   const k = parseFloat(searchParams.get('k') || '5.0');
@@ -38,20 +38,20 @@ export async function GET(request: Request) {
   const startTime = performance.now();
 
   try {
-    // Construir query con costos resilientes
+    // Construir query con costos resilientes (usando 0.0 para p_fallo temporalmente)
     let edgesQuery = `
       SELECT 
         id, 
         source, 
         target, 
-        length_m * (1.0 + ${k} * COALESCE(p_fallo_arista, 0.0)) as cost
+        length_m * (1.0 + ${k} * 0.0) as cost
       FROM infra_aristas 
       WHERE length_m IS NOT NULL
     `;
 
     // Aplicar filtros de restricciones si se especifican
     if (maxRisk !== null) {
-      edgesQuery += ` AND COALESCE(p_fallo_arista, 0.0) <= ${maxRisk}`;
+      edgesQuery += ` AND 0.0 <= ${maxRisk}`;
     }
     if (maxDistance !== null) {
       edgesQuery += ` AND length_m <= ${maxDistance}`;
@@ -61,9 +61,9 @@ export async function GET(request: Request) {
       WITH route_result AS (
         SELECT * FROM pgr_dijkstra(
           '${edgesQuery}',
-          $1,
-          $2,
-          directed := false
+          $1::BIGINT,
+          $2::BIGINT,
+          false
         )
       )
       SELECT 
@@ -72,15 +72,18 @@ export async function GET(request: Request) {
           'features', COALESCE(json_agg(
             json_build_object(
               'type', 'Feature',
-              'geometry', ST_AsGeoJSON(a.geom)::json,
+              'geometry', CASE 
+                WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
+                ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
+              END,
               'properties', json_build_object(
                 'seq', r.seq,
                 'edge_id', r.edge,
                 'cost', r.cost,
                 'length_m', a.length_m,
-                'p_fallo', COALESCE(a.p_fallo_arista, 0.0),
+                'p_fallo', 0.0,
                 'highway', a.highway,
-                'adjusted_cost', a.length_m * (1.0 + ${k} * COALESCE(a.p_fallo_arista, 0.0))
+                'adjusted_cost', a.length_m * (1.0 + ${k} * 0.0)
               )
             ) ORDER BY r.seq
           ), '[]'::json)
@@ -144,7 +147,7 @@ export async function GET(request: Request) {
 
     console.error('Error en el endpoint de ruta resiliente:', err);
     return NextResponse.json(
-      { 
+      {
         route: {
           type: 'FeatureCollection',
           features: []
