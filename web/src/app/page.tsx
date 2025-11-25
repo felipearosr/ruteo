@@ -1,10 +1,9 @@
 /**
  * Página principal - Fase 3: Ruteo Resiliente con Comparación
  * 
- * Muestra mapa interactivo con 4 rutas calculadas simultáneamente:
+ * Muestra mapa interactivo con 3 rutas calculadas simultáneamente:
  * - Baseline (Dijkstra simple)
  * - Resiliente (Dijkstra con costos ajustados)
- * - GUROBI (Optimización MILP)
  * - A* (Metaheurística)
  */
 'use client';
@@ -73,7 +72,6 @@ interface RouteResult {
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
-  gurobi: RouteResult;
   astar: RouteResult;
   comparison: {
     total_time_ms: number;
@@ -105,14 +103,14 @@ export default function HomePage() {
   // Controles de visualización de rutas
   const [showBaseline, setShowBaseline] = useState(true);
   const [showResilient, setShowResilient] = useState(true);
-  const [showGurobi, setShowGurobi] = useState(true);
+
   const [showAstar, setShowAstar] = useState(true);
 
   // Parámetros de ruteo
   const [sourceNode, setSourceNode] = useState(640514);
   const [targetNode, setTargetNode] = useState(723678);
   const [k, setK] = useState(5.0);
-  const [lambdaRisk, setLambdaRisk] = useState(5.0);
+
   const [riskWeight, setRiskWeight] = useState(3.0);
   const [maxRisk, setMaxRisk] = useState<number | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
@@ -186,7 +184,7 @@ export default function HomePage() {
         source: sourceNode.toString(),
         target: targetNode.toString(),
         k: k.toString(),
-        lambda_risk: lambdaRisk.toString(),
+
         risk_weight: riskWeight.toString(),
         ...(maxRisk && { max_risk: maxRisk.toString() }),
         ...(maxDistance && { max_distance: maxDistance.toString() }),
@@ -199,7 +197,6 @@ export default function HomePage() {
       console.log('✅ Routes received:', {
         baseline: data.baseline?.route?.features?.length || 0,
         resilient: data.resilient?.route?.features?.length || 0,
-        gurobi: data.gurobi?.route?.features?.length || 0,
         astar: data.astar?.route?.features?.length || 0
       });
 
@@ -372,13 +369,12 @@ export default function HomePage() {
     setSourceNode(640514);
     setTargetNode(723678);
     setK(5.0);
-    setLambdaRisk(5.0);
+
     setRiskWeight(3.0);
 
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
     setShowResilient(true);
-    setShowGurobi(true);
     setShowAstar(true);
 
     // Ejecutar comparación después de actualizar estados
@@ -419,7 +415,6 @@ export default function HomePage() {
 
   const baselineCoords = getRouteCoords(comparisonData?.baseline);
   const resilientCoords = getRouteCoords(comparisonData?.resilient);
-  const gurobiCoords = getRouteCoords(comparisonData?.gurobi);
   const astarCoords = getRouteCoords(comparisonData?.astar);
 
   // Formatear métricas
@@ -527,16 +522,6 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lambda">λ (GUROBI)</Label>
-                <Input
-                  id="lambda"
-                  type="number"
-                  step="0.1"
-                  value={lambdaRisk}
-                  onChange={(e) => setLambdaRisk(parseFloat(e.target.value) || 5.0)}
-                />
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="riskweight">Peso Riesgo (A*)</Label>
@@ -677,17 +662,6 @@ export default function HomePage() {
                 </Label>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="gurobi"
-                  checked={showGurobi}
-                  onCheckedChange={(checked) => setShowGurobi(checked as boolean)}
-                />
-                <Label htmlFor="gurobi" className="flex items-center gap-2">
-                  <div className="w-4 h-1 bg-green-500"></div>
-                  GUROBI
-                </Label>
-              </div>
 
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -870,12 +844,7 @@ export default function HomePage() {
                       <TableCell>{formatTime(comparisonData.resilient.metrics.computation_time_ms)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.resilient.metrics.risk_score)}</TableCell>
                     </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium">GUROBI</TableCell>
-                      <TableCell>{formatDistance(comparisonData.gurobi.metrics.distance_m)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.gurobi.metrics.computation_time_ms)}</TableCell>
-                      <TableCell>{formatRisk(comparisonData.gurobi.metrics.risk_score)}</TableCell>
-                    </TableRow>
+
                     <TableRow>
                       <TableCell className="font-medium">A*</TableCell>
                       <TableCell>{formatDistance(comparisonData.astar.metrics.distance_m)}</TableCell>
@@ -938,12 +907,6 @@ export default function HomePage() {
             />
           )}
 
-          {showGurobi && gurobiCoords.length > 0 && (
-            <Polyline
-              positions={gurobiCoords}
-              pathOptions={{ color: '#22c55e', weight: 4, opacity: 0.7 }}
-            />
-          )}
 
           {showAstar && astarCoords.length > 0 && (
             <Polyline
@@ -1134,10 +1097,7 @@ export default function HomePage() {
               <div className="w-6 h-1 bg-orange-500"></div>
               <span>Resiliente (ajustada)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-1 bg-green-500"></div>
-              <span>GUROBI (óptima)</span>
-            </div>
+
             <div className="flex items-center gap-2">
               <div className="w-6 h-1 bg-purple-500"></div>
               <span>A* (metaheurística)</span>
