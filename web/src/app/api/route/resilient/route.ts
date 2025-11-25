@@ -34,33 +34,103 @@ export async function GET(request: Request) {
   const k = parseFloat(searchParams.get('k') || '5.0');
   const maxRisk = searchParams.get('max_risk') ? parseFloat(searchParams.get('max_risk')!) : null;
   const maxDistance = searchParams.get('max_distance') ? parseFloat(searchParams.get('max_distance')!) : null;
+  const simulationId = searchParams.get('simulation_id');
 
   const startTime = performance.now();
+  let client;
 
   try {
-    // Construir query con costos resilientes (usando 0.0 para p_fallo temporalmente)
-    let edgesQuery = `
+    client = await pool.connect();
+
+    // 1. Pre-cálculos con tablas temporales
+    await client.query('BEGIN');
+
+    let penaltyJoin = '';
+    let penaltyCost = '0.0';
+    let trafficJoin = '';
+    let trafficCost = '1.0'; // Factor multiplicativo base (1.0 = sin tráfico)
+
+    // A. Penalización por Fallas (Simulación)
+    if (simulationId) {
+      const createFailureTempTable = `
+        CREATE TEMP TABLE temp_edge_penalties ON COMMIT DROP AS
+        WITH active_failures AS (
+          SELECT 
+            CASE 
+              WHEN entity_type = 'nodo' THEN (SELECT geom FROM infra_nodos WHERE id = entity_id)
+              WHEN entity_type = 'arista' THEN (SELECT geom FROM infra_aristas WHERE id = entity_id)
+            END as geom_sim
+          FROM sim_fallas_activas 
+          WHERE simulation_id = $1 AND is_failed = true
+        )
+        SELECT 
+          a.id as edge_id,
+          SUM(5.0 / (ST_Distance(a.geom::geography, f.geom_sim::geography) + 1.0)) as penalty
+        FROM infra_aristas a
+        JOIN active_failures f ON ST_DWithin(a.geom, f.geom_sim, 0.001)
+        GROUP BY a.id
+      `;
+
+      await client.query(createFailureTempTable, [simulationId]);
+      penaltyJoin = `LEFT JOIN temp_edge_penalties p ON a.id = p.edge_id`;
+      penaltyCost = `COALESCE(p.penalty, 0.0)`;
+    }
+
+    // B. Penalización por Tráfico (Metadata)
+    // Calculamos qué aristas están dentro de zonas de congestión
+    const createTrafficTempTable = `
+      CREATE TEMP TABLE temp_traffic_factors ON COMMIT DROP AS
       SELECT 
-        id, 
-        source, 
-        target, 
-        length_m * (1.0 + ${k} * 0.0) as cost
-      FROM infra_aristas 
-      WHERE length_m IS NOT NULL
+        a.id as edge_id,
+        MAX(t.congestion_factor) as traffic_factor
+      FROM infra_aristas a
+      JOIN meta_trafico t ON ST_Intersects(a.geom, t.geom)
+      GROUP BY a.id
     `;
 
-    // Aplicar filtros de restricciones si se especifican
+    await client.query(createTrafficTempTable);
+    trafficJoin = `LEFT JOIN temp_traffic_factors tf ON a.id = tf.edge_id`;
+    trafficCost = `COALESCE(tf.traffic_factor, 1.0)`;
+
+    // 2. Construir query para pgr_dijkstra
+    // Costo = Longitud * FactorTráfico * FactorHeurístico * (1 + k * (ProbFallo + PenalizaciónProximidad))
+
+    // Heurística: Avenidas principales son más lentas por defecto (simulación de tráfico base)
+    const heuristicTrafficSql = `
+      CASE 
+        WHEN a.highway IN ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link') THEN 1.5
+        WHEN a.highway IN ('secondary', 'secondary_link') THEN 1.2
+        ELSE 1.0
+      END
+    `;
+
+    let edgesQuery = `
+      SELECT 
+        a.id, 
+        a.source, 
+        a.target, 
+        a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as cost
+      FROM infra_aristas a
+      ${penaltyJoin}
+      ${trafficJoin}
+      WHERE a.length_m IS NOT NULL
+    `;
+
+    // Aplicar filtros de restricciones
     if (maxRisk !== null) {
-      edgesQuery += ` AND 0.0 <= ${maxRisk}`;
+      edgesQuery += ` AND a.p_fallo_arista <= ${maxRisk}`;
     }
     if (maxDistance !== null) {
       edgesQuery += ` AND length_m <= ${maxDistance}`;
     }
 
+    // Escapar comillas simples para pgr_dijkstra
+    const safeEdgesQuery = edgesQuery.replace(/'/g, "''");
+
     const query = `
       WITH route_result AS (
         SELECT * FROM pgr_dijkstra(
-          '${edgesQuery}',
+          '${safeEdgesQuery}',
           $1::BIGINT,
           $2::BIGINT,
           false
@@ -81,9 +151,9 @@ export async function GET(request: Request) {
                 'edge_id', r.edge,
                 'cost', r.cost,
                 'length_m', a.length_m,
-                'p_fallo', 0.0,
+                'p_fallo', a.p_fallo_arista,
                 'highway', a.highway,
-                'adjusted_cost', a.length_m * (1.0 + ${k} * 0.0)
+                'adjusted_cost', r.cost
               )
             ) ORDER BY r.seq
           ), '[]'::json)
@@ -92,7 +162,10 @@ export async function GET(request: Request) {
       JOIN infra_aristas a ON r.edge = a.id;
     `;
 
-    const result = await pool.query(query, [source, target]);
+    const result = await client.query(query, [source, target]);
+
+    await client.query('COMMIT');
+
     const endTime = performance.now();
     const computationTime = endTime - startTime;
 
@@ -142,6 +215,10 @@ export async function GET(request: Request) {
     });
 
   } catch (err) {
+    if (client) {
+      try { await client.query('ROLLBACK'); } catch (e) { }
+    }
+
     const endTime = performance.now();
     const computationTime = endTime - startTime;
 
@@ -164,5 +241,7 @@ export async function GET(request: Request) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }

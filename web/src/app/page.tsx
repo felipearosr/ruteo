@@ -189,7 +189,8 @@ export default function HomePage() {
         lambda_risk: lambdaRisk.toString(),
         risk_weight: riskWeight.toString(),
         ...(maxRisk && { max_risk: maxRisk.toString() }),
-        ...(maxDistance && { max_distance: maxDistance.toString() })
+        ...(maxDistance && { max_distance: maxDistance.toString() }),
+        ...(simulationActive && simulationId && { simulation_id: simulationId })
       });
 
       const response = await fetch(`/api/route/compare?${params}`);
@@ -1079,7 +1080,7 @@ export default function HomePage() {
                 <Polyline
                   key={`fail-edge-${idx}`}
                   positions={coords}
-                  pathOptions={{ color: 'red', weight: 4, opacity: 0.8, dashArray: '10, 10' }}
+                  pathOptions={{ color: 'red', weight: 6, opacity: 0.9 }}
                 >
                   <Popup>
                     <b>❌ Arista Fallida</b><br />

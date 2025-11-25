@@ -13,15 +13,16 @@
  *   - risk_weight: peso A* (default: 3.0)
  *   - max_risk: restricción de riesgo (opcional)
  *   - max_distance: restricción de distancia (opcional)
+ *   - simulation_id: ID de simulación activa (opcional)
  */
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  
+
   const source = searchParams.get('source');
   const target = searchParams.get('target');
-  
+
   if (!source || !target) {
     return NextResponse.json(
       { error: 'Se requieren parámetros source y target' },
@@ -34,18 +35,20 @@ export async function GET(request: Request) {
   const riskWeight = searchParams.get('risk_weight') || '3.0';
   const maxRisk = searchParams.get('max_risk');
   const maxDistance = searchParams.get('max_distance');
+  const simulationId = searchParams.get('simulation_id');
 
   const startTime = performance.now();
 
   try {
     // Construir URLs para cada endpoint
     const baseUrl = new URL(request.url).origin;
-    
+
     const params = new URLSearchParams({
       source,
       target,
       ...(maxRisk && { max_risk: maxRisk }),
-      ...(maxDistance && { max_distance: maxDistance })
+      ...(maxDistance && { max_distance: maxDistance }),
+      ...(simulationId && { simulation_id: simulationId })
     });
 
     // URLs de cada ruta
@@ -104,7 +107,8 @@ export async function GET(request: Request) {
           lambda_risk: parseFloat(lambdaRisk),
           risk_weight: parseFloat(riskWeight),
           max_risk: maxRisk ? parseFloat(maxRisk) : null,
-          max_distance: maxDistance ? parseFloat(maxDistance) : null
+          max_distance: maxDistance ? parseFloat(maxDistance) : null,
+          simulation_id: simulationId
         },
         summary: {
           shortest_distance: Math.min(
@@ -136,7 +140,7 @@ export async function GET(request: Request) {
     const totalTime = endTime - startTime;
 
     console.error('Error en comparación de rutas:', err);
-    
+
     return NextResponse.json(
       {
         error: 'Error al comparar rutas: ' + (err instanceof Error ? err.message : String(err)),

@@ -21,7 +21,7 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { seed, min_probability = 0.01 } = body;
+    const { seed, min_probability = 0.01, propagation_probability = 0.8, max_steps = 50 } = body;
 
     // Generar ID único para esta simulación
     const simulationId = uuidv4();
@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Obtener nodos con probabilidad > umbral
+    console.log(`[PROPAGATION] Starting simulation ${simulationId}`);
+
+    // 1. Obtener nodos semilla (initial failures based on probability)
     const { data: nodos, error: nodosError } = await supabase
       .from('infra_nodos')
       .select('id, p_fallo_nodo')
@@ -47,55 +49,108 @@ export async function POST(request: NextRequest) {
       throw new Error(`Error al obtener nodos: ${nodosError.message}`);
     }
 
-    // Obtener aristas con probabilidad > umbral
-    const { data: aristas, error: aristasError } = await supabase
-      .from('infra_aristas')
-      .select('id, p_fallo_arista')
-      .gt('p_fallo_arista', min_probability);
-
-    if (aristasError) {
-      throw new Error(`Error al obtener aristas: ${aristasError.message}`);
-    }
-
+    const failedNodeIds = new Set<number>();
+    const failedEdgeIds = new Set<number>();
+    const queue: number[] = [];
     const simulaciones = [];
 
-    // Simular fallas en nodos usando probabilidades reales de la BD
+    // 2. Determinar fallas iniciales (Semillas)
     let nodosFailedCount = 0;
     for (const nodo of nodos || []) {
       const randomValue = random();
       const isFailed = randomValue < nodo.p_fallo_nodo;
 
-      if (isFailed) nodosFailedCount++;
+      if (isFailed) {
+        nodosFailedCount++;
+        failedNodeIds.add(nodo.id);
+        queue.push(nodo.id);
 
-      simulaciones.push({
-        simulation_id: simulationId,
-        entity_type: 'nodo',
-        entity_id: nodo.id,
-        p_fallo: nodo.p_fallo_nodo,
-        random_value: randomValue,
-        is_failed: isFailed
-      });
+        simulaciones.push({
+          simulation_id: simulationId,
+          entity_type: 'nodo',
+          entity_id: nodo.id,
+          p_fallo: nodo.p_fallo_nodo,
+          random_value: randomValue,
+          is_failed: true
+        });
+      }
     }
 
-    // Simular fallas en aristas usando probabilidades reales de la BD
-    let aristasFailedCount = 0;
-    for (const arista of aristas || []) {
-      const randomValue = random();
-      const isFailed = randomValue < arista.p_fallo_arista;
+    console.log(`[PROPAGATION] Initial seeds: ${nodosFailedCount}`);
 
-      if (isFailed) aristasFailedCount++;
+    // 3. Propagación tipo "agua" (BFS con fetch on-demand)
+    let propagatedCount = 0;
+    let step = 0;
 
-      simulaciones.push({
-        simulation_id: simulationId,
-        entity_type: 'arista',
-        entity_id: arista.id,
-        p_fallo: arista.p_fallo_arista,
-        random_value: randomValue,
-        is_failed: isFailed
-      });
+    while (queue.length > 0 && step < max_steps) {
+      step++;
+      const batchSize = Math.min(queue.length, 10); // Process up to 10 nodes at a time
+      const currentBatch = queue.splice(0, batchSize);
+
+      console.log(`[PROPAGATION] Step ${step}: Processing ${currentBatch.length} nodes, queue size: ${queue.length}`);
+
+      // Fetch neighbors for this batch of nodes
+      // We query edges where source OR target is in currentBatch
+      const { data: edges, error: edgesError } = await supabase
+        .from('infra_aristas')
+        .select('id, source, target')
+        .or(`source.in.(${currentBatch.join(',')}),target.in.(${currentBatch.join(',')})`);
+
+      if (edgesError) {
+        console.error(`Error fetching neighbors:`, edgesError);
+        throw new Error(`Error al obtener vecinos: ${edgesError.message}`);
+      }
+
+      // Process each edge to find neighbors
+      for (const edge of edges || []) {
+        // Determine which end is the neighbor
+        for (const currentId of currentBatch) {
+          let neighborId: number | null = null;
+
+          if (edge.source === currentId) {
+            neighborId = edge.target;
+          } else if (edge.target === currentId) {
+            neighborId = edge.source;
+          }
+
+          if (neighborId && !failedNodeIds.has(neighborId)) {
+            // Evaluar propagación
+            const randomValue = random();
+            if (randomValue < propagation_probability) {
+              failedNodeIds.add(neighborId);
+              queue.push(neighborId);
+              propagatedCount++;
+
+              simulaciones.push({
+                simulation_id: simulationId,
+                entity_type: 'nodo',
+                entity_id: neighborId,
+                p_fallo: propagation_probability,
+                random_value: randomValue,
+                is_failed: true
+              });
+
+              // Fail the connecting edge
+              if (!failedEdgeIds.has(edge.id)) {
+                failedEdgeIds.add(edge.id);
+                simulaciones.push({
+                  simulation_id: simulationId,
+                  entity_type: 'arista',
+                  entity_id: edge.id,
+                  p_fallo: propagation_probability,
+                  random_value: randomValue,
+                  is_failed: true
+                });
+              }
+            }
+          }
+        }
+      }
     }
 
-    // Guardar en BD (en lotes de 1000)
+    console.log(`[PROPAGATION] Completed: ${propagatedCount} nodes propagated in ${step} steps`);
+
+    // 4. Guardar en BD (en lotes de 1000)
     const batchSize = 1000;
     for (let i = 0; i < simulaciones.length; i += batchSize) {
       const batch = simulaciones.slice(i, i + batchSize);
@@ -112,17 +167,13 @@ export async function POST(request: NextRequest) {
       success: true,
       simulation_id: simulationId,
       summary: {
-        total_nodos: nodos?.length || 0,
-        nodos_failed: nodosFailedCount,
-        nodos_failure_rate: nodos?.length ? (nodosFailedCount / nodos.length * 100).toFixed(1) : '0',
-        total_aristas: aristas?.length || 0,
-        aristas_failed: aristasFailedCount,
-        aristas_failure_rate: aristas?.length ? (aristasFailedCount / aristas.length * 100).toFixed(1) : '0',
-        total_entities: (nodos?.length || 0) + (aristas?.length || 0),
-        total_failed: nodosFailedCount + aristasFailedCount,
-        note: nodos?.length === 0 && aristas?.length === 0
-          ? 'No hay entidades con probabilidad > umbral. Ejecuta: python model/actualizar_probabilidades.py'
-          : 'Usando probabilidades calculadas de la base de datos basadas en proximidad a amenazas'
+        total_nodos_checked: nodos?.length || 0,
+        initial_seeds: nodosFailedCount,
+        propagated_nodes: propagatedCount,
+        total_nodes_failed: failedNodeIds.size,
+        total_edges_failed: failedEdgeIds.size,
+        steps: step,
+        note: 'Simulación con propagación tipo agua completada'
       },
       timestamp: new Date().toISOString(),
       seed: seed
