@@ -44,6 +44,7 @@ const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapCo
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
+const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 // Cliente de Supabase
@@ -1017,6 +1018,30 @@ export default function HomePage() {
           })}
 
           {/* Visualización de Fallas Simuladas */}
+          {/* Zona inundada (buffer alrededor de nodos fallidos) */}
+          {simulationActive && simulationEntities.map((entity, idx) => {
+            if (!entity.is_failed || !entity.geom || entity.entity_type !== 'nodo') return null;
+
+            const coords = extractCoords(entity.geom);
+            if (coords.length === 0) return null;
+
+            return (
+              <Circle
+                key={`flood-zone-${idx}`}
+                center={coords[0]}
+                radius={150} // 150 metros de radio para la zona inundada
+                pathOptions={{
+                  color: '#ff6b6b',
+                  fillColor: '#ff6b6b',
+                  fillOpacity: 0.15,
+                  weight: 1,
+                  opacity: 0.3
+                }}
+              />
+            );
+          })}
+
+          {/* Nodos y aristas fallidos */}
           {simulationActive && simulationEntities.map((entity, idx) => {
             if (!entity.is_failed || !entity.geom) return null;
 
