@@ -109,7 +109,12 @@ export async function GET(request: Request) {
         a.id, 
         a.source, 
         a.target, 
-        a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as cost
+        a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as cost,
+        CASE 
+          WHEN a.tags->>'oneway' = 'yes' THEN -1
+          WHEN a.tags->>'oneway' = '-1' THEN a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost}))
+          ELSE a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost}))
+        END as reverse_cost
       FROM infra_aristas a
       ${penaltyJoin}
       ${trafficJoin}
@@ -133,7 +138,7 @@ export async function GET(request: Request) {
           '${safeEdgesQuery}',
           $1::BIGINT,
           $2::BIGINT,
-          false
+          true
         )
       )
       SELECT 

@@ -138,6 +138,7 @@ class AStarResilientRouter:
                 a.length_m,
                 0.0 as p_fallo,
                 a.highway,
+                a.tags->>'oneway' as oneway,
                 ST_AsText(a.geom) as geom_wkt
             FROM infra_aristas a
             WHERE 
@@ -160,13 +161,25 @@ class AStarResilientRouter:
             
             source_id = arista['source']
             target_id = arista['target']
+            oneway = arista.get('oneway')
             
             # Costo = distancia + riesgo ponderado
             cost = arista['length_m'] * (1.0 + self.risk_weight * arista['p_fallo'])
             
-            # Grafo no dirigido
-            grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
-            grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
+            # Respetar direcciones de calles según OSM oneway tag
+            # oneway=yes: solo source -> target
+            # oneway=-1: solo target -> source
+            # oneway=no o NULL: bidireccional
+            if oneway == 'yes':
+                # Solo permitir source -> target
+                grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
+            elif oneway == '-1':
+                # Solo permitir target -> source
+                grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
+            else:
+                # Bidireccional (oneway='no' o NULL)
+                grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
+                grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
             
             aristas_dict[arista['id']] = dict(arista)
         

@@ -57,10 +57,16 @@ export async function GET(request: Request) {
           ), '[]'::json)
         ) as route
       FROM pgr_dijkstra(
-        'SELECT id, source, target, length_m as cost, length_m as reverse_cost FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0',
+        'SELECT id, source, target, length_m as cost, 
+         CASE 
+           WHEN tags->>''oneway'' = ''yes'' THEN -1
+           WHEN tags->>''oneway'' = ''-1'' THEN length_m
+           ELSE length_m
+         END as reverse_cost 
+         FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0',
         $1::BIGINT,
         $2::BIGINT,
-        false
+        true
       ) r
       JOIN infra_aristas a ON r.edge = a.id;
     `;
