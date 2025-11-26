@@ -424,7 +424,7 @@ export default function HomePage() {
   const formatRisk = (r: number) => (r * 100).toFixed(1) + '%';
 
   return (
-    <div className="w-full h-screen flex">
+    <div className="w-full h-screen flex dark bg-background text-foreground">
       {/* Panel lateral izquierdo */}
       <div className="w-96 h-full overflow-y-auto bg-background border-r shadow-lg z-10">
         <div className="p-6 space-y-6">
@@ -771,22 +771,7 @@ export default function HomePage() {
 
               {simulationActive && simulationData && (
                 <div className="p-3 bg-muted rounded-md text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Nodos fallidos:</span>
-                    <Badge variant="destructive">
-                      {simulationData.nodos_failed}/{simulationData.total_nodos}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Aristas fallidas:</span>
-                    <Badge variant="destructive">
-                      {simulationData.aristas_failed}/{simulationData.total_aristas}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between font-semibold">
-                    <span>Total fallas:</span>
-                    <span className="text-destructive">{simulationData.total_failed}</span>
-                  </div>
+                  {/* Statistics removed as requested */}
                 </div>
               )}
 
@@ -889,8 +874,9 @@ export default function HomePage() {
           className="w-full h-full"
         >
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            className="filter brightness-[1.2] contrast-[0.9]"
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
 
           {/* Rutas */}
