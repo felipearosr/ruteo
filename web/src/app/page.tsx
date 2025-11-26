@@ -1,10 +1,9 @@
 /**
  * Página principal - Fase 3: Ruteo Resiliente con Comparación
  * 
- * Muestra mapa interactivo con 3 rutas calculadas simultáneamente:
+ * Muestra mapa interactivo con 2 rutas calculadas simultáneamente:
  * - Baseline (Dijkstra simple)
  * - Resiliente (Dijkstra con costos ajustados)
- * - A* (Metaheurística)
  */
 'use client';
 
@@ -73,7 +72,6 @@ interface RouteResult {
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
-  astar: RouteResult;
   comparison: {
     total_time_ms: number;
     summary: {
@@ -95,24 +93,22 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Controles de visualización de capas
-  const [showInundaciones, setShowInundaciones] = useState(false);
-  const [showReportes, setShowReportes] = useState(false);
-  const [showDgaStations, setShowDgaStations] = useState(false);
-  const [showDebugGraph, setShowDebugGraph] = useState(false);
-  const [debugGraphData, setDebugGraphData] = useState<any>(null);
+  const [showInundaciones, setShowInundaciones] = useState(true);
+  const [showReportes, setShowReportes] = useState(true);
+  const [showDgaStations, setShowDgaStations] = useState(true);
 
   // Controles de visualización de rutas
   const [showBaseline, setShowBaseline] = useState(true);
   const [showResilient, setShowResilient] = useState(true);
 
-  const [showAstar, setShowAstar] = useState(true);
+
 
   // Parámetros de ruteo
   const [sourceNode, setSourceNode] = useState(640514);
   const [targetNode, setTargetNode] = useState(723678);
   const [k, setK] = useState(5.0);
 
-  const [riskWeight, setRiskWeight] = useState(3.0);
+
   const [maxRisk, setMaxRisk] = useState<number | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
 
@@ -147,15 +143,7 @@ export default function HomePage() {
     loadDgaStations();
   }, []);
 
-  // Load debug graph data when toggled
-  useEffect(() => {
-    if (showDebugGraph && !debugGraphData) {
-      fetch('/debug_graph.json')
-        .then(res => res.json())
-        .then(data => setDebugGraphData(data))
-        .catch(err => console.error('Error loading debug graph:', err));
-    }
-  }, [showDebugGraph, debugGraphData]); // Added debugGraphData to dependencies to prevent re-fetching if already loaded
+
 
   // Cargar ruta de ejemplo al inicio (desde cache)
   useEffect(() => {
@@ -185,8 +173,6 @@ export default function HomePage() {
         source: sourceNode.toString(),
         target: targetNode.toString(),
         k: k.toString(),
-
-        risk_weight: riskWeight.toString(),
         ...(maxRisk && { max_risk: maxRisk.toString() }),
         ...(maxDistance && { max_distance: maxDistance.toString() }),
         ...(simulationActive && simulationId && { simulation_id: simulationId })
@@ -197,8 +183,7 @@ export default function HomePage() {
 
       console.log('✅ Routes received:', {
         baseline: data.baseline?.route?.features?.length || 0,
-        resilient: data.resilient?.route?.features?.length || 0,
-        astar: data.astar?.route?.features?.length || 0
+        resilient: data.resilient?.route?.features?.length || 0
       });
 
       setComparisonData(data);
@@ -371,12 +356,11 @@ export default function HomePage() {
     setTargetNode(723678);
     setK(5.0);
 
-    setRiskWeight(3.0);
+
 
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
     setShowResilient(true);
-    setShowAstar(true);
 
     // Ejecutar comparación después de actualizar estados
     setTimeout(() => {
@@ -416,7 +400,7 @@ export default function HomePage() {
 
   const baselineCoords = getRouteCoords(comparisonData?.baseline);
   const resilientCoords = getRouteCoords(comparisonData?.resilient);
-  const astarCoords = getRouteCoords(comparisonData?.astar);
+
 
   // Formatear métricas
   const formatDistance = (m: number) => (m / 1000).toFixed(2) + ' km';
@@ -524,16 +508,7 @@ export default function HomePage() {
               </div>
 
 
-              <div className="space-y-2">
-                <Label htmlFor="riskweight">Peso Riesgo (A*)</Label>
-                <Input
-                  id="riskweight"
-                  type="number"
-                  step="0.1"
-                  value={riskWeight}
-                  onChange={(e) => setRiskWeight(parseFloat(e.target.value) || 3.0)}
-                />
-              </div>
+
 
               {/* Restricciones opcionales */}
               <div className="pt-3 border-t space-y-2">
@@ -664,17 +639,7 @@ export default function HomePage() {
               </div>
 
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="astar"
-                  checked={showAstar}
-                  onCheckedChange={(checked) => setShowAstar(checked as boolean)}
-                />
-                <Label htmlFor="astar" className="flex items-center gap-2">
-                  <div className="w-4 h-1 bg-purple-500"></div>
-                  A*
-                </Label>
-              </div>
+
             </CardContent>
           </Card>
 
@@ -688,46 +653,23 @@ export default function HomePage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="inundaciones"
-                  checked={showInundaciones}
-                  onCheckedChange={(checked) => setShowInundaciones(checked as boolean)}
-                />
-                <Label htmlFor="inundaciones" className="text-sm">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <Label className="text-sm">
                   Zonas de Inundación
                 </Label>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="reportes"
-                  checked={showReportes}
-                  onCheckedChange={(checked) => setShowReportes(checked as boolean)}
-                />
-                <Label htmlFor="reportes" className="text-sm">
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <Label className="text-sm">
                   Reportes Ciudadanos
                 </Label>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="dga"
-                  checked={showDgaStations}
-                  onCheckedChange={(checked) => setShowDgaStations(checked as boolean)}
-                />
-                <Label htmlFor="dga" className="text-sm">
+                <div className="w-2 h-2 rounded-full bg-cyan-500" />
+                <Label className="text-sm">
                   Estaciones DGA
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="debug-graph"
-                  checked={showDebugGraph}
-                  onCheckedChange={(checked) => setShowDebugGraph(checked as boolean)}
-                />
-                <Label htmlFor="debug-graph" className="text-sm">
-                  🔍 Debug: Grafo (Nodos y Aristas)
                 </Label>
               </div>
             </CardContent>
@@ -831,12 +773,7 @@ export default function HomePage() {
                       <TableCell>{formatRisk(comparisonData.resilient.metrics.risk_score)}</TableCell>
                     </TableRow>
 
-                    <TableRow>
-                      <TableCell className="font-medium">A*</TableCell>
-                      <TableCell>{formatDistance(comparisonData.astar.metrics.distance_m)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.astar.metrics.computation_time_ms)}</TableCell>
-                      <TableCell>{formatRisk(comparisonData.astar.metrics.risk_score)}</TableCell>
-                    </TableRow>
+
                   </TableBody>
                 </Table>
 
@@ -895,12 +832,7 @@ export default function HomePage() {
           )}
 
 
-          {showAstar && astarCoords.length > 0 && (
-            <Polyline
-              positions={astarCoords}
-              pathOptions={{ color: '#a855f7', weight: 4, opacity: 0.7 }}
-            />
-          )}
+
 
           {/* Inundaciones históricas */}
           {showInundaciones && inundaciones.map((item, idx) => {
@@ -963,45 +895,7 @@ export default function HomePage() {
             );
           })}
 
-          {/* Debug Graph Layer - Nodes and Edges */}
-          {showDebugGraph && debugGraphData && debugGraphData.features && debugGraphData.features.map((feature: any, idx: number) => {
-            if (feature.properties.type === 'node') {
-              const coords = extractCoords(feature.geometry);
-              if (coords.length === 0) return null;
-              return (
-                <CircleMarker
-                  key={`debug-node-${idx}`}
-                  center={coords[0]}
-                  radius={2}
-                  pathOptions={{ color: 'gray', fillColor: 'gray', fillOpacity: 0.3, weight: 1 }}
-                >
-                  <Popup>
-                    <b>🔍 Nodo</b><br />
-                    ID: {feature.properties.id}
-                  </Popup>
-                </CircleMarker>
-              );
-            } else if (feature.properties.type === 'edge') {
-              const coords = extractCoords(feature.geometry);
-              if (coords.length === 0) return null;
-              return (
-                <Polyline
-                  key={`debug-edge-${idx}`}
-                  positions={coords}
-                  pathOptions={{ color: 'lightgray', weight: 1, opacity: 0.4 }}
-                >
-                  <Popup>
-                    <b>🔍 Arista</b><br />
-                    ID: {feature.properties.id}<br />
-                    Source: {feature.properties.source}<br />
-                    Target: {feature.properties.target}<br />
-                    Length: {feature.properties.length?.toFixed(2)}m
-                  </Popup>
-                </Polyline>
-              );
-            }
-            return null;
-          })}
+
 
           {/* Visualización de Fallas Simuladas */}
           {/* Zona inundada (buffer alrededor de nodos fallidos) */}
@@ -1097,9 +991,9 @@ export default function HomePage() {
         </MapContainer>
 
         {/* Leyenda en el mapa */}
-        <div className="absolute bottom-4 right-4 z-[1000] bg-white p-4 rounded-lg shadow-lg border">
-          <h3 className="font-semibold mb-2 text-sm">Leyenda de Rutas</h3>
-          <div className="space-y-1 text-xs">
+        <div className="absolute bottom-4 right-4 z-[1000] bg-background p-4 rounded-lg shadow-lg border border-border">
+          <h3 className="font-semibold mb-2 text-sm text-foreground">Leyenda de Rutas</h3>
+          <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-6 h-1 bg-blue-500"></div>
               <span>Baseline (más corta)</span>
@@ -1109,10 +1003,7 @@ export default function HomePage() {
               <span>Resiliente (ajustada)</span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-1 bg-purple-500"></div>
-              <span>A* (metaheurística)</span>
-            </div>
+
           </div>
         </div>
       </div>
