@@ -114,6 +114,7 @@
     }
     ```
 - [ ] Optimizar para compartir conexiones a BD
+- [x] Optimizar para compartir conexiones a BD (pool único en `/api/route/compare` para baseline/resilient)
 
 ### F. Simulación de Fallas
 
