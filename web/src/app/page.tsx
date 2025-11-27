@@ -122,6 +122,7 @@ export default function HomePage() {
   const [simulationData, setSimulationData] = useState<any>(null);
   const [simulationEntities, setSimulationEntities] = useState<any[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [onlySimulatedThreats, setOnlySimulatedThreats] = useState(false);
   const [geolocating, setGeolocating] = useState(false);
 
   // Funciones para cargar datos de amenazas
@@ -765,6 +766,24 @@ export default function HomePage() {
                   Estaciones DGA
                 </Label>
               </div>
+
+              {simulationActive && (
+                <div className="flex items-start space-x-3 pt-2 border-t">
+                  <Checkbox
+                    id="onlySimulated"
+                    checked={onlySimulatedThreats}
+                    onCheckedChange={(checked) => setOnlySimulatedThreats(checked as boolean)}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="onlySimulated" className="text-sm">
+                      Mostrar solo amenazas simuladas
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Oculta capas base y muestra fallas activas de la simulación.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -953,7 +972,7 @@ export default function HomePage() {
 
 
           {/* Inundaciones históricas */}
-          {showInundaciones && inundaciones.map((item, idx) => {
+          {showInundaciones && !onlySimulatedThreats && inundaciones.map((item, idx) => {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
             return (
@@ -973,7 +992,7 @@ export default function HomePage() {
           })}
 
           {/* Reportes ciudadanos */}
-          {showReportes && reportes.map((item, idx) => {
+          {showReportes && !onlySimulatedThreats && reportes.map((item, idx) => {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
             return (
@@ -993,7 +1012,7 @@ export default function HomePage() {
           })}
 
           {/* Estaciones DGA */}
-          {showDgaStations && dgaStations.map((station: any, idx) => {
+          {showDgaStations && !onlySimulatedThreats && dgaStations.map((station: any, idx) => {
             const coords = extractCoords(station.geom);
             if (coords.length === 0) return null;
             return (
