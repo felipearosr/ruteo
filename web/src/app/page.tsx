@@ -72,6 +72,8 @@ interface RouteResult {
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
+  gurobi?: RouteResult;
+  astar: RouteResult;
   comparison: {
     total_time_ms: number;
     summary: {
@@ -100,6 +102,8 @@ export default function HomePage() {
   // Controles de visualización de rutas
   const [showBaseline, setShowBaseline] = useState(true);
   const [showResilient, setShowResilient] = useState(true);
+  const [showAstar, setShowAstar] = useState(true);
+  const [showGurobi, setShowGurobi] = useState(true);
 
 
 
@@ -183,7 +187,9 @@ export default function HomePage() {
 
       console.log('✅ Routes received:', {
         baseline: data.baseline?.route?.features?.length || 0,
-        resilient: data.resilient?.route?.features?.length || 0
+        resilient: data.resilient?.route?.features?.length || 0,
+        astar: data.astar?.route?.features?.length || 0,
+        gurobi: data.gurobi?.route?.features?.length || 0
       });
 
       setComparisonData(data);
@@ -361,6 +367,8 @@ export default function HomePage() {
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
     setShowResilient(true);
+    setShowGurobi(true);
+    setShowAstar(true);
 
     // Ejecutar comparación después de actualizar estados
     setTimeout(() => {
@@ -400,6 +408,8 @@ export default function HomePage() {
 
   const baselineCoords = getRouteCoords(comparisonData?.baseline);
   const resilientCoords = getRouteCoords(comparisonData?.resilient);
+  const astarCoords = getRouteCoords(comparisonData?.astar);
+  const gurobiCoords = getRouteCoords(comparisonData?.gurobi);
 
 
   // Formatear métricas
@@ -638,6 +648,29 @@ export default function HomePage() {
                 </Label>
               </div>
 
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="gurobi"
+                  checked={showGurobi}
+                  onCheckedChange={(checked) => setShowGurobi(checked as boolean)}
+                />
+                <Label htmlFor="gurobi" className="flex items-center gap-2">
+                  <div className="w-4 h-1 bg-emerald-500"></div>
+                  MILP (GUROBI)
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="astar"
+                  checked={showAstar}
+                  onCheckedChange={(checked) => setShowAstar(checked as boolean)}
+                />
+                <Label htmlFor="astar" className="flex items-center gap-2">
+                  <div className="w-4 h-1 bg-purple-500"></div>
+                  A* Resiliente
+                </Label>
+              </div>
 
 
             </CardContent>
@@ -772,6 +805,18 @@ export default function HomePage() {
                       <TableCell>{formatTime(comparisonData.resilient.metrics.computation_time_ms)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.resilient.metrics.risk_score)}</TableCell>
                     </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">MILP (GUROBI)</TableCell>
+                      <TableCell>{formatDistance(comparisonData.gurobi?.metrics?.distance_m || 0)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.gurobi?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatRisk(comparisonData.gurobi?.metrics?.risk_score || 0)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">A* (Metaheurística)</TableCell>
+                      <TableCell>{formatDistance(comparisonData.astar?.metrics?.distance_m || 0)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.astar?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatRisk(comparisonData.astar?.metrics?.risk_score || 0)}</TableCell>
+                    </TableRow>
 
 
                   </TableBody>
@@ -831,6 +876,19 @@ export default function HomePage() {
             />
           )}
 
+          {showGurobi && gurobiCoords.length > 0 && (
+            <Polyline
+              positions={gurobiCoords}
+              pathOptions={{ color: '#10b981', weight: 4, opacity: 0.7 }}
+            />
+          )}
+
+          {showAstar && astarCoords.length > 0 && (
+            <Polyline
+              positions={astarCoords}
+              pathOptions={{ color: '#a855f7', weight: 4, opacity: 0.7 }}
+            />
+          )}
 
 
 

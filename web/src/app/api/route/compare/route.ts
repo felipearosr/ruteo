@@ -13,6 +13,7 @@
  *   - max_risk: restricción de riesgo (opcional)
  *   - max_distance: restricción de distancia (opcional)
  *   - simulation_id: ID de simulación activa (opcional)
+ *   - lambda_risk: factor de riesgo para GUROBI (default: 5.0)
  */
 import { NextResponse } from 'next/server';
 
@@ -35,6 +36,7 @@ export async function GET(request: Request) {
   const maxRisk = searchParams.get('max_risk');
   const maxDistance = searchParams.get('max_distance');
   const simulationId = searchParams.get('simulation_id');
+  const lambdaRisk = searchParams.get('lambda_risk') || '5.0';
 
   const startTime = performance.now();
 
@@ -42,24 +44,26 @@ export async function GET(request: Request) {
     // Construir URLs para cada endpoint
     const baseUrl = new URL(request.url).origin;
 
-    const params = new URLSearchParams({
-      source,
-      target,
-      ...(maxRisk && { max_risk: maxRisk }),
-      ...(maxDistance && { max_distance: maxDistance }),
-      ...(simulationId && { simulation_id: simulationId })
-    });
+  const params = new URLSearchParams({
+    source,
+    target,
+    ...(maxRisk && { max_risk: maxRisk }),
+    ...(maxDistance && { max_distance: maxDistance }),
+    ...(simulationId && { simulation_id: simulationId })
+  });
 
     // URLs de cada ruta
     const baselineUrl = `${baseUrl}/api/route/baseline?${params}`;
     const resilientUrl = `${baseUrl}/api/route/resilient?${params}&k=${k}`;
     const metaheuristicUrl = `${baseUrl}/api/route/metaheuristic?${params}&risk_weight=${riskWeight}`;
+    const gurobiUrl = `${baseUrl}/api/route/optimize?${params}&lambda_risk=${lambdaRisk}`;
 
-    // Ejecutar las 3 rutas en paralelo
-    const [baseline, resilient, metaheuristic] = await Promise.allSettled([
+    // Ejecutar las 4 rutas en paralelo
+    const [baseline, resilient, metaheuristic, gurobi] = await Promise.allSettled([
       fetch(baselineUrl).then(r => r.json()),
       fetch(resilientUrl).then(r => r.json()),
-      fetch(metaheuristicUrl).then(r => r.json())
+      fetch(metaheuristicUrl).then(r => r.json()),
+      fetch(gurobiUrl).then(r => r.json())
     ]);
 
     const endTime = performance.now();
@@ -88,11 +92,13 @@ export async function GET(request: Request) {
     const baselineResult = getResult(baseline, 'baseline');
     const resilientResult = getResult(resilient, 'resilient');
     const astarResult = getResult(metaheuristic, 'astar');
+    const gurobiResult = getResult(gurobi, 'gurobi');
 
     const results = {
       baseline: baselineResult,
       resilient: resilientResult,
       astar: astarResult,
+      gurobi: gurobiResult,
       comparison: {
         total_time_ms: totalTime,
         parameters: {
@@ -103,23 +109,27 @@ export async function GET(request: Request) {
           risk_weight: parseFloat(riskWeight),
           max_risk: maxRisk ? parseFloat(maxRisk) : null,
           max_distance: maxDistance ? parseFloat(maxDistance) : null,
-          simulation_id: simulationId
+          simulation_id: simulationId,
+          lambda_risk: parseFloat(lambdaRisk)
         },
         summary: {
           shortest_distance: Math.min(
             baselineResult?.metrics?.distance_m || Infinity,
             resilientResult?.metrics?.distance_m || Infinity,
-            astarResult?.metrics?.distance_m || Infinity
+            astarResult?.metrics?.distance_m || Infinity,
+            gurobiResult?.metrics?.distance_m || Infinity
           ),
           lowest_risk: Math.min(
             baselineResult?.metrics?.risk_score || Infinity,
             resilientResult?.metrics?.risk_score || Infinity,
-            astarResult?.metrics?.risk_score || Infinity
+            astarResult?.metrics?.risk_score || Infinity,
+            gurobiResult?.metrics?.risk_score || Infinity
           ),
           fastest_computation: Math.min(
             baselineResult?.metrics?.computation_time_ms || Infinity,
             resilientResult?.metrics?.computation_time_ms || Infinity,
-            astarResult?.metrics?.computation_time_ms || Infinity
+            astarResult?.metrics?.computation_time_ms || Infinity,
+            gurobiResult?.metrics?.computation_time_ms || Infinity
           )
         }
       }

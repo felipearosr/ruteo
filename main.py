@@ -44,6 +44,10 @@ def main():
     run_script('amenazas/dga_etl.py')
     run_script('amenazas/inundaciones_hist_etl.py')
     run_script('amenazas/reportes_ciudadanos_etl.py')
+
+    # Paso 4: Cálculo de probabilidades de falla
+    # Recalcula p_fallo_nodo y p_fallo_arista en base a amenazas y metadata
+    run_script('model/actualizar_probabilidades.py')
     
     print("\n" + "="*60)
     print("ETL completo finalizado con éxito.")

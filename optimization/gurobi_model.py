@@ -123,7 +123,7 @@ class ResilientRouter:
                 a.source,
                 a.target,
                 a.length_m,
-                0.0 as p_fallo,
+                coalesce(a.p_fallo_arista, 0.0) as p_fallo,
                 a.highway,
                 ST_AsText(a.geom) as geom_wkt
             FROM infra_aristas a
