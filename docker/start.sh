@@ -11,6 +11,12 @@ if [ -z "$SUPABASE_DB_HOST" ]; then
     echo ""
 fi
 
+if [ ! -f "${GUROBI_LICENSE_FILE:-/opt/gurobi/gurobi.lic}" ]; then
+    echo "⚠️  ADVERTENCIA: No se encontró licencia de GUROBI en ${GUROBI_LICENSE_FILE:-/opt/gurobi/gurobi.lic}"
+    echo "   Las rutas MILP fallarán hasta montar la licencia (variable GUROBI_LICENSE_FILE/GRB_LICENSE_FILE)."
+    echo ""
+fi
+
 echo "=== Ejecutando ETL (main.py) ==="
 echo "Generando archivos JSON/GeoJSON de infraestructura, metadata y amenazas..."
 echo ""
