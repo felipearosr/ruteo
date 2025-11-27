@@ -270,7 +270,8 @@ export async function GET(request: Request) {
         .catch((err) => ({
           route: { type: 'FeatureCollection', features: [] },
           metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'gurobi', error: true },
-          error: err instanceof Error ? err.message : String(err)
+          error: err instanceof Error ? err.message : String(err),
+          gurobi_available: false
         }))
     ]);
 

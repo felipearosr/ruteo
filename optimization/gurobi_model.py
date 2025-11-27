@@ -20,7 +20,8 @@ try:
     GUROBI_AVAILABLE = True
 except ImportError:
     GUROBI_AVAILABLE = False
-    print("⚠️  GUROBI no está instalado. El modelo de optimización no estará disponible.")
+    # Enviar la advertencia a stderr para no romper salidas JSON de scripts que importan este módulo
+    print("⚠️  GUROBI no está instalado. El modelo de optimización no estará disponible.", file=sys.stderr)
 
 
 import socket

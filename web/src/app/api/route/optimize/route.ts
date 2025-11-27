@@ -61,18 +61,45 @@ export async function GET(request: Request) {
       errorData += data.toString();
     });
 
-    const result = await new Promise<any>((resolve, reject) => {
-      pythonProcess.on('close', () => {
-        // El script siempre imprime JSON; intentar parsear aunque el exit code sea 1
+    const result = await new Promise<any>((resolve) => {
+      pythonProcess.on('close', (code) => {
+        // El script siempre imprime JSON; si hay ruido previo, intentar limpiar
+        const trimmed = (outputData || '').trim();
+        let parsed: any = null;
         try {
-          const jsonResult = JSON.parse(outputData || '{}');
-          resolve(jsonResult);
-        } catch (err) {
-          reject(new Error(`No se pudo parsear la salida de GUROBI: ${outputData || errorData}`));
+          parsed = JSON.parse(trimmed);
+        } catch {
+          // Si no se puede parsear, devolver un error estandarizado
+          parsed = {
+            route: { type: 'FeatureCollection', features: [] },
+            metrics: {
+              distance_m: 0,
+              computation_time_ms: 0,
+              risk_score: 0,
+              num_segments: 0,
+              method: 'gurobi',
+              status: 'error'
+            },
+            error: trimmed || errorData || `GUROBI process exited with code ${code}`,
+            gurobi_available: false
+          };
         }
+        resolve(parsed);
       });
 
-      pythonProcess.on('error', (err) => reject(err));
+      pythonProcess.on('error', (err) => resolve({
+        route: { type: 'FeatureCollection', features: [] },
+        metrics: {
+          distance_m: 0,
+          computation_time_ms: 0,
+          risk_score: 0,
+          num_segments: 0,
+          method: 'gurobi',
+          status: 'error'
+        },
+        error: err instanceof Error ? err.message : String(err),
+        gurobi_available: false
+      }));
     });
 
     const endTime = performance.now();
