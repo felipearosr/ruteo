@@ -21,9 +21,6 @@ services:
       # Variables para Next.js (cliente web)
       - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      # Licencia GUROBI (opcional). Monte el archivo de licencia en /opt/gurobi/gurobi.lic
-      - GUROBI_LICENSE_FILE=${GUROBI_LICENSE_FILE:-/opt/gurobi/gurobi.lic}
-      - GRB_LICENSE_FILE=${GRB_LICENSE_FILE:-/opt/gurobi/gurobi.lic}
       # Configuraciones de runtime opcionales
       - PYTHONUNBUFFERED=1
       - NODE_ENV=development

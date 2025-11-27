@@ -28,10 +28,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Crear directorio de la aplicación
 WORKDIR /app
 
-# Ruta recomendada de licencia GUROBI (puede montarse vía volumen)
-ENV GUROBI_LICENSE_FILE=/opt/gurobi/gurobi.lic
-ENV GRB_LICENSE_FILE=/opt/gurobi/gurobi.lic
-
 # Copiar todo el repositorio al contenedor
 # (se asume que el contexto de build es la raíz del repositorio)
 COPY . /app

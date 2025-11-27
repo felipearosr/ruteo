@@ -72,7 +72,8 @@ interface RouteResult {
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
-  gurobi?: RouteResult;
+  gurobi?: RouteResult; // deprecated key kept for backward compatibility
+  cplex?: RouteResult;
   astar: RouteResult;
   comparison: {
     total_time_ms: number;
@@ -203,7 +204,7 @@ export default function HomePage() {
         baseline: data.baseline?.route?.features?.length || 0,
         resilient: data.resilient?.route?.features?.length || 0,
         astar: data.astar?.route?.features?.length || 0,
-        gurobi: data.gurobi?.route?.features?.length || 0
+        cplex: data.cplex?.route?.features?.length || data.gurobi?.route?.features?.length || 0
       });
 
       setComparisonData(data);
@@ -423,7 +424,7 @@ export default function HomePage() {
   const baselineCoords = getRouteCoords(comparisonData?.baseline);
   const resilientCoords = getRouteCoords(comparisonData?.resilient);
   const astarCoords = getRouteCoords(comparisonData?.astar);
-  const gurobiCoords = getRouteCoords(comparisonData?.gurobi);
+  const gurobiCoords = getRouteCoords(comparisonData?.gurobi || comparisonData?.cplex);
 
 
   // Formatear métricas
@@ -717,7 +718,7 @@ export default function HomePage() {
                 />
                 <Label htmlFor="gurobi" className="flex items-center gap-2">
                   <div className="w-4 h-1 bg-emerald-500"></div>
-                  MILP (GUROBI)
+                  MILP (CPLEX)
                 </Label>
               </div>
 
@@ -885,10 +886,10 @@ export default function HomePage() {
                       <TableCell>{formatRisk(comparisonData.resilient.metrics.risk_score)}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">MILP (GUROBI)</TableCell>
-                      <TableCell>{formatDistance(comparisonData.gurobi?.metrics?.distance_m || 0)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.gurobi?.metrics?.computation_time_ms || 0)}</TableCell>
-                      <TableCell>{formatRisk(comparisonData.gurobi?.metrics?.risk_score || 0)}</TableCell>
+                      <TableCell className="font-medium">MILP (CPLEX)</TableCell>
+                      <TableCell>{formatDistance((comparisonData.gurobi || comparisonData.cplex)?.metrics?.distance_m || 0)}</TableCell>
+                      <TableCell>{formatTime((comparisonData.gurobi || comparisonData.cplex)?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatRisk((comparisonData.gurobi || comparisonData.cplex)?.metrics?.risk_score || 0)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">A* (Metaheurística)</TableCell>

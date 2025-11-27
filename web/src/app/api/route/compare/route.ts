@@ -247,7 +247,7 @@ export async function GET(request: Request) {
       ...(simulationId && { simulation_id: simulationId })
     });
 
-    const [baselineResult, resilientResult, astarResult, gurobiResult] = await Promise.all([
+    const [baselineResult, resilientResult, astarResult, cplexResult] = await Promise.all([
       runBaseline(sourceNum, targetNum, maxDistanceNum, avoidFlood).catch((err) => ({
         route: { type: 'FeatureCollection', features: [] },
         metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'baseline', error: true },
@@ -269,9 +269,9 @@ export async function GET(request: Request) {
         .then(r => r.json())
         .catch((err) => ({
           route: { type: 'FeatureCollection', features: [] },
-          metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'gurobi', error: true },
+          metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'cplex', error: true },
           error: err instanceof Error ? err.message : String(err),
-          gurobi_available: false
+          cplex_available: false
         }))
     ]);
 
@@ -281,7 +281,8 @@ export async function GET(request: Request) {
       baseline: baselineResult,
       resilient: resilientResult,
       astar: astarResult,
-      gurobi: gurobiResult,
+      gurobi: cplexResult,
+      cplex: cplexResult,
       comparison: {
         total_time_ms: totalTime,
         parameters: {
@@ -301,19 +302,19 @@ export async function GET(request: Request) {
             baselineResult?.metrics?.distance_m || Infinity,
             resilientResult?.metrics?.distance_m || Infinity,
             astarResult?.metrics?.distance_m || Infinity,
-            gurobiResult?.metrics?.distance_m || Infinity
+            cplexResult?.metrics?.distance_m || Infinity
           ),
           lowest_risk: Math.min(
             baselineResult?.metrics?.risk_score || Infinity,
             resilientResult?.metrics?.risk_score || Infinity,
             astarResult?.metrics?.risk_score || Infinity,
-            gurobiResult?.metrics?.risk_score || Infinity
+            cplexResult?.metrics?.risk_score || Infinity
           ),
           fastest_computation: Math.min(
             baselineResult?.metrics?.computation_time_ms || Infinity,
             resilientResult?.metrics?.computation_time_ms || Infinity,
             astarResult?.metrics?.computation_time_ms || Infinity,
-            gurobiResult?.metrics?.computation_time_ms || Infinity
+            cplexResult?.metrics?.computation_time_ms || Infinity
           )
         }
       }

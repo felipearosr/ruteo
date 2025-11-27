@@ -1,7 +1,7 @@
 /**
- * API route para Ruta 2: Optimización MILP con GUROBI
+ * API route para Ruta 2: Optimización MILP con CPLEX
  *
- * Ejecuta el modelo ResilientRouter en Python (gurobi_router_api.py) y retorna
+ * Ejecuta el modelo ResilientRouter en Python (cplex_router_api.py) y retorna
  * la ruta óptima considerando distancia y riesgo.
  *
  * Endpoint: GET /api/route/optimize
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   const startTime = performance.now();
 
   try {
-    const scriptPath = path.join(process.cwd(), '..', 'optimization', 'gurobi_router_api.py');
+    const scriptPath = path.join(process.cwd(), '..', 'optimization', 'cplex_router_api.py');
 
     const args = [
       scriptPath,
@@ -72,20 +72,20 @@ export async function GET(request: Request) {
           // Si no se puede parsear, devolver un error estandarizado
           parsed = {
             route: { type: 'FeatureCollection', features: [] },
-            metrics: {
-              distance_m: 0,
-              computation_time_ms: 0,
-              risk_score: 0,
-              num_segments: 0,
-              method: 'gurobi',
-              status: 'error'
-            },
-            error: trimmed || errorData || `GUROBI process exited with code ${code}`,
-            gurobi_available: false
-          };
-        }
-        resolve(parsed);
-      });
+          metrics: {
+            distance_m: 0,
+            computation_time_ms: 0,
+            risk_score: 0,
+            num_segments: 0,
+            method: 'cplex',
+            status: 'error'
+          },
+          error: trimmed || errorData || `CPLEX process exited with code ${code}`,
+          cplex_available: false
+        };
+      }
+      resolve(parsed);
+    });
 
       pythonProcess.on('error', (err) => resolve({
         route: { type: 'FeatureCollection', features: [] },
@@ -94,11 +94,11 @@ export async function GET(request: Request) {
           computation_time_ms: 0,
           risk_score: 0,
           num_segments: 0,
-          method: 'gurobi',
+          method: 'cplex',
           status: 'error'
         },
         error: err instanceof Error ? err.message : String(err),
-        gurobi_available: false
+        cplex_available: false
       }));
     });
 
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
     const endTime = performance.now();
     const computationTime = endTime - startTime;
 
-    console.error('Error en el endpoint de GUROBI:', err);
+    console.error('Error en el endpoint de CPLEX:', err);
 
     return NextResponse.json(
       {
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
           computation_time_ms: computationTime,
           risk_score: 0,
           num_segments: 0,
-          method: 'gurobi',
+          method: 'cplex',
           status: 'error',
           parameters: {
             lambda_risk: lambdaRisk,

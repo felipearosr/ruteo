@@ -63,8 +63,8 @@
 
 #### D.2 Ruta 2: CPLEX/GUROBI
 
-- [x] Decidir entre CPLEX o GUROBI (usar GUROBI por licencia académica)
-- [x] Crear `optimization/gurobi_model.py`
+- [x] Decidir entre CPLEX o GUROBI (usar CPLEX por disponibilidad)
+- [x] Crear `optimization/cplex_model.py`
   - [x] Clase `ResilientRouter` con método `solve()`
   - [x] Variables: binarias para cada arista
   - [x] Función objetivo: min(distancia + λ * riesgo)
@@ -73,7 +73,7 @@
     - [x] Riesgo acumulado ≤ max_risk (si aplica)
     - [x] Longitud total ≤ max_distance (si aplica)
   - [x] Conversión de solución a lista de aristas
-- [x] Crear `/api/route/cplex` (usar endpoint genérico) → `/api/route/optimize` con GUROBI
+- [x] Crear `/api/route/cplex` (usar endpoint genérico) → `/api/route/optimize` con CPLEX
 - [x] Implementar carga de grafo desde Supabase
 - [x] Retornar GeoJSON + métricas
 
@@ -158,7 +158,7 @@
 ### I. Dependencias y Configuración
 
 - [x] Actualizar `requirements.txt`:
-  - [x] `gurobipy` (o `cplex` si se usa CPLEX)
+  - [x] `docplex` (o binding CPLEX local)
   - [x] `geopy` (para Nominatim)
   - [ ] `networkx` (para metaheurísticas)
 - [x] Actualizar `web/package.json`:
