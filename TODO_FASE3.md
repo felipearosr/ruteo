@@ -35,16 +35,16 @@
   - [x] Implementar HTML5 Geolocation API
   - [x] Integrar Nominatim para geocodificación de direcciones
   - [x] UI para seleccionar origen (ubicación actual vs dirección)
-- [ ] Controles de Restricciones
+- [x] Controles de Restricciones
   - [x] Input: Riesgo máximo aceptable (%)
   - [x] Input: Distancia máxima (km)
-  - [ ] Input: Tiempo máximo estimado (min)
-  - [ ] Toggle: Evitar zonas de inundación
-- [ ] Panel de Comparación de Rutas
+  - [x] Input: Tiempo máximo estimado (min)
+  - [x] Toggle: Evitar zonas de inundación
+- [x] Panel de Comparación de Rutas
   - [x] Tabla con 4 filas (una por ruta)
   - [x] Columnas: Método, Distancia, Tiempo de cómputo, Riesgo acumulado
   - [x] Checkboxes para mostrar/ocultar cada ruta
-- [ ] Leyenda de Colores
+- [x] Leyenda de Colores
   - [x] Ruta 1 (Baseline): Azul
   - [x] Ruta 2 (CPLEX): Verde
   - [x] Ruta 3 (Dijkstra Resiliente): Naranja
@@ -104,7 +104,7 @@
 - [x] Crear `/api/route/compare`
   - [x] Parámetros: `source`, `target`, `max_risk`, `max_distance`
   - [x] Ejecutar las 4 rutas en paralelo (Baseline, Resiliente, A*, GUROBI)
-  - [ ] Retornar JSON:
+  - [x] Retornar JSON:
     ```json
     {
       "baseline": { route: ..., metrics: ... },
@@ -237,12 +237,12 @@
 | Modelo de Riesgo | 4 entregables | 4 | 100% |
 | Métodos de Ruteo | 4 implementaciones | 4 | 100% |
 | APIs | 5 endpoints (incl. compare) | 5 | 100% |
-| UI Mejorada | 14 subtareas | 12 | 86% |
+| UI Mejorada | 14 subtareas | 14 | 100% |
 | Simulación | 4 subtareas | 4 | 100% |
 | Caso de Ejemplo | 3 subtareas | 2 | 67% |
 | Docker | 5 subtareas | 0 | 0% |
 | Documentación | 3 subtareas | 1 | 33% |
-| **TOTAL** | **42** | **32** | **76%** |
+| **TOTAL** | **42** | **34** | **81%** |
 
 **Objetivo:** 100% de completitud para Fase 3
 
@@ -250,8 +250,8 @@
 
 ## 🎯 HITOS
 
-- [ ] **Hito 1:** Modelo de probabilidad funcionando (Semana 1)
-- [ ] **Hito 2:** 4 rutas implementadas y visualizables (Semana 2)
+- [x] **Hito 1:** Modelo de probabilidad funcionando (Semana 1)
+- [x] **Hito 2:** 4 rutas implementadas y visualizables (Semana 2)
 - [ ] **Hito 3:** Simulación de fallas operativa (Semana 3)
 - [ ] **Hito 4:** Documentación completa y Docker funcionando (Semana 4)
 
@@ -279,4 +279,4 @@
 
 **Última actualización:** 26 de November, 2025  
 **Estado general:** 🟠 En progreso  
-**Próxima tarea:** Añadir restricción de tiempo/evitar inundaciones en UI, optimizar conexiones compartidas en `/api/route/compare`, y preparar Docker con GUROBI/licencia.
+**Próxima tarea:** Optimizar conexiones compartidas en `/api/route/compare`, documentar/cablear Docker con GUROBI/licencia y completar filtros de amenazas activas + caso de ejemplo (resultados/capturas).

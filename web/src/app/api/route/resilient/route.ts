@@ -35,6 +35,7 @@ export async function GET(request: Request) {
   const maxRisk = searchParams.get('max_risk') ? parseFloat(searchParams.get('max_risk')!) : null;
   const maxDistance = searchParams.get('max_distance') ? parseFloat(searchParams.get('max_distance')!) : null;
   const simulationId = searchParams.get('simulation_id');
+  const avoidFloodZones = searchParams.get('avoid_flood_zones') === 'true';
 
   const startTime = performance.now();
   let client;
@@ -127,6 +128,9 @@ export async function GET(request: Request) {
     }
     if (maxDistance !== null) {
       edgesQuery += ` AND length_m <= ${maxDistance}`;
+    }
+    if (avoidFloodZones) {
+      edgesQuery += ` AND coalesce(a.p_fallo_arista, 0) < 0.3`;
     }
 
     // Escapar comillas simples para pgr_dijkstra

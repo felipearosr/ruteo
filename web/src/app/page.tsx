@@ -111,10 +111,10 @@ export default function HomePage() {
   const [sourceNode, setSourceNode] = useState(640514);
   const [targetNode, setTargetNode] = useState(723678);
   const [k, setK] = useState(5.0);
-
-
   const [maxRisk, setMaxRisk] = useState<number | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
+  const [maxTimeMinutes, setMaxTimeMinutes] = useState<number | null>(null);
+  const [avoidFloodZones, setAvoidFloodZones] = useState(false);
 
   // Estado para simulación de fallas
   const [simulationActive, setSimulationActive] = useState(false);
@@ -173,12 +173,25 @@ export default function HomePage() {
     console.log('🚀 Starting route comparison:', { sourceNode, targetNode });
 
     try {
+      const AVERAGE_SPEED_M_PER_MIN = 500; // ~30 km/h as rough estimate
+      const timeBasedDistance = maxTimeMinutes ? maxTimeMinutes * AVERAGE_SPEED_M_PER_MIN : null;
+      const effectiveMaxDistance = (() => {
+        if (timeBasedDistance !== null && maxDistance !== null) {
+          return Math.min(timeBasedDistance, maxDistance);
+        }
+        if (timeBasedDistance !== null) return timeBasedDistance;
+        if (maxDistance !== null) return maxDistance;
+        return null;
+      })();
+
       const params = new URLSearchParams({
         source: sourceNode.toString(),
         target: targetNode.toString(),
         k: k.toString(),
         ...(maxRisk && { max_risk: maxRisk.toString() }),
-        ...(maxDistance && { max_distance: maxDistance.toString() }),
+        ...(effectiveMaxDistance && { max_distance: effectiveMaxDistance.toString() }),
+        ...(maxTimeMinutes && { max_time_min: maxTimeMinutes.toString() }),
+        ...(avoidFloodZones && { avoid_flood_zones: 'true' }),
         ...(simulationActive && simulationId && { simulation_id: simulationId })
       });
 
@@ -585,6 +598,53 @@ export default function HomePage() {
                   <p className="text-xs text-gray-500">
                     Longitud máxima de ruta permitida. Dejar vacío para sin límite.
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="maxtime" className="text-sm">
+                    Tiempo máximo estimado (min)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="maxtime"
+                      type="number"
+                      step="1"
+                      min="0"
+                      placeholder="Ej: 30"
+                      value={maxTimeMinutes ?? ''}
+                      onChange={(e) => setMaxTimeMinutes(e.target.value ? parseFloat(e.target.value) : null)}
+                      className="flex-1"
+                    />
+                    {maxTimeMinutes !== null && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setMaxTimeMinutes(null)}
+                      >
+                        ✕
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Se convierte a distancia usando ~30 km/h. Si también defines distancia, usamos el menor límite.
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3 pt-1">
+                  <Checkbox
+                    id="avoidflood"
+                    checked={avoidFloodZones}
+                    onCheckedChange={(checked) => setAvoidFloodZones(checked as boolean)}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="avoidflood" className="text-sm">
+                      Evitar zonas de inundación
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      Filtra aristas con p_fallo &gt;= 0.30 para rutas calculadas.
+                    </p>
+                  </div>
                 </div>
               </div>
 

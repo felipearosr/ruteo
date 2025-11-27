@@ -37,6 +37,8 @@ export async function GET(request: Request) {
   const maxDistance = searchParams.get('max_distance');
   const simulationId = searchParams.get('simulation_id');
   const lambdaRisk = searchParams.get('lambda_risk') || '5.0';
+  const maxTime = searchParams.get('max_time_min');
+  const avoidFlood = searchParams.get('avoid_flood_zones') === 'true';
 
   const startTime = performance.now();
 
@@ -44,13 +46,15 @@ export async function GET(request: Request) {
     // Construir URLs para cada endpoint
     const baseUrl = new URL(request.url).origin;
 
-  const params = new URLSearchParams({
-    source,
-    target,
-    ...(maxRisk && { max_risk: maxRisk }),
-    ...(maxDistance && { max_distance: maxDistance }),
-    ...(simulationId && { simulation_id: simulationId })
-  });
+    const params = new URLSearchParams({
+      source,
+      target,
+      ...(maxRisk && { max_risk: maxRisk }),
+      ...(maxDistance && { max_distance: maxDistance }),
+      ...(maxTime && { max_time_min: maxTime }),
+      ...(avoidFlood && { avoid_flood_zones: 'true' }),
+      ...(simulationId && { simulation_id: simulationId })
+    });
 
     // URLs de cada ruta
     const baselineUrl = `${baseUrl}/api/route/baseline?${params}`;
@@ -109,8 +113,10 @@ export async function GET(request: Request) {
           risk_weight: parseFloat(riskWeight),
           max_risk: maxRisk ? parseFloat(maxRisk) : null,
           max_distance: maxDistance ? parseFloat(maxDistance) : null,
+          max_time_min: maxTime ? parseFloat(maxTime) : null,
           simulation_id: simulationId,
-          lambda_risk: parseFloat(lambdaRisk)
+          lambda_risk: parseFloat(lambdaRisk),
+          avoid_flood_zones: avoidFlood
         },
         summary: {
           shortest_distance: Math.min(

@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   const lambdaRisk = parseFloat(searchParams.get('lambda_risk') || '5.0');
   const maxRisk = searchParams.get('max_risk');
   const maxDistance = searchParams.get('max_distance');
+  const avoidFloodZones = searchParams.get('avoid_flood_zones') === 'true';
 
   const startTime = performance.now();
 
@@ -42,6 +43,9 @@ export async function GET(request: Request) {
     }
     if (maxDistance) {
       args.push('--max-distance', maxDistance);
+    }
+    if (avoidFloodZones) {
+      args.push('--avoid-flood');
     }
 
     const pythonProcess = spawn('python', args);

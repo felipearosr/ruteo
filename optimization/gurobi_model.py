@@ -79,7 +79,7 @@ class ResilientRouter:
         if self.conn and not self.conn.closed:
             self.conn.close()
     
-    def load_graph(self, source: int, target: int, bbox_margin: float = 0.05) -> Tuple[List, Dict]:
+    def load_graph(self, source: int, target: int, bbox_margin: float = 0.05, avoid_flood_zones: bool = False, flood_threshold: float = 0.3) -> Tuple[List, Dict]:
         """
         Cargar el grafo desde la base de datos
         
@@ -135,7 +135,8 @@ class ResilientRouter:
                     a.geom,
                     ST_MakeEnvelope(%s, %s, %s, %s, 4326)
                 )
-        """, (xmin, ymin, xmax, ymax))
+                AND (%s = false OR coalesce(a.p_fallo_arista, 0.0) < %s)
+        """, (xmin, ymin, xmax, ymax, avoid_flood_zones, flood_threshold))
         
         aristas = cur.fetchall()
         
@@ -173,7 +174,8 @@ class ResilientRouter:
     def solve(self, source: int, target: int, 
               max_risk: Optional[float] = None,
               max_distance: Optional[float] = None,
-              lambda_risk: Optional[float] = None) -> Dict:
+              lambda_risk: Optional[float] = None,
+              avoid_flood_zones: bool = False) -> Dict:
         """
         Resolver el problema de ruteo óptimo
         
@@ -200,7 +202,7 @@ class ResilientRouter:
         print(f"🔍 Resolviendo ruta de {source} a {target}...")
         
         # Cargar grafo
-        aristas, nodos = self.load_graph(source, target)
+        aristas, nodos = self.load_graph(source, target, avoid_flood_zones=avoid_flood_zones)
         
         if source not in nodos or target not in nodos:
             raise ValueError(f"Los nodos {source} o {target} no están en el grafo cargado")

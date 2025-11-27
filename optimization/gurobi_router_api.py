@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--lambda-risk', type=float, default=5.0, help='Factor de penalización por riesgo')
     parser.add_argument('--max-risk', type=float, default=None, help='Riesgo máximo permitido')
     parser.add_argument('--max-distance', type=float, default=None, help='Distancia máxima permitida')
+    parser.add_argument('--avoid-flood', action='store_true', help='Filtrar aristas con p_fallo >= 0.3')
     
     args = parser.parse_args()
     
@@ -62,7 +63,8 @@ def main():
             target=args.target,
             max_risk=args.max_risk,
             max_distance=args.max_distance,
-            lambda_risk=args.lambda_risk
+            lambda_risk=args.lambda_risk,
+            avoid_flood_zones=args.avoid_flood
         )
         
         # Convertir a GeoJSON

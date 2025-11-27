@@ -28,11 +28,14 @@ export async function GET(request: Request) {
   // Obtener parámetros de origen y destino
   const source = parseInt(searchParams.get('source') || '1');
   const target = parseInt(searchParams.get('target') || '100');
+  const avoidFloodZones = searchParams.get('avoid_flood_zones') === 'true';
 
   // Medir tiempo de inicio
   const startTime = performance.now();
 
   try {
+    const floodFilter = avoidFloodZones ? " AND coalesce(p_fallo_arista, 0) < 0.3" : "";
+
     // Consulta SQL con pgr_dijkstra (solo costo = distancia)
     const query = `
       SELECT 
@@ -63,7 +66,7 @@ export async function GET(request: Request) {
            WHEN tags->>''oneway'' = ''-1'' THEN length_m
            ELSE length_m
          END as reverse_cost 
-         FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0',
+         FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
         $1::BIGINT,
         $2::BIGINT,
         true
