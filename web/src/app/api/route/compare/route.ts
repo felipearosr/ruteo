@@ -20,6 +20,8 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
+const DEFAULT_TIMEOUT_MS = parseInt(process.env.COMPARE_ROUTE_TIMEOUT_MS || '60000', 10);
+
 // Pool compartido para evitar crear conexiones por ruta
 const pool = new Pool({
   host: process.env.SUPABASE_DB_HOST,
@@ -201,6 +203,39 @@ async function runResilient(source: number, target: number, k: number, maxRisk: 
   }
 }
 
+function fallbackResult(method: string, message: string) {
+  return {
+    route: { type: 'FeatureCollection', features: [] },
+    metrics: {
+      distance_m: 0,
+      computation_time_ms: 0,
+      risk_score: 0,
+      num_segments: 0,
+      method,
+      error: true
+    },
+    error: message
+  };
+}
+
+function withTimeout<T>(promise: Promise<T>, method: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<T | ReturnType<typeof fallbackResult>> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve(fallbackResult(method, `${method} timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        resolve(fallbackResult(method, err instanceof Error ? err.message : String(err)));
+      });
+  });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -223,6 +258,7 @@ export async function GET(request: Request) {
   const lambdaRisk = searchParams.get('lambda_risk') || '5.0';
   const maxTime = searchParams.get('max_time_min');
   const avoidFlood = searchParams.get('avoid_flood_zones') === 'true';
+  const bboxMarginParam = searchParams.get('bbox_margin') || process.env.CPLEX_BBOX_MARGIN || process.env.NEXT_PUBLIC_CPLEX_BBOX_MARGIN || undefined;
   const sourceNum = parseInt(source, 10);
   const targetNum = parseInt(target, 10);
   const kNum = parseFloat(k);
@@ -231,6 +267,7 @@ export async function GET(request: Request) {
   const maxRiskNum = maxRisk ? parseFloat(maxRisk) : null;
   const maxDistanceNum = maxDistance ? parseFloat(maxDistance) : null;
   const maxTimeNum = maxTime ? parseFloat(maxTime) : null;
+  const bboxMarginNum = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
   const startTime = performance.now();
 
@@ -244,35 +281,21 @@ export async function GET(request: Request) {
       ...(maxDistanceNum !== null && { max_distance: maxDistanceNum.toString() }),
       ...(maxTimeNum !== null && { max_time_min: maxTimeNum.toString() }),
       ...(avoidFlood && { avoid_flood_zones: 'true' }),
+      ...(bboxMarginNum !== undefined && !Number.isNaN(bboxMarginNum) && { bbox_margin: bboxMarginNum.toString() }),
       ...(simulationId && { simulation_id: simulationId })
     });
 
     const [baselineResult, resilientResult, astarResult, cplexResult] = await Promise.all([
-      runBaseline(sourceNum, targetNum, maxDistanceNum, avoidFlood).catch((err) => ({
-        route: { type: 'FeatureCollection', features: [] },
-        metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'baseline', error: true },
-        error: err instanceof Error ? err.message : String(err)
-      })),
-      runResilient(sourceNum, targetNum, kNum, maxRiskNum, maxDistanceNum, avoidFlood).catch((err) => ({
-        route: { type: 'FeatureCollection', features: [] },
-        metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'resilient', error: true },
-        error: err instanceof Error ? err.message : String(err)
-      })),
-      fetch(`${baseUrl}/api/route/metaheuristic?${sharedParams.toString()}&risk_weight=${riskWeightNum}`)
-        .then(r => r.json())
-        .catch((err) => ({
-          route: { type: 'FeatureCollection', features: [] },
-          metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'astar', error: true },
-          error: err instanceof Error ? err.message : String(err)
-        })),
-      fetch(`${baseUrl}/api/route/optimize?${sharedParams.toString()}&lambda_risk=${lambdaRiskNum}`)
-        .then(r => r.json())
-        .catch((err) => ({
-          route: { type: 'FeatureCollection', features: [] },
-          metrics: { distance_m: 0, computation_time_ms: 0, risk_score: 0, num_segments: 0, method: 'cplex', error: true },
-          error: err instanceof Error ? err.message : String(err),
-          cplex_available: false
-        }))
+      withTimeout(runBaseline(sourceNum, targetNum, maxDistanceNum, avoidFlood), 'baseline'),
+      withTimeout(runResilient(sourceNum, targetNum, kNum, maxRiskNum, maxDistanceNum, avoidFlood), 'resilient'),
+      withTimeout(
+        fetch(`${baseUrl}/api/route/metaheuristic?${sharedParams.toString()}&risk_weight=${riskWeightNum}`).then(r => r.json()),
+        'astar'
+      ),
+      withTimeout(
+        fetch(`${baseUrl}/api/route/optimize?${sharedParams.toString()}&lambda_risk=${lambdaRiskNum}`).then(r => r.json()),
+        'cplex'
+      )
     ]);
 
     const totalTime = performance.now() - startTime;
@@ -281,7 +304,6 @@ export async function GET(request: Request) {
       baseline: baselineResult,
       resilient: resilientResult,
       astar: astarResult,
-      gurobi: cplexResult,
       cplex: cplexResult,
       comparison: {
         total_time_ms: totalTime,
@@ -295,7 +317,8 @@ export async function GET(request: Request) {
           max_time_min: maxTimeNum,
           simulation_id: simulationId,
           lambda_risk: lambdaRiskNum,
-          avoid_flood_zones: avoidFlood
+          avoid_flood_zones: avoidFlood,
+          bbox_margin: bboxMarginNum
         },
         summary: {
           shortest_distance: Math.min(

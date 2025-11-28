@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  app:
+    # Solo se aplica cuando hay un archivo de licencia que montar desde el host.
+    volumes:
+      - ${CPLEX_LICENSE_FILE}:/licenses/ilm.lic:ro
+    environment:
+      - ILOG_LICENSE_FILE=/licenses/ilm.lic

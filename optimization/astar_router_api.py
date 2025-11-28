@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--target', type=int, required=True, help='Nodo destino')
     parser.add_argument('--risk-weight', type=float, default=3.0, help='Peso del riesgo en el costo')
     parser.add_argument('--heuristic-weight', type=float, default=1.0, help='Peso de la heurística')
+    parser.add_argument('--bbox-margin', type=float, default=None, help='Margen del bounding box (grados)')
     
     args = parser.parse_args()
     
@@ -36,7 +37,8 @@ def main():
             source=args.source,
             target=args.target,
             risk_weight=args.risk_weight,
-            heuristic_weight=args.heuristic_weight
+            heuristic_weight=args.heuristic_weight,
+            bbox_margin=args.bbox_margin
         )
         
         # Convertir a GeoJSON
@@ -54,7 +56,8 @@ def main():
                 'method': 'astar',
                 'parameters': {
                     'risk_weight': args.risk_weight,
-                    'heuristic_weight': args.heuristic_weight
+                    'heuristic_weight': args.heuristic_weight,
+                    'bbox_margin': args.bbox_margin
                 }
             }
         }

@@ -8,6 +8,8 @@ services:
     # Montar el repositorio para desarrollo y para que main.py pueda encontrar archivos generados
     volumes:
       - ..:/app:delegated
+      # Montar instalación local de CPLEX y licencia (ajustar rutas en host)
+      - ${CPLEX_HOST_DIR:-/home/faros/CPLEX_Studio2211}:/opt/ibm/ILOG/CPLEX_Studio2211:ro
     environment:
       # Variables para conectar a Supabase / PostgreSQL (NO poner secretos aquí en el repo)
       - SUPABASE_URL
@@ -24,6 +26,11 @@ services:
       # Configuraciones de runtime opcionales
       - PYTHONUNBUFFERED=1
       - NODE_ENV=development
+      # Configuración CPLEX (paths internos del contenedor)
+      - CPLEX_STUDIO_DIR2211=/opt/ibm/ILOG/CPLEX_Studio2211
+      - PATH=/opt/ibm/ILOG/CPLEX_Studio2211/cplex/bin/x86-64_linux:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - LD_LIBRARY_PATH=/opt/ibm/ILOG/CPLEX_Studio2211/cplex/bin/x86-64_linux:/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux
+      - ILOG_LICENSE_FILE=${ILOG_LICENSE_FILE:-}
     ports:
       - "3000:3000"
     restart: unless-stopped

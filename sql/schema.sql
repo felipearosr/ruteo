@@ -187,10 +187,13 @@ create index if not exists sim_fallas_activas_entity_idx on sim_fallas_activas (
 
 -- Fase 3: Función para encontrar el nodo más cercano a una coordenada
 -- Útil para geolocalización HTML5 y geocodificación
+drop function if exists find_nearest_node(double precision, double precision);
 create or replace function find_nearest_node(lat double precision, lon double precision)
 returns table (
-    id bigint,
-    distance_m double precision
+    node_id bigint,
+    distance_m double precision,
+    node_lat double precision,
+    node_lon double precision
 ) as $$
 begin
     return query
@@ -199,12 +202,14 @@ begin
         st_distance(
             n.geom::geography,
             st_setsrid(st_makepoint(lon, lat), 4326)::geography
-        ) as distance_m
+        ) as distance_m,
+        st_y(n.geom),
+        st_x(n.geom)
     from infra_nodos n
-    order by distance_m
+    order by n.geom <-> st_setsrid(st_makepoint(lon, lat), 4326)
     limit 1;
 end;
-$$ language plpgsql;
+$$ language plpgsql stable;
 
 -- Nota: Para usar pgrouting, se recomienda poblar las columnas source/target usando
 -- pgr_createTopology o calculando la topología externamente y cargando los ids.

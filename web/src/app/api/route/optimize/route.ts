@@ -25,11 +25,15 @@ export async function GET(request: Request) {
   const maxRisk = searchParams.get('max_risk');
   const maxDistance = searchParams.get('max_distance');
   const avoidFloodZones = searchParams.get('avoid_flood_zones') === 'true';
+  const defaultBboxMargin = process.env.CPLEX_BBOX_MARGIN || process.env.NEXT_PUBLIC_CPLEX_BBOX_MARGIN;
+  const bboxMarginParam = searchParams.get('bbox_margin') || defaultBboxMargin || undefined;
+  const bboxMargin = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
   const startTime = performance.now();
 
   try {
     const scriptPath = path.join(process.cwd(), '..', 'optimization', 'cplex_router_api.py');
+    const pythonBin = process.env.PYTHON_BIN || 'python3';
 
     const args = [
       scriptPath,
@@ -47,8 +51,11 @@ export async function GET(request: Request) {
     if (avoidFloodZones) {
       args.push('--avoid-flood');
     }
+    if (bboxMargin !== undefined && !Number.isNaN(bboxMargin)) {
+      args.push('--bbox-margin', bboxMargin.toString());
+    }
 
-    const pythonProcess = spawn('python', args);
+    const pythonProcess = spawn(pythonBin, args);
 
     let outputData = '';
     let errorData = '';
@@ -61,31 +68,64 @@ export async function GET(request: Request) {
       errorData += data.toString();
     });
 
+    const tryParseJson = (text: string): any | null => {
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch {
+        const firstBrace = text.indexOf('{');
+        const lastBrace = text.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          const candidate = text.slice(firstBrace, lastBrace + 1);
+          try {
+            return JSON.parse(candidate);
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      }
+    };
+
     const result = await new Promise<any>((resolve) => {
       pythonProcess.on('close', (code) => {
+        const exitCode = code;
+        const stdoutText = (outputData || '').trim();
+        const stderrText = (errorData || '').trim();
+
         // El script siempre imprime JSON; si hay ruido previo, intentar limpiar
-        const trimmed = (outputData || '').trim();
-        let parsed: any = null;
-        try {
-          parsed = JSON.parse(trimmed);
-        } catch {
-          // Si no se puede parsear, devolver un error estandarizado
-          parsed = {
+        const parsed =
+          tryParseJson(stdoutText) ||
+          tryParseJson(stderrText) ||
+          {
             route: { type: 'FeatureCollection', features: [] },
-          metrics: {
-            distance_m: 0,
-            computation_time_ms: 0,
-            risk_score: 0,
-            num_segments: 0,
-            method: 'cplex',
-            status: 'error'
-          },
-          error: trimmed || errorData || `CPLEX process exited with code ${code}`,
-          cplex_available: false
-        };
-      }
-      resolve(parsed);
-    });
+            metrics: {
+              distance_m: 0,
+              computation_time_ms: 0,
+              risk_score: 0,
+              num_segments: 0,
+              method: 'cplex',
+              status: 'error',
+              parameters: {
+                lambda_risk: lambdaRisk,
+                max_risk: maxRisk ? parseFloat(maxRisk) : null,
+                max_distance: maxDistance ? parseFloat(maxDistance) : null,
+                avoid_flood: avoidFloodZones,
+                bbox_margin: bboxMargin
+              }
+            },
+            error: stdoutText || stderrText || `CPLEX process exited with code ${exitCode}`,
+            cplex_available: false
+          };
+        if (parsed && typeof parsed === 'object') {
+          parsed.debug = {
+            stderr: stderrText,
+            stdout: stdoutText,
+            exit_code: exitCode
+          };
+        }
+        resolve(parsed);
+      });
 
       pythonProcess.on('error', (err) => resolve({
         route: { type: 'FeatureCollection', features: [] },

@@ -60,7 +60,9 @@ class AStarResilientRouter:
         # Parámetros del algoritmo
         self.heuristic_weight = 1.0  # Peso de la heurística
         self.risk_weight = 3.0  # Peso del riesgo en el costo
-        
+        # Margen del bounding box para recortar el subgrafo (por defecto 0.02° ≈ 2 km)
+        self.bbox_margin = float(os.getenv("ASTAR_BBOX_MARGIN", 0.02))
+    
     def connect(self):
         """Establecer conexión a la base de datos"""
         if not self.conn or self.conn.closed:
@@ -86,6 +88,7 @@ class AStarResilientRouter:
         """
         self.connect()
         cur = self.conn.cursor(cursor_factory=RealDictCursor)
+        bbox_margin = bbox_margin if bbox_margin is not None else self.bbox_margin
         
         # Obtener coordenadas de origen y destino para definir bbox
         cur.execute("""
@@ -144,8 +147,12 @@ class AStarResilientRouter:
             WHERE 
                 a.source = ANY(%s::bigint[]) AND
                 a.target = ANY(%s::bigint[]) AND
-                a.length_m IS NOT NULL
-        """, (list(nodos.keys()), list(nodos.keys())))
+                a.length_m IS NOT NULL AND
+                ST_Intersects(
+                    a.geom,
+                    ST_MakeEnvelope(%s, %s, %s, %s, 4326)
+                )
+        """, (list(nodos.keys()), list(nodos.keys()), xmin, ymin, xmax, ymax))
         
         aristas_list = cur.fetchall()
         
@@ -216,7 +223,8 @@ class AStarResilientRouter:
     
     def solve(self, source: int, target: int,
               risk_weight: Optional[float] = None,
-              heuristic_weight: Optional[float] = None) -> Dict:
+              heuristic_weight: Optional[float] = None,
+              bbox_margin: Optional[float] = None) -> Dict:
         """
         Resolver el problema de ruteo usando A*
         
@@ -225,6 +233,7 @@ class AStarResilientRouter:
             target: ID del nodo destino
             risk_weight: Peso del riesgo en el costo (override)
             heuristic_weight: Peso de la heurística (override)
+            bbox_margin: Margen del bounding box para recortar el grafo (grados)
             
         Returns:
             Diccionario con la solución:
@@ -246,7 +255,7 @@ class AStarResilientRouter:
         start_time = time.time()
         
         # Cargar grafo
-        grafo, nodos, aristas_dict = self.load_graph(source, target)
+        grafo, nodos, aristas_dict = self.load_graph(source, target, bbox_margin=bbox_margin)
         
         if source not in grafo or target not in grafo:
             raise ValueError(f"Los nodos {source} o {target} no están en el grafo cargado")

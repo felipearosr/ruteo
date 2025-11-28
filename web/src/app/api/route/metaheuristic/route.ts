@@ -22,6 +22,9 @@ export async function GET(request: Request) {
   const target = parseInt(searchParams.get('target') || '100');
   const riskWeight = parseFloat(searchParams.get('risk_weight') || '3.0');
   const heuristicWeight = parseFloat(searchParams.get('heuristic_weight') || '1.0');
+  const defaultBboxMargin = process.env.ASTAR_BBOX_MARGIN || process.env.NEXT_PUBLIC_ASTAR_BBOX_MARGIN;
+  const bboxMarginParam = searchParams.get('bbox_margin') || defaultBboxMargin || undefined;
+  const bboxMargin = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
   const startTime = performance.now();
 
@@ -29,13 +32,19 @@ export async function GET(request: Request) {
     // Ejecutar el script Python de A*
     const scriptPath = path.join(process.cwd(), '..', 'optimization', 'astar_router_api.py');
     
-    const pythonProcess = spawn('python', [
+    const args = [
       scriptPath,
       '--source', source.toString(),
       '--target', target.toString(),
       '--risk-weight', riskWeight.toString(),
       '--heuristic-weight', heuristicWeight.toString()
-    ]);
+    ];
+
+    if (bboxMargin !== undefined && !Number.isNaN(bboxMargin)) {
+      args.push('--bbox-margin', bboxMargin.toString());
+    }
+
+    const pythonProcess = spawn('python', args);
 
     let outputData = '';
     let errorData = '';

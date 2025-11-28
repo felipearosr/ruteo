@@ -39,7 +39,13 @@ interface AddressResult {
 }
 
 interface AddressInputProps {
-  onNodeSelected: (nodeId: number, address: string, distance: number) => void;
+  onNodeSelected: (payload: {
+    nodeId: number;
+    address: string;
+    distance: number;
+    lat: number;
+    lon: number;
+  }) => void;
   placeholder?: string;
   label?: string;
 }
@@ -153,7 +159,13 @@ export function AddressInput({
       const nearestNode = data[0];
 
       // Callback al padre con el nodo seleccionado
-      onNodeSelected(nearestNode.node_id, result.display_name, nearestNode.distance_m);
+      onNodeSelected({
+        nodeId: nearestNode.node_id,
+        address: result.display_name,
+        distance: nearestNode.distance_m,
+        lat: nearestNode.node_lat ?? result.lat,
+        lon: nearestNode.node_lon ?? result.lon
+      });
 
       console.log(
         `Direccion encontrada: ${result.display_name}. ` +

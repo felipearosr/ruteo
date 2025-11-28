@@ -76,6 +76,8 @@
 - [x] Crear `/api/route/cplex` (usar endpoint genérico) → `/api/route/optimize` con CPLEX
 - [x] Implementar carga de grafo desde Supabase
 - [x] Retornar GeoJSON + métricas
+- [ ] Documentar instalación local de CPLEX (bin, vars: CPLEX_STUDIO_DIR2211, PATH, LD_LIBRARY_PATH, ILOG_LICENSE_FILE)
+- [ ] Probar `/api/route/optimize` con CPLEX en local y en Docker (montar binarios/licencia si aplica)
 
 #### D.3 Ruta 3: pgr_dijkstra con Costos Ajustados
 

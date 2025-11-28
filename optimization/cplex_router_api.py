@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--max-risk', type=float, default=None, help='Riesgo máximo permitido')
     parser.add_argument('--max-distance', type=float, default=None, help='Distancia máxima permitida')
     parser.add_argument('--avoid-flood', action='store_true', help='Filtrar aristas con p_fallo >= 0.3')
+    parser.add_argument('--bbox-margin', type=float, default=None, help='Margen (grados) alrededor de source/target')
 
     args = parser.parse_args()
 
@@ -52,7 +53,8 @@ def main():
             max_risk=args.max_risk,
             max_distance=args.max_distance,
             lambda_risk=args.lambda_risk,
-            avoid_flood_zones=args.avoid_flood
+            avoid_flood_zones=args.avoid_flood,
+            bbox_margin=args.bbox_margin,
         )
 
         geojson = router.solution_to_geojson(solution)
@@ -70,7 +72,8 @@ def main():
                     'lambda_risk': args.lambda_risk,
                     'max_risk': args.max_risk,
                     'max_distance': args.max_distance,
-                    'avoid_flood': args.avoid_flood
+                    'avoid_flood': args.avoid_flood,
+                    'bbox_margin': args.bbox_margin,
                 }
             },
             'cplex_available': True

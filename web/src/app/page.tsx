@@ -72,7 +72,6 @@ interface RouteResult {
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
-  gurobi?: RouteResult; // deprecated key kept for backward compatibility
   cplex?: RouteResult;
   astar: RouteResult;
   comparison: {
@@ -104,7 +103,7 @@ export default function HomePage() {
   const [showBaseline, setShowBaseline] = useState(true);
   const [showResilient, setShowResilient] = useState(true);
   const [showAstar, setShowAstar] = useState(true);
-  const [showGurobi, setShowGurobi] = useState(true);
+  const [showCplex, setShowCplex] = useState(true);
 
 
 
@@ -125,6 +124,8 @@ export default function HomePage() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [onlySimulatedThreats, setOnlySimulatedThreats] = useState(false);
   const [geolocating, setGeolocating] = useState(false);
+  const [sourceMarker, setSourceMarker] = useState<{ lat: number; lon: number; label?: string; distance?: number } | null>(null);
+  const [targetMarker, setTargetMarker] = useState<{ lat: number; lon: number; label?: string; distance?: number } | null>(null);
 
   // Funciones para cargar datos de amenazas
   const loadInundaciones = async () => {
@@ -169,6 +170,10 @@ export default function HomePage() {
       });
   }, []);
 
+  const clearRoutes = () => {
+    setComparisonData(null);
+  };
+
   const compareRoutes = async () => {
     setIsLoading(true);
 
@@ -204,7 +209,7 @@ export default function HomePage() {
         baseline: data.baseline?.route?.features?.length || 0,
         resilient: data.resilient?.route?.features?.length || 0,
         astar: data.astar?.route?.features?.length || 0,
-        cplex: data.cplex?.route?.features?.length || data.gurobi?.route?.features?.length || 0
+        cplex: data.cplex?.route?.features?.length || 0
       });
 
       setComparisonData(data);
@@ -324,6 +329,13 @@ export default function HomePage() {
           if (data && data.length > 0) {
             const nearestNode = data[0];
             setSourceNode(nearestNode.node_id);
+            setSourceMarker({
+              lat: nearestNode.node_lat ?? latitude,
+              lon: nearestNode.node_lon ?? longitude,
+              label: 'Ubicacion detectada',
+              distance: nearestNode.distance_m
+            });
+            clearRoutes();
 
             toast.success('Ubicacion detectada', {
               description: `Nodo mas cercano: ${nearestNode.node_id} (${nearestNode.distance_m.toFixed(0)} metros)`,
@@ -382,7 +394,7 @@ export default function HomePage() {
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
     setShowResilient(true);
-    setShowGurobi(true);
+    setShowCplex(true);
     setShowAstar(true);
 
     // Ejecutar comparación después de actualizar estados
@@ -424,7 +436,9 @@ export default function HomePage() {
   const baselineCoords = getRouteCoords(comparisonData?.baseline);
   const resilientCoords = getRouteCoords(comparisonData?.resilient);
   const astarCoords = getRouteCoords(comparisonData?.astar);
-  const gurobiCoords = getRouteCoords(comparisonData?.gurobi || comparisonData?.cplex);
+  const cplexCoords = getRouteCoords(comparisonData?.cplex);
+  const sourceLatLng = sourceMarker ? [sourceMarker.lat, sourceMarker.lon] : (baselineCoords[0] ?? null);
+  const targetLatLng = targetMarker ? [targetMarker.lat, targetMarker.lon] : (baselineCoords.length ? baselineCoords[baselineCoords.length - 1] : null);
 
 
   // Formatear métricas
@@ -502,8 +516,10 @@ export default function HomePage() {
                   </Label>
                   <AddressInput
                     placeholder="Ej: Av. Providencia 1234, Santiago"
-                    onNodeSelected={(nodeId, address, distance) => {
+                    onNodeSelected={({ nodeId, address, distance, lat, lon }) => {
                       setSourceNode(nodeId);
+                      setSourceMarker({ lat, lon, label: address, distance });
+                      clearRoutes();
                     }}
                   />
                 </div>
@@ -514,8 +530,10 @@ export default function HomePage() {
                   </Label>
                   <AddressInput
                     placeholder="Ej: Mall Parque Arauco, Las Condes"
-                    onNodeSelected={(nodeId, address, distance) => {
+                    onNodeSelected={({ nodeId, address, distance, lat, lon }) => {
                       setTargetNode(nodeId);
+                      setTargetMarker({ lat, lon, label: address, distance });
+                      clearRoutes();
                     }}
                   />
                 </div>
@@ -712,11 +730,11 @@ export default function HomePage() {
 
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="gurobi"
-                  checked={showGurobi}
-                  onCheckedChange={(checked) => setShowGurobi(checked as boolean)}
+                  id="cplex"
+                  checked={showCplex}
+                  onCheckedChange={(checked) => setShowCplex(checked as boolean)}
                 />
-                <Label htmlFor="gurobi" className="flex items-center gap-2">
+                <Label htmlFor="cplex" className="flex items-center gap-2">
                   <div className="w-4 h-1 bg-emerald-500"></div>
                   MILP (CPLEX)
                 </Label>
@@ -887,9 +905,9 @@ export default function HomePage() {
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">MILP (CPLEX)</TableCell>
-                      <TableCell>{formatDistance((comparisonData.gurobi || comparisonData.cplex)?.metrics?.distance_m || 0)}</TableCell>
-                      <TableCell>{formatTime((comparisonData.gurobi || comparisonData.cplex)?.metrics?.computation_time_ms || 0)}</TableCell>
-                      <TableCell>{formatRisk((comparisonData.gurobi || comparisonData.cplex)?.metrics?.risk_score || 0)}</TableCell>
+                      <TableCell>{formatDistance(comparisonData.cplex?.metrics?.distance_m || 0)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.cplex?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatRisk(comparisonData.cplex?.metrics?.risk_score || 0)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">A* (Metaheurística)</TableCell>
@@ -956,9 +974,9 @@ export default function HomePage() {
             />
           )}
 
-          {showGurobi && gurobiCoords.length > 0 && (
+          {showCplex && cplexCoords.length > 0 && (
             <Polyline
-              positions={gurobiCoords}
+              positions={cplexCoords}
               pathOptions={{ color: '#10b981', weight: 4, opacity: 0.7 }}
             />
           )}
@@ -1100,29 +1118,33 @@ export default function HomePage() {
           })}
 
           {/* Marcador de nodo origen */}
-          {sourceNode && baselineCoords.length > 0 && (
+          {sourceLatLng && (
             <CircleMarker
-              center={baselineCoords[0]}
+              center={sourceLatLng as [number, number]}
               radius={15}
               pathOptions={{ color: '#22c55e', fillColor: '#22c55e', fillOpacity: 0.8, weight: 3 }}
             >
               <Popup>
                 <b>🟢 Nodo Origen</b><br />
-                ID: {sourceNode}
+                ID: {sourceNode}<br />
+                {sourceMarker?.label && <>Dir: {sourceMarker.label}<br /></>}
+                {sourceMarker?.distance !== undefined && <>Dist: {sourceMarker.distance.toFixed(0)} m<br /></>}
               </Popup>
             </CircleMarker>
           )}
 
           {/* Marcador de nodo destino */}
-          {targetNode && baselineCoords.length > 0 && (
+          {targetLatLng && (
             <CircleMarker
-              center={baselineCoords[baselineCoords.length - 1]}
+              center={targetLatLng as [number, number]}
               radius={15}
               pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.8, weight: 3 }}
             >
               <Popup>
                 <b>🔴 Nodo Destino</b><br />
-                ID: {targetNode}
+                ID: {targetNode}<br />
+                {targetMarker?.label && <>Dir: {targetMarker.label}<br /></>}
+                {targetMarker?.distance !== undefined && <>Dist: {targetMarker.distance.toFixed(0)} m<br /></>}
               </Popup>
             </CircleMarker>
           )}
