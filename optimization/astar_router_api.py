@@ -78,10 +78,17 @@ def main():
                 'risk_score': 0,
                 'num_segments': 0,
                 'nodes_explored': 0,
-                'method': 'astar'
+                'method': 'astar',
+                'parameters': {
+                    'risk_weight': args.risk_weight,
+                    'heuristic_weight': args.heuristic_weight,
+                    'bbox_margin': args.bbox_margin
+                }
             },
             'error': str(e)
         }
+        import traceback
+        traceback.print_exc()
         print(json.dumps(result))
         sys.exit(1)
 

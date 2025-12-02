@@ -28,6 +28,8 @@ DB_CONFIG = {
     'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
     'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
     'password': os.getenv('SUPABASE_DB_PASSWORD'),
+    'sslmode': 'require',
+    'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
 }
 
 def get_db_connection():
@@ -37,12 +39,15 @@ def get_db_connection():
     if not params.get('password'):
         raise ValueError("SUPABASE_DB_PASSWORD no está definido en el entorno")
 
-    # Forzar IPv4 si falla la resolución DNS; de lo contrario usar host tal cual
     host = params.get('host')
+    fallback_host = os.getenv("SUPABASE_DB_HOST_FALLBACK", "18.213.155.45")
+
+    # Resolver a IPv4; si falla, usa fallback explícito con hostaddr para saltar DNS
     try:
         params['host'] = socket.gethostbyname(host)
     except Exception:
-        params['host'] = host
+        params['host'] = host  # mantiene SNI/ssl
+        params['hostaddr'] = fallback_host
 
     return psycopg2.connect(**params)
 
@@ -63,8 +68,8 @@ class AStarResilientRouter:
         # Parámetros del algoritmo
         self.heuristic_weight = 1.0  # Peso de la heurística
         self.risk_weight = 3.0  # Peso del riesgo en el costo
-        # Margen del bounding box para recortar el subgrafo (por defecto 0.1° ≈ 11 km)
-        self.bbox_margin = float(os.getenv("ASTAR_BBOX_MARGIN", 0.1))
+        # Margen del bounding box para recortar el subgrafo (por defecto 0.02° ≈ 2.2 km)
+        self.bbox_margin = float(os.getenv("ASTAR_BBOX_MARGIN", 0.02))
     
     def connect(self):
         """Establecer conexión a la base de datos"""
@@ -142,7 +147,7 @@ class AStarResilientRouter:
                 a.source,
                 a.target,
                 a.length_m,
-                0.0 as p_fallo,
+                COALESCE(a.p_fallo_arista, 0.0) as p_fallo,
                 a.highway,
                 a.tags->>'oneway' as oneway,
                 ST_AsText(a.geom) as geom_wkt
@@ -169,25 +174,15 @@ class AStarResilientRouter:
             
             source_id = arista['source']
             target_id = arista['target']
-            oneway = arista.get('oneway')
-            
-            # Costo = distancia + riesgo ponderado
+
+            # Si los nodos no están en el bbox cargado, omitir esta arista para evitar KeyError
+            if source_id not in grafo or target_id not in grafo:
+                continue
+            # Costo = distancia + riesgo ponderado (tratamos todas las aristas como bidireccionales para evitar cortes)
             cost = arista['length_m'] * (1.0 + self.risk_weight * arista['p_fallo'])
-            
-            # Respetar direcciones de calles según OSM oneway tag
-            # oneway=yes: solo source -> target
-            # oneway=-1: solo target -> source
-            # oneway=no o NULL: bidireccional
-            if oneway == 'yes':
-                # Solo permitir source -> target
-                grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
-            elif oneway == '-1':
-                # Solo permitir target -> source
-                grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
-            else:
-                # Bidireccional (oneway='no' o NULL)
-                grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
-                grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
+
+            grafo[source_id].append((target_id, cost, arista['p_fallo'], arista['id']))
+            grafo[target_id].append((source_id, cost, arista['p_fallo'], arista['id']))
             
             aristas_dict[arista['id']] = dict(arista)
         

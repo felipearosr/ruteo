@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const target = parseInt(searchParams.get('target') || '100');
   const riskWeight = parseFloat(searchParams.get('risk_weight') || '3.0');
   const heuristicWeight = parseFloat(searchParams.get('heuristic_weight') || '1.0');
-  const defaultBboxMargin = process.env.ASTAR_BBOX_MARGIN || process.env.NEXT_PUBLIC_ASTAR_BBOX_MARGIN;
+  const defaultBboxMargin = process.env.ASTAR_BBOX_MARGIN || process.env.NEXT_PUBLIC_ASTAR_BBOX_MARGIN || '0.02';
   const bboxMarginParam = searchParams.get('bbox_margin') || defaultBboxMargin || undefined;
   const bboxMargin = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
@@ -76,23 +76,66 @@ export async function GET(request: Request) {
       errorData += data.toString();
     });
 
-    const result = await new Promise<any>((resolve, reject) => {
+    const result = await new Promise<any>((resolve) => {
       pythonProcess.on('close', (code) => {
+        const stdoutText = (outputData || '').trim();
+        const stderrText = (errorData || '').trim();
+
         if (code !== 0) {
-          reject(new Error(`Python process exited with code ${code}: ${errorData}`));
+          resolve({
+            route: { type: 'FeatureCollection', features: [] },
+            metrics: {
+              distance_m: 0,
+              computation_time_ms: 0,
+              risk_score: 0,
+              num_segments: 0,
+              nodes_explored: 0,
+              method: 'astar',
+              parameters: { risk_weight: riskWeight, heuristic_weight: heuristicWeight }
+            },
+            error: `Python process exited with code ${code}: ${stderrText || stdoutText || 'sin salida'}`,
+            debug: { stdout: stdoutText, stderr: stderrText, exit_code: code }
+          });
           return;
         }
 
         try {
-          const jsonResult = JSON.parse(outputData);
+          const jsonResult = JSON.parse(stdoutText);
+          jsonResult.debug = { stdout: stdoutText, stderr: stderrText, exit_code: code };
           resolve(jsonResult);
         } catch (err) {
-          reject(new Error(`Failed to parse Python output: ${outputData}`));
+          resolve({
+            route: { type: 'FeatureCollection', features: [] },
+            metrics: {
+              distance_m: 0,
+              computation_time_ms: 0,
+              risk_score: 0,
+              num_segments: 0,
+              nodes_explored: 0,
+              method: 'astar',
+              parameters: { risk_weight: riskWeight, heuristic_weight: heuristicWeight }
+            },
+            error: `Failed to parse Python output: ${stdoutText || '(vacío)'}`,
+            debug: { stdout: stdoutText, stderr: stderrText, exit_code: code }
+          });
         }
       });
 
       pythonProcess.on('error', (err) => {
-        reject(err);
+        resolve({
+          route: { type: 'FeatureCollection', features: [] },
+          metrics: {
+            distance_m: 0,
+            computation_time_ms: 0,
+            risk_score: 0,
+            num_segments: 0,
+            nodes_explored: 0,
+            method: 'astar',
+            parameters: { risk_weight: riskWeight, heuristic_weight: heuristicWeight }
+          },
+          error: err instanceof Error ? err.message : String(err),
+          debug: { stdout: outputData, stderr: errorData, exit_code: null }
+        });
       });
     });
 
@@ -100,10 +143,12 @@ export async function GET(request: Request) {
     const totalTime = endTime - startTime;
 
     // Agregar tiempo total de API
-    result.metrics.total_api_time_ms = totalTime;
+    if (result.metrics) {
+      result.metrics.total_api_time_ms = totalTime;
+    }
     result.node_adjustments = nodeResolution;
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, result.error ? { status: 500 } : undefined);
 
   } catch (err) {
     const endTime = performance.now();
