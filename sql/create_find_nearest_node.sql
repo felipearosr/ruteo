@@ -20,6 +20,11 @@ BEGIN
     ST_Y(n.geom)::DOUBLE PRECISION,
     ST_X(n.geom)::DOUBLE PRECISION
   FROM infra_nodos n
+  WHERE EXISTS (
+    SELECT 1
+    FROM infra_aristas a
+    WHERE a.source = n.id OR a.target = n.id
+  ) -- Filtra nodos aislados
   ORDER BY n.geom <-> ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)
   LIMIT 1;
 END;

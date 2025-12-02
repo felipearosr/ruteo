@@ -15,6 +15,19 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
+import pg from 'pg';
+import { resolveConnectedNodes } from '@/lib/connectedNodes';
+
+const { Pool } = pg;
+
+const pool = new Pool({
+  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
+  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
+  database: process.env.SUPABASE_DB_NAME || 'postgres',
+  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
+  password: process.env.SUPABASE_DB_PASSWORD,
+  ssl: { rejectUnauthorized: false }
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,15 +43,21 @@ export async function GET(request: Request) {
   const bboxMargin = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
   const startTime = performance.now();
+  let client;
 
   try {
+    client = await pool.connect();
+    const nodeResolution = await resolveConnectedNodes(source, target, client);
+    const usedSource = nodeResolution.adjustedSource;
+    const usedTarget = nodeResolution.adjustedTarget;
+
     const scriptPath = path.join(process.cwd(), '..', 'optimization', 'cplex_router_api.py');
     const pythonBin = process.env.PYTHON_BIN || 'python3';
 
     const args = [
       scriptPath,
-      '--source', source.toString(),
-      '--target', target.toString(),
+      '--source', usedSource.toString(),
+      '--target', usedTarget.toString(),
       '--lambda-risk', lambdaRisk.toString()
     ];
 
@@ -123,6 +142,7 @@ export async function GET(request: Request) {
             stdout: stdoutText,
             exit_code: exitCode
           };
+          parsed.node_adjustments = nodeResolution;
         }
         resolve(parsed);
       });
@@ -177,5 +197,7 @@ export async function GET(request: Request) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }

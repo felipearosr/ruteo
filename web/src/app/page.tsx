@@ -7,8 +7,9 @@
  */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useMapEvents } from 'react-leaflet';
 import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +46,7 @@ const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline)
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
 
 // Cliente de Supabase
 const supabase = createClient(
@@ -69,11 +71,30 @@ interface RouteResult {
   error?: string;
 }
 
+interface NodeAdjustment {
+  requested: number;
+  resolved: number;
+  exists: boolean;
+  degree: number | null;
+  snapped: boolean;
+  nearestDistanceM: number | null;
+  requestedLat: number | null;
+  requestedLon: number | null;
+  resolvedLat: number | null;
+  resolvedLon: number | null;
+}
+
 interface ComparisonResult {
   baseline: RouteResult;
   resilient: RouteResult;
   cplex?: RouteResult;
   astar: RouteResult;
+  node_adjustments?: {
+    source: NodeAdjustment;
+    target: NodeAdjustment;
+    adjustedSource: number;
+    adjustedTarget: number;
+  };
   comparison: {
     total_time_ms: number;
     summary: {
@@ -89,6 +110,20 @@ export default function HomePage() {
   const [inundaciones, setInundaciones] = useState<any[]>([]);
   const [reportes, setReportes] = useState<any[]>([]);
   const [dgaStations, setDgaStations] = useState<any[]>([]);
+  const mapRef = useRef<any>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [leafletLib, setLeafletLib] = useState<typeof import('leaflet') | null>(null);
+  const [lastMouseLatLng, setLastMouseLatLng] = useState<{ lat: number; lon: number } | null>(null);
+  const [showNodes, setShowNodes] = useState(false);
+  const [visibleNodes, setVisibleNodes] = useState<{ id: number; lat: number; lon: number }[]>([]);
+  const [isLoadingNodes, setIsLoadingNodes] = useState(false);
+  const emptyNodesWarned = useRef(false);
+  const [currentZoom, setCurrentZoom] = useState<number>(13);
+  const [nodesInfo, setNodesInfo] = useState<string | null>(null);
+  const [shouldFitBounds, setShouldFitBounds] = useState(true);
+  const [showConnections, setShowConnections] = useState(false);
+  const [visibleConnections, setVisibleConnections] = useState<{ id: number; coords: [number, number][] }[]>([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(false);
 
   // Estado para rutas
   const [comparisonData, setComparisonData] = useState<ComparisonResult | null>(null);
@@ -108,8 +143,9 @@ export default function HomePage() {
 
 
   // Parámetros de ruteo
-  const [sourceNode, setSourceNode] = useState(640514);
-  const [targetNode, setTargetNode] = useState(723678);
+  // Nodos de ejemplo (se dejan vacíos al cargar; usar o seleccionar)
+  const [sourceNode, setSourceNode] = useState<string>('');
+  const [targetNode, setTargetNode] = useState<string>('');
   const [k, setK] = useState(5.0);
   const [maxRisk, setMaxRisk] = useState<number | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
@@ -126,6 +162,7 @@ export default function HomePage() {
   const [geolocating, setGeolocating] = useState(false);
   const [sourceMarker, setSourceMarker] = useState<{ lat: number; lon: number; label?: string; distance?: number } | null>(null);
   const [targetMarker, setTargetMarker] = useState<{ lat: number; lon: number; label?: string; distance?: number } | null>(null);
+  const markerUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Funciones para cargar datos de amenazas
   const loadInundaciones = async () => {
@@ -143,6 +180,19 @@ export default function HomePage() {
     if (data) setDgaStations(data);
   };
 
+  // Cargar Leaflet solo en cliente para evitar errores de window en SSR
+  useEffect(() => {
+    let mounted = true;
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((mod) => {
+        if (mounted) setLeafletLib(mod);
+      });
+    }
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     // Cargar amenazas al montar el componente
     loadInundaciones();
@@ -152,29 +202,36 @@ export default function HomePage() {
 
 
 
-  // Cargar ruta de ejemplo al inicio (desde cache)
+  // Modo rápido: Shift + D fija el destino en la posición actual del cursor sobre el mapa
   useEffect(() => {
-    // Cargar ejemplo pre-calculado desde archivo estático
-    fetch('/example_route.json')
-      .then(res => res.json())
-      .then(data => {
-        setComparisonData(data);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error('Error loading cached example:', err);
-        // Fallback: calcular en vivo si falla la carga del cache
-        setTimeout(() => {
-          compareRoutes();
-        }, 500);
-      });
-  }, []);
-
-  const clearRoutes = () => {
-    setComparisonData(null);
-  };
+    const handler = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        if (lastMouseLatLng) {
+          setDestinationFromPosition(lastMouseLatLng.lat, lastMouseLatLng.lon, 'Destino (Shift+D)');
+        } else {
+          toast.warning('Mueve el mouse sobre el mapa y vuelve a intentarlo');
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lastMouseLatLng]);
 
   const compareRoutes = async () => {
+    const src = parseInt(sourceNode, 10);
+    const tgt = parseInt(targetNode, 10);
+    if (Number.isNaN(src) || Number.isNaN(tgt)) {
+      toast.warning('Ingresa nodo origen y destino antes de calcular');
+      return;
+    }
+
+    // Asegurar que las capas estén visibles al recalcular
+    setShowBaseline(true);
+    setShowResilient(true);
+    setShowAstar(true);
+    setShowCplex(true);
+
     setIsLoading(true);
 
     console.log('🚀 Starting route comparison:', { sourceNode, targetNode });
@@ -192,8 +249,8 @@ export default function HomePage() {
       })();
 
       const params = new URLSearchParams({
-        source: sourceNode.toString(),
-        target: targetNode.toString(),
+        source: src.toString(),
+        target: tgt.toString(),
         k: k.toString(),
         ...(maxRisk && { max_risk: maxRisk.toString() }),
         ...(effectiveMaxDistance && { max_distance: effectiveMaxDistance.toString() }),
@@ -213,6 +270,38 @@ export default function HomePage() {
       });
 
       setComparisonData(data);
+      setShouldFitBounds(true);
+      const adjustments = data.node_adjustments;
+      if (adjustments?.source?.resolvedLat != null && adjustments?.source?.resolvedLon != null) {
+        setSourceMarker({
+          lat: adjustments.source.resolvedLat,
+          lon: adjustments.source.resolvedLon,
+          label: adjustments.source.snapped
+            ? `Snapped → ${adjustments.source.resolved} (desde ${adjustments.source.requested})`
+            : `Nodo ${adjustments.source.resolved}`,
+          distance: adjustments.source.nearestDistanceM ?? undefined
+        });
+      }
+      if (adjustments?.target?.resolvedLat != null && adjustments?.target?.resolvedLon != null) {
+        setTargetMarker({
+          lat: adjustments.target.resolvedLat,
+          lon: adjustments.target.resolvedLon,
+          label: adjustments.target.snapped
+            ? `Snapped → ${adjustments.target.resolved} (desde ${adjustments.target.requested})`
+            : `Nodo ${adjustments.target.resolved}`,
+          distance: adjustments.target.nearestDistanceM ?? undefined
+        });
+      }
+      const noRoutes =
+        (!data?.baseline?.route?.features || data.baseline.route.features.length === 0) &&
+        (!data?.resilient?.route?.features || data.resilient.route.features.length === 0) &&
+        (!data?.astar?.route?.features || data.astar.route.features.length === 0) &&
+        (!data?.cplex?.route?.features || data.cplex.route.features.length === 0);
+      if (noRoutes) {
+        toast.warning('No se encontraron rutas para estos nodos', {
+          description: 'Verifica origen/destino o intenta con otro par de nodos.'
+        });
+      }
     } catch (err) {
       console.error('Error al comparar rutas:', err);
     } finally {
@@ -328,7 +417,7 @@ export default function HomePage() {
 
           if (data && data.length > 0) {
             const nearestNode = data[0];
-            setSourceNode(nearestNode.node_id);
+            setSourceNode(nearestNode.node_id.toString());
             setSourceMarker({
               lat: nearestNode.node_lat ?? latitude,
               lon: nearestNode.node_lon ?? longitude,
@@ -384,9 +473,9 @@ export default function HomePage() {
 
   // Cargar caso de ejemplo predefinido
   const loadExample = () => {
-    // Configurar parámetros del caso de ejemplo (usando nodos válidos conocidos)
-    setSourceNode(640514);
-    setTargetNode(723678);
+    // Configurar parámetros del caso de ejemplo (nodos cercanos válidos)
+    setSourceNode('81615');
+    setTargetNode('79672');
     setK(5.0);
 
 
@@ -403,7 +492,7 @@ export default function HomePage() {
     }, 300);
 
     toast.info('Ejemplo cargado', {
-      description: 'Origen: Nodo 640514, Destino: Nodo 723678. Ejecutando comparacion de rutas...',
+      description: 'Origen: Nodo 81615, Destino: Nodo 79672. Ejecutando comparacion de rutas...',
       duration: 3000,
     });
   };
@@ -412,12 +501,25 @@ export default function HomePage() {
   const extractCoords = (geom: any): [number, number][] => {
     if (!geom) return [];
 
-    if (typeof geom === 'object' && geom.coordinates) {
-      if (geom.type === 'LineString') {
-        return geom.coordinates.map((c: number[]) => [c[1], c[0]]);
+    const handleCoords = (coords: any): [number, number][] => {
+      if (!Array.isArray(coords)) return [];
+      // Handles [lon, lat] pairs
+      if (coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+        return [[coords[1], coords[0]]];
+      }
+      // Handles nested arrays (LineString / MultiLineString parts)
+      return coords.flatMap((c: any) => handleCoords(c));
+    };
+
+    if (typeof geom === 'object' && geom.type && geom.coordinates) {
+      if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
+        return handleCoords(geom.coordinates);
       }
       if (geom.type === 'Point') {
         return [[geom.coordinates[1], geom.coordinates[0]]];
+      }
+      if (geom.type === 'GeometryCollection' && Array.isArray(geom.geometries)) {
+        return geom.geometries.flatMap((g: any) => extractCoords(g));
       }
     }
 
@@ -433,18 +535,308 @@ export default function HomePage() {
       .filter((c: any) => c.length === 2);
   };
 
-  const baselineCoords = getRouteCoords(comparisonData?.baseline);
-  const resilientCoords = getRouteCoords(comparisonData?.resilient);
-  const astarCoords = getRouteCoords(comparisonData?.astar);
-  const cplexCoords = getRouteCoords(comparisonData?.cplex);
+  const baselineCoords = useMemo(() => getRouteCoords(comparisonData?.baseline), [comparisonData?.baseline]);
+  const resilientCoords = useMemo(() => getRouteCoords(comparisonData?.resilient), [comparisonData?.resilient]);
+  const astarCoords = useMemo(() => getRouteCoords(comparisonData?.astar), [comparisonData?.astar]);
+  const cplexCoords = useMemo(() => getRouteCoords(comparisonData?.cplex), [comparisonData?.cplex]);
   const sourceLatLng = sourceMarker ? [sourceMarker.lat, sourceMarker.lon] : (baselineCoords[0] ?? null);
   const targetLatLng = targetMarker ? [targetMarker.lat, targetMarker.lon] : (baselineCoords.length ? baselineCoords[baselineCoords.length - 1] : null);
+
+  // Ajustar vista del mapa al conjunto de rutas o marcadores disponibles
+  useEffect(() => {
+    if (!mapRef.current || !leafletLib) return;
+    if (!shouldFitBounds) return;
+
+    const routeCoords: [number, number][] = [
+      ...baselineCoords,
+      ...resilientCoords,
+      ...astarCoords,
+      ...cplexCoords
+    ];
+
+    if (routeCoords.length > 0) {
+      const bounds = leafletLib.latLngBounds(routeCoords);
+      mapRef.current.fitBounds(bounds, { padding: [80, 80] });
+      setShouldFitBounds(false);
+      return;
+    }
+
+    const markerCoords: [number, number][] = [];
+    if (sourceLatLng) markerCoords.push(sourceLatLng as [number, number]);
+    if (targetLatLng) markerCoords.push(targetLatLng as [number, number]);
+
+    if (markerCoords.length > 0) {
+      mapRef.current.fitBounds(leafletLib.latLngBounds(markerCoords), { padding: [80, 80] });
+      setShouldFitBounds(false);
+    }
+  }, [baselineCoords, resilientCoords, astarCoords, cplexCoords, sourceLatLng, targetLatLng, leafletLib, shouldFitBounds]);
+
+const clearRoutes = () => {
+    // Preservar posición actual antes de limpiar resultados
+    if (!sourceMarker && baselineCoords.length > 0) {
+      setSourceMarker({
+        lat: baselineCoords[0][0],
+        lon: baselineCoords[0][1],
+        label: `Nodo origen ${sourceNode}`
+      });
+    }
+    if (!targetMarker && baselineCoords.length > 0) {
+      const last = baselineCoords[baselineCoords.length - 1];
+      setTargetMarker({
+        lat: last[0],
+        lon: last[1],
+        label: `Nodo destino ${targetNode}`
+      });
+    }
+    setComparisonData(null);
+};
+
+// Componente ligero para escuchar eventos del mapa sin depender de whenCreated
+function MapEventBridge({
+  onMoveEnd,
+  onZoomChange,
+  onUserAdjustView,
+  mapRef
+}: {
+  onMoveEnd: () => void;
+  onZoomChange: (zoom: number) => void;
+  onUserAdjustView: () => void;
+  mapRef: React.MutableRefObject<any>;
+}) {
+  const map = useMapEvents({
+    movestart: () => {
+      onUserAdjustView();
+    },
+    zoomstart: () => {
+      onUserAdjustView();
+    },
+    moveend: () => {
+      mapRef.current = map;
+      onZoomChange(map.getZoom());
+      onMoveEnd();
+    },
+    zoomend: () => {
+      mapRef.current = map;
+      onZoomChange(map.getZoom());
+    }
+  });
+
+  useEffect(() => {
+    mapRef.current = map;
+    onZoomChange(map.getZoom());
+  }, [map, onZoomChange]);
+
+  return null;
+}
 
 
   // Formatear métricas
   const formatDistance = (m: number) => (m / 1000).toFixed(2) + ' km';
   const formatTime = (ms: number) => ms < 1000 ? ms.toFixed(0) + 'ms' : (ms / 1000).toFixed(2) + 's';
   const formatRisk = (r: number) => (r * 100).toFixed(1) + '%';
+  const fitToData = () => setShouldFitBounds(true);
+
+  const refreshNodesInView = async () => {
+    if (!showNodes || !mapRef.current) return;
+
+    const zoom = mapRef.current.getZoom?.() ?? 0;
+    setCurrentZoom(zoom);
+    if (zoom < 13) {
+      setVisibleNodes([]);
+      return;
+    }
+
+    const bounds = mapRef.current.getBounds?.();
+    if (!bounds) return;
+
+    const south = bounds.getSouth();
+    const west = bounds.getWest();
+    const north = bounds.getNorth();
+    const east = bounds.getEast();
+    setNodesInfo(`bbox=${south.toFixed(4)},${west.toFixed(4)},${north.toFixed(4)},${east.toFixed(4)} zoom=${zoom}`);
+
+    setIsLoadingNodes(true);
+    try {
+      const res = await fetch(`/api/nodes?bbox=${south},${west},${north},${east}&limit=1500`);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Error al obtener nodos');
+      }
+      if (data?.nodes) {
+        setVisibleNodes(data.nodes);
+        if (data.nodes.length === 0 && !emptyNodesWarned.current) {
+          emptyNodesWarned.current = true;
+          toast.info('No hay nodos en esta vista', {
+            description: 'Mueve el mapa hacia Santiago (lon -70.83 a -70.46, lat -33.63 a -33.37)',
+            duration: 4000
+          });
+        }
+        if (data.nodes.length > 0) {
+          emptyNodesWarned.current = false;
+        }
+      } else {
+        setVisibleNodes([]);
+        setNodesInfo((prev) => prev ? `${prev} | sin datos` : 'sin datos');
+      }
+    } catch (err) {
+      console.error('Error loading nodes bbox', err);
+      toast.error(err instanceof Error ? err.message : 'No se pudieron cargar nodos en vista');
+      setVisibleNodes([]);
+      setNodesInfo((prev) => prev ? `${prev} | error` : 'error');
+    } finally {
+      setIsLoadingNodes(false);
+    }
+  };
+
+  const refreshConnectionsInView = async () => {
+    if (!showConnections || !mapRef.current) return;
+
+    const zoom = mapRef.current.getZoom?.() ?? 0;
+    if (zoom < 13) {
+      setVisibleConnections([]);
+      return;
+    }
+
+    const bounds = mapRef.current.getBounds?.();
+    if (!bounds) return;
+
+    const south = bounds.getSouth();
+    const west = bounds.getWest();
+    const north = bounds.getNorth();
+    const east = bounds.getEast();
+
+    setIsLoadingConnections(true);
+    try {
+      const res = await fetch(`/api/connections?bbox=${south},${west},${north},${east}&limit=2000`);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || 'Error al obtener conexiones');
+      }
+      const conns = (data?.connections || []).map((c: any) => ({
+        id: c.id,
+        coords: extractCoords(c.geom)
+      })).filter((c: any) => c.coords.length > 0);
+      setVisibleConnections(conns);
+    } catch (err) {
+      console.error('Error loading connections bbox', err);
+      toast.error(err instanceof Error ? err.message : 'No se pudieron cargar conexiones en vista');
+      setVisibleConnections([]);
+    } finally {
+      setIsLoadingConnections(false);
+    }
+  };
+
+  const refreshLayersInView = async () => {
+    await Promise.all([
+      refreshNodesInView(),
+      refreshConnectionsInView()
+    ]);
+  };
+
+  // Mantener marcadores de origen/destino siempre visibles al cambiar IDs
+  useEffect(() => {
+    const src = parseInt(sourceNode, 10);
+    const tgt = parseInt(targetNode, 10);
+    if (Number.isNaN(src) || Number.isNaN(tgt)) return;
+    // Debounce para evitar demasiadas peticiones mientras se escribe
+    if (markerUpdateTimeout.current) clearTimeout(markerUpdateTimeout.current);
+    markerUpdateTimeout.current = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          source: src.toString(),
+          target: tgt.toString()
+        });
+        const resp = await fetch(`/api/node/resolve?${params.toString()}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const adjustments = data?.node_adjustments;
+        if (adjustments?.source?.resolvedLat != null && adjustments?.source?.resolvedLon != null) {
+          setSourceMarker({
+            lat: adjustments.source.resolvedLat,
+            lon: adjustments.source.resolvedLon,
+            label: adjustments.source.snapped
+              ? `Snapped → ${adjustments.source.resolved} (desde ${adjustments.source.requested})`
+              : `Nodo ${adjustments.source.resolved}`,
+            distance: adjustments.source.nearestDistanceM ?? undefined
+          });
+        }
+        if (adjustments?.target?.resolvedLat != null && adjustments?.target?.resolvedLon != null) {
+          setTargetMarker({
+            lat: adjustments.target.resolvedLat,
+            lon: adjustments.target.resolvedLon,
+            label: adjustments.target.snapped
+              ? `Snapped → ${adjustments.target.resolved} (desde ${adjustments.target.requested})`
+              : `Nodo ${adjustments.target.resolved}`,
+            distance: adjustments.target.nearestDistanceM ?? undefined
+          });
+        }
+      } catch (err) {
+        console.error('No se pudo resolver nodos para marcadores:', err);
+      }
+    }, 300);
+    return () => {
+      if (markerUpdateTimeout.current) clearTimeout(markerUpdateTimeout.current);
+    };
+  }, [sourceNode, targetNode]);
+
+  // Actualizar conexiones cuando el toggle cambia
+  useEffect(() => {
+    if (showConnections) {
+      refreshConnectionsInView();
+    } else {
+      setVisibleConnections([]);
+    }
+  }, [showConnections]);
+
+  const setDestinationFromPosition = async (lat: number, lon: number, label?: string) => {
+    try {
+      const { data, error } = await supabase.rpc('find_nearest_node', {
+        p_lat: lat,
+        p_lon: lon
+      });
+      if (error) throw error;
+      if (data && data.length > 0) {
+        const nearest = data[0];
+        setTargetNode(nearest.node_id.toString());
+        setTargetMarker({
+          lat: nearest.node_lat ?? lat,
+          lon: nearest.node_lon ?? lon,
+          label: label || 'Destino fijado',
+          distance: nearest.distance_m
+        });
+        clearRoutes();
+        toast.success('Destino actualizado', {
+          description: `Nodo ${nearest.node_id} a ${nearest.distance_m.toFixed(0)} m`
+        });
+      } else {
+        toast.warning('No se encontró nodo conectado cerca de ese punto');
+      }
+    } catch (err: any) {
+      console.error('Error fijando destino desde mapa:', err);
+      toast.error('No se pudo fijar destino', { description: err.message });
+    }
+  };
+
+  // Recargar nodos al cambiar la vista o al activar la capa
+  useEffect(() => {
+    if (!showNodes) {
+      setVisibleNodes([]);
+      return;
+    }
+    if (!mapReady || !mapRef.current) return;
+    refreshNodesInView();
+  }, [showNodes, mapReady]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const map = mapRef.current;
+    const updateZoom = () => setCurrentZoom(map.getZoom?.() ?? null);
+    updateZoom();
+    map.on?.('zoomend', updateZoom);
+    return () => {
+      map.off?.('zoomend', updateZoom);
+    };
+  }, [mapReady]);
 
   return (
     <div className="w-full h-screen flex dark bg-background text-foreground">
@@ -477,7 +869,7 @@ export default function HomePage() {
                       id="source"
                       type="number"
                       value={sourceNode}
-                      onChange={(e) => setSourceNode(parseInt(e.target.value) || 1)}
+                      onChange={(e) => setSourceNode(e.target.value)}
                       className="flex-1"
                     />
                     <Button
@@ -503,7 +895,7 @@ export default function HomePage() {
                     id="target"
                     type="number"
                     value={targetNode}
-                    onChange={(e) => setTargetNode(parseInt(e.target.value) || 100)}
+                    onChange={(e) => setTargetNode(e.target.value)}
                   />
                 </div>
               </div>
@@ -517,7 +909,7 @@ export default function HomePage() {
                   <AddressInput
                     placeholder="Ej: Av. Providencia 1234, Santiago"
                     onNodeSelected={({ nodeId, address, distance, lat, lon }) => {
-                      setSourceNode(nodeId);
+                      setSourceNode(nodeId.toString());
                       setSourceMarker({ lat, lon, label: address, distance });
                       clearRoutes();
                     }}
@@ -531,7 +923,7 @@ export default function HomePage() {
                   <AddressInput
                     placeholder="Ej: Mall Parque Arauco, Las Condes"
                     onNodeSelected={({ nodeId, address, distance, lat, lon }) => {
-                      setTargetNode(nodeId);
+                      setTargetNode(nodeId.toString());
                       setTargetMarker({ lat, lon, label: address, distance });
                       clearRoutes();
                     }}
@@ -671,7 +1063,7 @@ export default function HomePage() {
               <Button
                 className="w-full"
                 onClick={compareRoutes}
-                disabled={isLoading}
+                disabled={isLoading || !sourceNode || !targetNode}
               >
                 {isLoading ? (
                   <>
@@ -753,6 +1145,73 @@ export default function HomePage() {
               </div>
 
 
+            </CardContent>
+          </Card>
+
+          {/* Nodos en vista */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Nodos</CardTitle>
+              <CardDescription>Mostrar nodos visibles (zoom ≥ 13)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="shownodes"
+                  checked={showNodes}
+                  onCheckedChange={(checked) => setShowNodes(!!checked)}
+                />
+                <Label htmlFor="shownodes" className="flex-1">
+                  Mostrar nodos en la vista actual
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Se limita a 1500 nodos por vista. Acerca el zoom para ver IDs.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Cobertura actual de datos: Santiago (lon -70.83 a -70.46, lat -33.63 a -33.37).
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Zoom actual: {currentZoom} (mínimo 13 para mostrar nodos).
+              </p>
+              {nodesInfo && (
+                <p className="text-[10px] text-muted-foreground">
+                  Última consulta: {nodesInfo}
+                </p>
+              )}
+              {showNodes && (
+                <div className="text-xs text-muted-foreground">
+                  {isLoadingNodes ? 'Cargando nodos...' : `Mostrando ${visibleNodes.length} nodos`}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Conexiones en vista */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Conexiones</CardTitle>
+              <CardDescription>Mostrar aristas en la vista (zoom ≥ 13)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="showconnections"
+                  checked={showConnections}
+                  onCheckedChange={(checked) => setShowConnections(!!checked)}
+                />
+                <Label htmlFor="showconnections" className="flex-1">
+                  Mostrar conexiones (límite 2000)
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Útil para ver la conectividad de la red en el área actual.
+              </p>
+              {showConnections && (
+                <div className="text-xs text-muted-foreground">
+                  {isLoadingConnections ? 'Cargando conexiones...' : `Mostrando ${visibleConnections.length} conexiones`}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -952,7 +1411,22 @@ export default function HomePage() {
           center={[-33.45, -70.65]}
           zoom={13}
           className="w-full h-full"
+          whenCreated={(mapInstance) => {
+            mapRef.current = mapInstance;
+            setMapReady(true);
+            setCurrentZoom(mapInstance.getZoom?.() ?? null);
+            mapInstance.on('mousemove', (e: any) => {
+              setLastMouseLatLng({ lat: e.latlng.lat, lon: e.latlng.lng });
+            });
+          }}
         >
+          {/* Bridge to listen map events reliably */}
+          <MapEventBridge
+            onMoveEnd={refreshLayersInView}
+            onZoomChange={setCurrentZoom}
+            onUserAdjustView={() => setShouldFitBounds(false)}
+            mapRef={mapRef}
+          />
           <TileLayer
             className="filter brightness-[1.2] contrast-[0.9]"
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -987,6 +1461,29 @@ export default function HomePage() {
               pathOptions={{ color: '#a855f7', weight: 4, opacity: 0.7 }}
             />
           )}
+
+          {/* Conexiones de la red */}
+          {showConnections && visibleConnections.map((conn) => (
+            <Polyline
+              key={`conn-${conn.id}`}
+              positions={conn.coords}
+              pathOptions={{ color: '#6b7280', weight: 2, opacity: 0.4 }}
+            />
+          ))}
+
+          {/* Nodos visibles en la vista */}
+          {showNodes && visibleNodes.map((n) => (
+            <CircleMarker
+              key={`node-${n.id}`}
+              center={[n.lat, n.lon]}
+              radius={4}
+              pathOptions={{ color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.8, weight: 1 }}
+            >
+              <Tooltip direction="top" offset={[0, -4]} opacity={0.95} className="text-xs">
+                {n.id}
+              </Tooltip>
+            </CircleMarker>
+          ))}
 
 
 
@@ -1150,6 +1647,12 @@ export default function HomePage() {
           )}
         </MapContainer>
 
+        <div className="absolute top-4 right-4 z-[1000] flex gap-2">
+          <Button size="sm" variant="secondary" onClick={fitToData}>
+            Ajustar vista
+          </Button>
+        </div>
+
         {/* Leyenda en el mapa */}
         <div className="absolute bottom-4 right-4 z-[1000] bg-background p-4 rounded-lg shadow-lg border border-border">
           <h3 className="font-semibold mb-2 text-sm text-foreground">Leyenda de Rutas</h3>
@@ -1167,6 +1670,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

@@ -17,6 +17,7 @@
  */
 import { NextResponse } from 'next/server';
 import pg from 'pg';
+import { resolveConnectedNodes } from '@/lib/connectedNodes';
 
 const { Pool } = pg;
 
@@ -24,15 +25,21 @@ const DEFAULT_TIMEOUT_MS = parseInt(process.env.COMPARE_ROUTE_TIMEOUT_MS || '600
 
 // Pool compartido para evitar crear conexiones por ruta
 const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
+  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
   port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
   database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER,
+  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
   password: process.env.SUPABASE_DB_PASSWORD,
   ssl: { rejectUnauthorized: false }
 });
 
-async function runBaseline(source: number, target: number, maxDistance: number | null, avoidFlood: boolean) {
+async function runBaselineForTable(
+  tableName: 'infra_aristas_cleaned' | 'infra_aristas',
+  source: number,
+  target: number,
+  maxDistance: number | null,
+  avoidFlood: boolean
+) {
   const floodFilter = avoidFlood ? ' AND coalesce(p_fallo_arista, 0) < 0.3' : '';
   const startTime = performance.now();
 
@@ -60,17 +67,13 @@ async function runBaseline(source: number, target: number, maxDistance: number |
       ) as route
     FROM pgr_dijkstra(
       'SELECT id, source, target, length_m as cost, 
-       CASE 
-         WHEN tags->>''oneway'' = ''yes'' THEN -1
-         WHEN tags->>''oneway'' = ''-1'' THEN length_m
-         ELSE length_m
-       END as reverse_cost 
-       FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
+       length_m as reverse_cost 
+       FROM ${tableName} WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
       $1::BIGINT,
       $2::BIGINT,
       true
     ) r
-    JOIN infra_aristas a ON r.edge = a.id
+    JOIN ${tableName} a ON r.edge = a.id
     ${maxDistance !== null ? 'WHERE a.length_m <= $3' : ''}
   `;
 
@@ -95,12 +98,36 @@ async function runBaseline(source: number, target: number, maxDistance: number |
       computation_time_ms: endTime - startTime,
       risk_score: 0,
       num_segments: features.length,
-      method: 'baseline'
+      method: 'baseline',
+      source_table: tableName
     }
   };
 }
 
-async function runResilient(source: number, target: number, k: number, maxRisk: number | null, maxDistance: number | null, avoidFlood: boolean) {
+async function runBaseline(source: number, target: number, maxDistance: number | null, avoidFlood: boolean) {
+  const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
+  for (let i = 0; i < tables.length; i++) {
+    const tableName = tables[i];
+    const result = await runBaselineForTable(tableName, source, target, maxDistance, avoidFlood);
+    if (result.metrics.num_segments > 0 || i === tables.length - 1) {
+      if (result.metrics.num_segments === 0 && i < tables.length - 1) {
+        console.warn(`[baseline] Sin segmentos usando ${tableName}, probando tabla alternativa`);
+      }
+      return result;
+    }
+  }
+  return fallbackResult('baseline', 'Sin ruta'); // improbable
+}
+
+async function runResilientForTable(
+  tableName: 'infra_aristas_cleaned' | 'infra_aristas',
+  source: number,
+  target: number,
+  k: number,
+  maxRisk: number | null,
+  maxDistance: number | null,
+  avoidFlood: boolean
+) {
   const client = await pool.connect();
   const startTime = performance.now();
 
@@ -113,12 +140,8 @@ async function runResilient(source: number, target: number, k: number, maxRisk: 
         a.source, 
         a.target, 
         a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0)) as cost,
-        CASE 
-          WHEN a.tags->>'oneway' = 'yes' THEN -1
-          WHEN a.tags->>'oneway' = '-1' THEN a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0))
-          ELSE a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0))
-        END as reverse_cost
-      FROM infra_aristas a
+        a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0)) as reverse_cost
+      FROM ${tableName} a
       WHERE a.length_m IS NOT NULL
     `;
 
@@ -166,7 +189,7 @@ async function runResilient(source: number, target: number, k: number, maxRisk: 
           ), '[]'::json)
         ) as route
       FROM route_result r
-      JOIN infra_aristas a ON r.edge = a.id;
+      JOIN ${tableName} a ON r.edge = a.id;
     `;
 
     const result = await client.query(query, [source, target]);
@@ -192,7 +215,8 @@ async function runResilient(source: number, target: number, k: number, maxRisk: 
         risk_score: totalRisk,
         num_segments: features.length,
         method: 'resilient',
-        parameters: { k, max_risk: maxRisk, max_distance: maxDistance }
+        parameters: { k, max_risk: maxRisk, max_distance: maxDistance },
+        source_table: tableName
       }
     };
   } catch (error) {
@@ -201,6 +225,21 @@ async function runResilient(source: number, target: number, k: number, maxRisk: 
   } finally {
     client.release();
   }
+}
+
+async function runResilient(source: number, target: number, k: number, maxRisk: number | null, maxDistance: number | null, avoidFlood: boolean) {
+  const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
+  for (let i = 0; i < tables.length; i++) {
+    const tableName = tables[i];
+    const result = await runResilientForTable(tableName, source, target, k, maxRisk, maxDistance, avoidFlood);
+    if (result.metrics.num_segments > 0 || i === tables.length - 1) {
+      if (result.metrics.num_segments === 0 && i < tables.length - 1) {
+        console.warn(`[resilient] Sin segmentos usando ${tableName}, probando tabla alternativa`);
+      }
+      return result;
+    }
+  }
+  return fallbackResult('resilient', 'Sin ruta'); // fallback de seguridad
 }
 
 function fallbackResult(method: string, message: string) {
@@ -270,13 +309,18 @@ export async function GET(request: Request) {
   const bboxMarginNum = bboxMarginParam !== undefined ? parseFloat(bboxMarginParam) : undefined;
 
   const startTime = performance.now();
+  const client = await pool.connect();
 
   try {
+    const nodeResolution = await resolveConnectedNodes(sourceNum, targetNum, client);
+    const usedSource = nodeResolution.adjustedSource;
+    const usedTarget = nodeResolution.adjustedTarget;
+
     const baseUrl = new URL(request.url).origin;
 
     const sharedParams = new URLSearchParams({
-      source: sourceNum.toString(),
-      target: targetNum.toString(),
+      source: usedSource.toString(),
+      target: usedTarget.toString(),
       ...(maxRiskNum !== null && { max_risk: maxRiskNum.toString() }),
       ...(maxDistanceNum !== null && { max_distance: maxDistanceNum.toString() }),
       ...(maxTimeNum !== null && { max_time_min: maxTimeNum.toString() }),
@@ -286,8 +330,8 @@ export async function GET(request: Request) {
     });
 
     const [baselineResult, resilientResult, astarResult, cplexResult] = await Promise.all([
-      withTimeout(runBaseline(sourceNum, targetNum, maxDistanceNum, avoidFlood), 'baseline'),
-      withTimeout(runResilient(sourceNum, targetNum, kNum, maxRiskNum, maxDistanceNum, avoidFlood), 'resilient'),
+      withTimeout(runBaseline(usedSource, usedTarget, maxDistanceNum, avoidFlood), 'baseline'),
+      withTimeout(runResilient(usedSource, usedTarget, kNum, maxRiskNum, maxDistanceNum, avoidFlood), 'resilient'),
       withTimeout(
         fetch(`${baseUrl}/api/route/metaheuristic?${sharedParams.toString()}&risk_weight=${riskWeightNum}`).then(r => r.json()),
         'astar'
@@ -318,7 +362,11 @@ export async function GET(request: Request) {
           simulation_id: simulationId,
           lambda_risk: lambdaRiskNum,
           avoid_flood_zones: avoidFlood,
-          bbox_margin: bboxMarginNum
+          bbox_margin: bboxMarginNum,
+          requested_source: sourceNum,
+          requested_target: targetNum,
+          resolved_source: usedSource,
+          resolved_target: usedTarget
         },
         summary: {
           shortest_distance: Math.min(
@@ -340,7 +388,8 @@ export async function GET(request: Request) {
             cplexResult?.metrics?.computation_time_ms || Infinity
           )
         }
-      }
+      },
+      node_adjustments: nodeResolution
     };
 
     return NextResponse.json(results);
@@ -357,5 +406,7 @@ export async function GET(request: Request) {
       },
       { status: 500 }
     );
+  } finally {
+    client.release();
   }
 }

@@ -25,4 +25,4 @@ dist/
 metadata/*.json
 amenazas/*.json
 infraestructura/*.geojson
-
+supabase_dump.sql

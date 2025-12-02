@@ -9,18 +9,21 @@
  */
 import { NextResponse } from 'next/server';
 import pg from 'pg';
+import { resolveConnectedNodes } from '@/lib/connectedNodes';
 
 const { Pool } = pg;
 
 // Crear pool de conexiones para PostgreSQL directo
 const pool = new Pool({
   host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '5432'),
+  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
   database: process.env.SUPABASE_DB_NAME || 'postgres',
   user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
   password: process.env.SUPABASE_DB_PASSWORD,
   ssl: { rejectUnauthorized: false }
 });
+
+type AristaTable = 'infra_aristas_cleaned' | 'infra_aristas';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,11 +35,11 @@ export async function GET(request: Request) {
 
   // Medir tiempo de inicio
   const startTime = performance.now();
+  let client;
 
-  try {
+  const runForTable = async (table: AristaTable, usedSource: number, usedTarget: number) => {
     const floodFilter = avoidFloodZones ? " AND coalesce(p_fallo_arista, 0) < 0.3" : "";
 
-    // Consulta SQL con pgr_dijkstra (solo costo = distancia)
     const query = `
       SELECT 
         json_build_object(
@@ -61,52 +64,61 @@ export async function GET(request: Request) {
         ) as route
       FROM pgr_dijkstra(
         'SELECT id, source, target, length_m as cost, 
-         CASE 
-           WHEN tags->>''oneway'' = ''yes'' THEN -1
-           WHEN tags->>''oneway'' = ''-1'' THEN length_m
-           ELSE length_m
-         END as reverse_cost 
-         FROM infra_aristas WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
+         length_m as reverse_cost 
+        FROM ${table} WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
         $1::BIGINT,
         $2::BIGINT,
         true
       ) r
-      JOIN infra_aristas a ON r.edge = a.id;
+      JOIN ${table} a ON r.edge = a.id;
     `;
 
-    const result = await pool.query(query, [source, target]);
+    const result = await client!.query(query, [usedSource, usedTarget]);
+    return result.rows?.[0]?.route || { type: 'FeatureCollection', features: [] };
+  };
 
-    // Medir tiempo de finalización
+  try {
+    client = await pool.connect();
+
+    const nodeResolution = await resolveConnectedNodes(source, target, client);
+    const usedSource = nodeResolution.adjustedSource;
+    const usedTarget = nodeResolution.adjustedTarget;
+
+    const tables: AristaTable[] = ['infra_aristas_cleaned', 'infra_aristas'];
+    let routeData: any = { type: 'FeatureCollection', features: [] };
+    let usedTable: AristaTable = tables[0];
+
+    for (let i = 0; i < tables.length; i++) {
+      usedTable = tables[i];
+      routeData = await runForTable(usedTable, usedSource, usedTarget);
+      if (routeData.features?.length) break;
+    }
+
     const endTime = performance.now();
     const computationTime = endTime - startTime;
 
-    if (!result.rows || result.rows.length === 0) {
+    const features = routeData.features || [];
+    let totalDistance = 0;
+    let totalRisk = 0;
+    for (const feature of features) {
+      totalDistance += feature.properties.length_m || 0;
+      totalRisk += feature.properties.p_fallo || 0;
+    }
+
+    if (!features.length) {
       return NextResponse.json({
-        route: {
-          type: 'FeatureCollection',
-          features: []
-        },
+        route: routeData,
         metrics: {
           distance_m: 0,
           computation_time_ms: computationTime,
           risk_score: 0,
           num_segments: 0,
-          method: 'baseline'
+          method: 'baseline',
+          source_table: usedTable
         },
-        error: 'No se encontró ruta entre los nodos especificados.'
+        error: 'No se encontró ruta entre los nodos especificados.',
+        node_adjustments: nodeResolution
       });
-    }
-
-    const routeData = result.rows[0].route;
-
-    // Calcular métricas
-    let totalDistance = 0;
-    let totalRisk = 0;
-    const features = routeData.features || [];
-
-    for (const feature of features) {
-      totalDistance += feature.properties.length_m || 0;
-      totalRisk += feature.properties.p_fallo || 0;
     }
 
     return NextResponse.json({
@@ -116,8 +128,10 @@ export async function GET(request: Request) {
         computation_time_ms: computationTime,
         risk_score: totalRisk,
         num_segments: features.length,
-        method: 'baseline'
-      }
+        method: 'baseline',
+        source_table: usedTable
+      },
+      node_adjustments: nodeResolution
     });
 
   } catch (err) {
@@ -138,9 +152,12 @@ export async function GET(request: Request) {
           num_segments: 0,
           method: 'baseline'
         },
-        error: 'Error calculando ruta: ' + (err instanceof Error ? err.message : String(err))
+        error: 'Error calculando ruta: ' + (err instanceof Error ? err.message : String(err)),
+        node_adjustments: { error: 'resolution_failed' }
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }

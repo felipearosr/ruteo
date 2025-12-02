@@ -21,26 +21,29 @@ import time
 
 import socket
 
-# Configuración de conexión a Supabase
+# Configuración de conexión a Supabase (usa el pooler por defecto)
 DB_CONFIG = {
-    'host': os.getenv('SUPABASE_DB_HOST'),
+    'host': os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com'),
     'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
-    'database': 'postgres',
-    'user': os.getenv('SUPABASE_DB_USER'),
+    'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
+    'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
     'password': os.getenv('SUPABASE_DB_PASSWORD'),
 }
 
 def get_db_connection():
     """Establece y retorna una conexión a la base de datos."""
-    host = DB_CONFIG['host']
-    try:
-        # Force IPv4 resolution
-        host_ip = socket.gethostbyname(host)
-    except Exception as e:
-        host_ip = '18.213.155.45'
-        
     params = DB_CONFIG.copy()
-    params['host'] = host_ip
+
+    if not params.get('password'):
+        raise ValueError("SUPABASE_DB_PASSWORD no está definido en el entorno")
+
+    # Forzar IPv4 si falla la resolución DNS; de lo contrario usar host tal cual
+    host = params.get('host')
+    try:
+        params['host'] = socket.gethostbyname(host)
+    except Exception:
+        params['host'] = host
+
     return psycopg2.connect(**params)
 
 
@@ -60,8 +63,8 @@ class AStarResilientRouter:
         # Parámetros del algoritmo
         self.heuristic_weight = 1.0  # Peso de la heurística
         self.risk_weight = 3.0  # Peso del riesgo en el costo
-        # Margen del bounding box para recortar el subgrafo (por defecto 0.02° ≈ 2 km)
-        self.bbox_margin = float(os.getenv("ASTAR_BBOX_MARGIN", 0.02))
+        # Margen del bounding box para recortar el subgrafo (por defecto 0.1° ≈ 11 km)
+        self.bbox_margin = float(os.getenv("ASTAR_BBOX_MARGIN", 0.1))
     
     def connect(self):
         """Establecer conexión a la base de datos"""
@@ -74,7 +77,7 @@ class AStarResilientRouter:
         if self.conn and not self.conn.closed:
             self.conn.close()
     
-    def load_graph(self, source: int, target: int, bbox_margin: float = 0.05) -> Tuple[Dict, Dict, Dict]:
+    def load_graph(self, source: int, target: int, bbox_margin: Optional[float] = None) -> Tuple[Dict, Dict, Dict]:
         """
         Cargar el grafo desde la base de datos
         
@@ -97,7 +100,7 @@ class AStarResilientRouter:
                 ST_XMax(extent) as xmax, ST_YMax(extent) as ymax
             FROM (
                 SELECT ST_Extent(geom) as extent
-                FROM infra_nodos
+                FROM infra_nodos_cleaned
                 WHERE id IN (%s, %s)
             ) AS bbox
         """, (source, target))
@@ -119,7 +122,7 @@ class AStarResilientRouter:
                 ST_X(geom) as lon,
                 ST_Y(geom) as lat,
                 0.0 as p_fallo
-            FROM infra_nodos
+            FROM infra_nodos_cleaned
             WHERE ST_Intersects(
                 geom,
                 ST_MakeEnvelope(%s, %s, %s, %s, 4326)
@@ -143,16 +146,14 @@ class AStarResilientRouter:
                 a.highway,
                 a.tags->>'oneway' as oneway,
                 ST_AsText(a.geom) as geom_wkt
-            FROM infra_aristas a
+            FROM infra_aristas_cleaned a
             WHERE 
-                a.source = ANY(%s::bigint[]) AND
-                a.target = ANY(%s::bigint[]) AND
                 a.length_m IS NOT NULL AND
                 ST_Intersects(
                     a.geom,
                     ST_MakeEnvelope(%s, %s, %s, %s, 4326)
                 )
-        """, (list(nodos.keys()), list(nodos.keys()), xmin, ymin, xmax, ymax))
+        """, (xmin, ymin, xmax, ymax))
         
         aristas_list = cur.fetchall()
         

@@ -1,5 +1,5 @@
 /**
- * API route para calcular rutas usando pgr_dijkstra en Supabase.
+ * API route para calcular rutas usando pgr_dijkstra en Supabase (topología limpiada).
  * 
  * Endpoint: GET /api/route
  * Query params (opcionales): ?source=1&target=100
@@ -49,12 +49,12 @@ export async function GET(request: Request) {
           ), '[]'::json)
         ) as route
       FROM pgr_dijkstra(
-        'SELECT id, source, target, cost FROM infra_aristas WHERE cost IS NOT NULL',
+        'SELECT id, source, target, cost FROM infra_aristas_cleaned WHERE cost IS NOT NULL',
         $1,
         $2,
         directed := false
       ) r
-      JOIN infra_aristas a ON r.edge = a.id;
+      JOIN infra_aristas_cleaned a ON r.edge = a.id;
     `;
 
     const result = await pool.query(query, [source, target]);

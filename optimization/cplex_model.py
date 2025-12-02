@@ -24,10 +24,10 @@ except ImportError:
 
 
 DB_CONFIG = {
-    'host': os.getenv('SUPABASE_DB_HOST'),
+    'host': os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com'),
     'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
     'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
-    'user': os.getenv('SUPABASE_DB_USER'),
+    'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
     'password': os.getenv('SUPABASE_DB_PASSWORD'),
     # Keep connections from hanging forever when the DB is unreachable.
     'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
@@ -54,8 +54,16 @@ class CplexResilientRouter:
         self.conn_params = connection_params or DB_CONFIG
         self.conn = None
         self.lambda_risk = float(os.getenv("CPLEX_LAMBDA_RISK", 5.0))
-        # 0 = sin límite de tiempo
-        self.max_time_limit = float(os.getenv("CPLEX_TIMELIMIT", 0))
+        # Límite de tiempo: por defecto 120s; 0 o negativo = sin límite explícito (dejar valor por defecto de CPLEX)
+        env_time_limit = os.getenv("CPLEX_TIMELIMIT")
+        if env_time_limit is None:
+            self.max_time_limit = 120.0
+        else:
+            try:
+                parsed = float(env_time_limit)
+                self.max_time_limit = parsed if parsed > 0 else None
+            except ValueError:
+                self.max_time_limit = 120.0
         # Subgrafo compacto por defecto (~2 km)
         self.bbox_margin = float(os.getenv("CPLEX_BBOX_MARGIN", 0.02))
         self.threads = int(os.getenv("CPLEX_THREADS", os.cpu_count() or 1))
@@ -101,7 +109,7 @@ class CplexResilientRouter:
                 ST_XMax(extent) as xmax, ST_YMax(extent) as ymax
             FROM (
                 SELECT ST_Extent(geom) as extent
-                FROM infra_nodos
+                FROM infra_nodos_cleaned
                 WHERE id IN (%s, %s)
             ) AS bbox
             """,
@@ -138,7 +146,7 @@ class CplexResilientRouter:
                 coalesce(a.p_fallo_arista, 0.0) as p_fallo,
                 a.highway,
                 ST_AsText(a.geom) as geom_wkt
-            FROM infra_aristas a
+            FROM infra_aristas_cleaned a
             WHERE 
                 a.length_m IS NOT NULL
                 AND ST_Intersects(a.geom, ST_MakeEnvelope(%s, %s, %s, %s, 4326))
@@ -170,7 +178,7 @@ class CplexResilientRouter:
                 ST_X(geom) as lon,
                 ST_Y(geom) as lat,
                 coalesce(p_fallo_nodo, 0.0) as p_fallo
-            FROM infra_nodos
+            FROM infra_nodos_cleaned
             WHERE ST_Intersects(geom, ST_MakeEnvelope(%s, %s, %s, %s, 4326))
             """,
             (xmin, ymin, xmax, ymax),
@@ -230,16 +238,18 @@ class CplexResilientRouter:
             raise ValueError(f"Los nodos {source} o {target} no están en el grafo cargado")
 
         m = Model(name="resilient_routing")
-        m.parameters.timelimit = self.max_time_limit
+        if self.max_time_limit is not None:
+            m.parameters.timelimit = self.max_time_limit
         m.parameters.threads = self.threads
         m.parameters.parallel = self.parallel_mode
         m.parameters.mip.tolerances.mipgap = self.mipgap
         m.parameters.mip.display = self.mip_display
         # emphasis vive en la rama general de emphasis (no en mip.* en versiones recientes de docplex)
         m.parameters.emphasis.mip = self.mip_emphasis
+        time_limit_log = f"{self.max_time_limit}s" if self.max_time_limit is not None else "auto"
         self._log(
             "[CPLEX] Parámetros | "
-            f"timelimit={self.max_time_limit}s threads={self.threads} "
+            f"timelimit={time_limit_log} threads={self.threads} "
             f"parallel={self.parallel_mode} mipgap={self.mipgap} mip_display={self.mip_display} "
             f"mip_emphasis={self.mip_emphasis}"
         )

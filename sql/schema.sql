@@ -206,6 +206,10 @@ begin
         st_y(n.geom),
         st_x(n.geom)
     from infra_nodos n
+    where exists (
+        select 1 from infra_aristas a
+        where a.source = n.id or a.target = n.id
+    ) -- excluye nodos aislados
     order by n.geom <-> st_setsrid(st_makepoint(lon, lat), 4326)
     limit 1;
 end;

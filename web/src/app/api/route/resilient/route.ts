@@ -14,17 +14,20 @@
  */
 import { NextResponse } from 'next/server';
 import pg from 'pg';
+import { resolveConnectedNodes } from '@/lib/connectedNodes';
 
 const { Pool } = pg;
 
 const pool = new Pool({
   host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '5432'),
+  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
   database: process.env.SUPABASE_DB_NAME || 'postgres',
   user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
   password: process.env.SUPABASE_DB_PASSWORD,
   ssl: { rejectUnauthorized: false }
 });
+
+type AristaTable = 'infra_aristas_cleaned' | 'infra_aristas';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -39,9 +42,14 @@ export async function GET(request: Request) {
 
   const startTime = performance.now();
   let client;
+  let nodeResolution;
 
   try {
     client = await pool.connect();
+
+    nodeResolution = await resolveConnectedNodes(source, target, client);
+    const usedSource = nodeResolution.adjustedSource;
+    const usedTarget = nodeResolution.adjustedTarget;
 
     // 1. Pre-cálculos con tablas temporales
     await client.query('BEGIN');
@@ -58,8 +66,8 @@ export async function GET(request: Request) {
         WITH active_failures AS (
           SELECT 
             CASE 
-              WHEN entity_type = 'nodo' THEN (SELECT geom FROM infra_nodos WHERE id = entity_id)
-              WHEN entity_type = 'arista' THEN (SELECT geom FROM infra_aristas WHERE id = entity_id)
+              WHEN entity_type = 'nodo' THEN (SELECT geom FROM infra_nodos_cleaned WHERE id = entity_id)
+              WHEN entity_type = 'arista' THEN (SELECT geom FROM infra_aristas_cleaned WHERE id = entity_id)
             END as geom_sim
           FROM sim_fallas_activas 
           WHERE simulation_id = $1 AND is_failed = true
@@ -67,7 +75,7 @@ export async function GET(request: Request) {
         SELECT 
           a.id as edge_id,
           SUM(5.0 / (ST_Distance(a.geom::geography, f.geom_sim::geography) + 1.0)) as penalty
-        FROM infra_aristas a
+        FROM infra_aristas_cleaned a
         JOIN active_failures f ON ST_DWithin(a.geom, f.geom_sim, 0.001)
         GROUP BY a.id
       `;
@@ -84,7 +92,7 @@ export async function GET(request: Request) {
       SELECT 
         a.id as edge_id,
         MAX(t.congestion_factor) as traffic_factor
-      FROM infra_aristas a
+      FROM infra_aristas_cleaned a
       JOIN meta_trafico t ON ST_Intersects(a.geom, t.geom)
       GROUP BY a.id
     `;
@@ -105,109 +113,112 @@ export async function GET(request: Request) {
       END
     `;
 
-    let edgesQuery = `
-      SELECT 
-        a.id, 
-        a.source, 
-        a.target, 
-        a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as cost,
-        CASE 
-          WHEN a.tags->>'oneway' = 'yes' THEN -1
-          WHEN a.tags->>'oneway' = '-1' THEN a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost}))
-          ELSE a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost}))
-        END as reverse_cost
-      FROM infra_aristas a
-      ${penaltyJoin}
-      ${trafficJoin}
-      WHERE a.length_m IS NOT NULL
-    `;
+    const runForTable = async (table: AristaTable) => {
+      let edgesQuery = `
+        SELECT 
+          a.id, 
+          a.source, 
+          a.target, 
+          a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as cost,
+          a.length_m * ${trafficCost} * ${heuristicTrafficSql} * (1.0 + ${k} * (a.p_fallo_arista + ${penaltyCost})) as reverse_cost
+        FROM ${table} a
+        ${penaltyJoin}
+        ${trafficJoin}
+        WHERE a.length_m IS NOT NULL
+      `;
 
-    // Aplicar filtros de restricciones
-    if (maxRisk !== null) {
-      edgesQuery += ` AND a.p_fallo_arista <= ${maxRisk}`;
-    }
-    if (maxDistance !== null) {
-      edgesQuery += ` AND length_m <= ${maxDistance}`;
-    }
-    if (avoidFloodZones) {
-      edgesQuery += ` AND coalesce(a.p_fallo_arista, 0) < 0.3`;
-    }
+      if (maxRisk !== null) {
+        edgesQuery += ` AND a.p_fallo_arista <= ${maxRisk}`;
+      }
+      if (maxDistance !== null) {
+        edgesQuery += ` AND length_m <= ${maxDistance}`;
+      }
+      if (avoidFloodZones) {
+        edgesQuery += ` AND coalesce(a.p_fallo_arista, 0) < 0.3`;
+      }
 
-    // Escapar comillas simples para pgr_dijkstra
-    const safeEdgesQuery = edgesQuery.replace(/'/g, "''");
+      const safeEdgesQuery = edgesQuery.replace(/'/g, "''");
 
-    const query = `
-      WITH route_result AS (
-        SELECT * FROM pgr_dijkstra(
-          '${safeEdgesQuery}',
-          $1::BIGINT,
-          $2::BIGINT,
-          true
+      const query = `
+        WITH route_result AS (
+          SELECT * FROM pgr_dijkstra(
+            '${safeEdgesQuery}',
+            $1::BIGINT,
+            $2::BIGINT,
+            true
+          )
         )
-      )
-      SELECT 
-        json_build_object(
-          'type', 'FeatureCollection',
-          'features', COALESCE(json_agg(
-            json_build_object(
-              'type', 'Feature',
-              'geometry', CASE 
-                WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
-                ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
-              END,
-              'properties', json_build_object(
-                'seq', r.seq,
-                'edge_id', r.edge,
-                'cost', r.cost,
-                'length_m', a.length_m,
-                'p_fallo', a.p_fallo_arista,
-                'highway', a.highway,
-                'adjusted_cost', r.cost
-              )
-            ) ORDER BY r.seq
-          ), '[]'::json)
-        ) as route
-      FROM route_result r
-      JOIN infra_aristas a ON r.edge = a.id;
-    `;
+        SELECT 
+          json_build_object(
+            'type', 'FeatureCollection',
+            'features', COALESCE(json_agg(
+              json_build_object(
+                'type', 'Feature',
+                'geometry', CASE 
+                  WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
+                  ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
+                END,
+                'properties', json_build_object(
+                  'seq', r.seq,
+                  'edge_id', r.edge,
+                  'cost', r.cost,
+                  'length_m', a.length_m,
+                  'p_fallo', a.p_fallo_arista,
+                  'highway', a.highway,
+                  'adjusted_cost', r.cost
+                )
+              ) ORDER BY r.seq
+            ), '[]'::json)
+          ) as route
+        FROM route_result r
+        JOIN ${table} a ON r.edge = a.id;
+      `;
 
-    const result = await client.query(query, [source, target]);
+      const result = await client!.query(query, [usedSource, usedTarget]);
+      return result.rows?.[0]?.route || { type: 'FeatureCollection', features: [] };
+    };
+
+    const tables: AristaTable[] = ['infra_aristas_cleaned', 'infra_aristas'];
+    let routeData: any = { type: 'FeatureCollection', features: [] };
+    let usedTable: AristaTable = tables[0];
+
+    for (let i = 0; i < tables.length; i++) {
+      usedTable = tables[i];
+      routeData = await runForTable(usedTable);
+      if (routeData.features?.length) break;
+    }
 
     await client.query('COMMIT');
 
     const endTime = performance.now();
     const computationTime = endTime - startTime;
 
-    if (!result.rows || result.rows.length === 0) {
+    const features = routeData.features || [];
+    let totalDistance = 0;
+    let totalRisk = 0;
+    let totalAdjustedCost = 0;
+
+    for (const feature of features) {
+      totalDistance += feature.properties.length_m || 0;
+      totalRisk += feature.properties.p_fallo || 0;
+      totalAdjustedCost += feature.properties.adjusted_cost || 0;
+    }
+
+    if (!features.length) {
       return NextResponse.json({
-        route: {
-          type: 'FeatureCollection',
-          features: []
-        },
+        route: routeData,
         metrics: {
           distance_m: 0,
           computation_time_ms: computationTime,
           risk_score: 0,
           num_segments: 0,
           method: 'resilient',
-          parameters: { k, max_risk: maxRisk, max_distance: maxDistance }
+          parameters: { k, max_risk: maxRisk, max_distance: maxDistance },
+          source_table: usedTable
         },
-        error: 'No se encontró ruta entre los nodos especificados.'
+        error: 'No se encontró ruta entre los nodos especificados.',
+        node_adjustments: nodeResolution
       });
-    }
-
-    const routeData = result.rows[0].route;
-
-    // Calcular métricas
-    let totalDistance = 0;
-    let totalRisk = 0;
-    let totalAdjustedCost = 0;
-    const features = routeData.features || [];
-
-    for (const feature of features) {
-      totalDistance += feature.properties.length_m || 0;
-      totalRisk += feature.properties.p_fallo || 0;
-      totalAdjustedCost += feature.properties.adjusted_cost || 0;
     }
 
     return NextResponse.json({
@@ -219,8 +230,10 @@ export async function GET(request: Request) {
         adjusted_cost: totalAdjustedCost,
         num_segments: features.length,
         method: 'resilient',
-        parameters: { k, max_risk: maxRisk, max_distance: maxDistance }
-      }
+        parameters: { k, max_risk: maxRisk, max_distance: maxDistance },
+        source_table: usedTable
+      },
+      node_adjustments: nodeResolution
     });
 
   } catch (err) {
@@ -246,7 +259,8 @@ export async function GET(request: Request) {
           method: 'resilient',
           parameters: { k, max_risk: maxRisk, max_distance: maxDistance }
         },
-        error: 'Error calculando ruta resiliente: ' + (err instanceof Error ? err.message : String(err))
+        error: 'Error calculando ruta resiliente: ' + (err instanceof Error ? err.message : String(err)),
+        node_adjustments: nodeResolution
       },
       { status: 500 }
     );

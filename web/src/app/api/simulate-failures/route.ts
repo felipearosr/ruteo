@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // 1. Obtener nodos semilla (initial failures based on probability)
     const { data: nodos, error: nodosError } = await supabase
-      .from('infra_nodos')
+      .from('infra_nodos_cleaned')
       .select('id, p_fallo_nodo')
       .gt('p_fallo_nodo', min_probability);
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       // Fetch neighbors for this batch of nodes
       // We query edges where source OR target is in currentBatch
       const { data: edges, error: edgesError } = await supabase
-        .from('infra_aristas')
+        .from('infra_aristas_cleaned')
         .select('id, source, target')
         .or(`source.in.(${currentBatch.join(',')}),target.in.(${currentBatch.join(',')})`);
 
@@ -270,7 +270,7 @@ export async function GET(request: NextRequest) {
       if (nodosData.length > 0) {
         const nodeIds = nodosData.map(n => n.entity_id);
         const { data: nodesGeom } = await supabase
-          .from('infra_nodos')
+          .from('infra_nodos_cleaned')
           .select('id, geom')
           .in('id', nodeIds);
 
@@ -287,7 +287,7 @@ export async function GET(request: NextRequest) {
       if (aristasData.length > 0) {
         const edgeIds = aristasData.map(a => a.entity_id);
         const { data: edgesGeom } = await supabase
-          .from('infra_aristas')
+          .from('infra_aristas_cleaned')
           .select('id, geom')
           .in('id', edgeIds);
 
