@@ -1406,11 +1406,12 @@ function MapEventBridge({
       </div>
 
       {/* Mapa */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative bg-[#191919]">
         <MapContainer
           center={[-33.45, -70.65]}
           zoom={13}
-          className="w-full h-full"
+          className="w-full h-full bg-[#191919]"
+          style={{ backgroundColor: '#191919' }}
           whenCreated={(mapInstance) => {
             mapRef.current = mapInstance;
             setMapReady(true);

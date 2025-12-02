@@ -95,6 +95,7 @@ body {
 
 .leaflet-container {
   z-index: 1;
+  background-color: #191919;
 }
 
 /* Dark theme for Leaflet controls */
@@ -117,4 +118,12 @@ body {
 
 .leaflet-control-attribution a {
   color: hsl(var(--primary)) !important;
+}
+
+.leaflet-pane,
+.leaflet-map-pane,
+.leaflet-tile-pane,
+.leaflet-layer,
+.leaflet-tile {
+  background-color: #191919 !important;
 }
