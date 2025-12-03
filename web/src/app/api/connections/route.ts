@@ -38,6 +38,7 @@ export async function GET(request: Request) {
              ST_AsGeoJSON(geom)::json as geom
       FROM infra_aristas_cleaned
       WHERE geom && ST_MakeEnvelope($1, $2, $3, $4, 4326)
+        AND COALESCE(highway, '') NOT IN ('footway','pedestrian','cycleway','path','steps','track','bridleway')
       LIMIT $5
       `,
       [west, south, east, north, limit]

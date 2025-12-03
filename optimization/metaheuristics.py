@@ -157,7 +157,8 @@ class AStarResilientRouter:
                 ST_Intersects(
                     a.geom,
                     ST_MakeEnvelope(%s, %s, %s, %s, 4326)
-                )
+                ) AND
+                coalesce(a.highway, '') NOT IN ('footway','pedestrian','cycleway','path','steps','track','bridleway')
         """, (xmin, ymin, xmax, ymax))
         
         aristas_list = cur.fetchall()

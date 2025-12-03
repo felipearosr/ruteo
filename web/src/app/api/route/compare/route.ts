@@ -33,15 +33,92 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+const FLOOD_BUFFER_METERS = 150;
+const EXCLUDED_HIGHWAYS = [
+  'footway',
+  'pedestrian',
+  'cycleway',
+  'path',
+  'steps',
+  'track',
+  'bridleway'
+];
+
+const EXCLUDED_HIGHWAYS_LIST = EXCLUDED_HIGHWAYS.map((h) => `'${h}'`).join(', ');
+const HIGHWAY_FILTER_CORE = `coalesce(highway, '') NOT IN (${EXCLUDED_HIGHWAYS_LIST})`;
+const highwayFilterAliasA = ` AND coalesce(a.highway, '') NOT IN (${EXCLUDED_HIGHWAYS_LIST})`;
+const highwayFilterExpression = ` AND ${HIGHWAY_FILTER_CORE}`;
+
+async function fetchFloodBlockedEdgeIds(client: pg.PoolClient, simulationId: string, radiusMeters = FLOOD_BUFFER_METERS) {
+  if (!simulationId) {
+    return [];
+  }
+
+  const query = `
+    WITH failed_nodes AS (
+      SELECT n.geom
+      FROM sim_fallas_activas s
+      JOIN infra_nodos_cleaned n ON s.entity_type = 'nodo' AND s.entity_id = n.id
+      WHERE s.simulation_id = $1 AND s.is_failed = true AND n.geom IS NOT NULL
+    ),
+    failed_edges AS (
+      SELECT a.geom
+      FROM sim_fallas_activas s
+      JOIN infra_aristas a ON s.entity_type = 'arista' AND s.entity_id = a.id
+      WHERE s.simulation_id = $1 AND s.is_failed = true AND a.geom IS NOT NULL
+    ),
+    failed_geoms AS (
+      SELECT geom FROM failed_nodes
+      UNION ALL
+      SELECT geom FROM failed_edges
+    ),
+    failure_buffer AS (
+      SELECT ST_Union(ST_Buffer(geom::geography, $2)::geometry) AS geom
+      FROM failed_geoms
+    ),
+    candidate_edges AS (
+      SELECT id, geom FROM infra_aristas_cleaned WHERE geom IS NOT NULL AND ${HIGHWAY_FILTER_CORE}
+      UNION ALL
+      SELECT id, geom FROM infra_aristas WHERE geom IS NOT NULL AND ${HIGHWAY_FILTER_CORE}
+    )
+    SELECT DISTINCT ce.id AS edge_id
+    FROM candidate_edges ce
+    JOIN failure_buffer fb ON fb.geom IS NOT NULL
+    WHERE ST_Intersects(ce.geom, fb.geom)
+  `;
+
+  const result = await client.query(query, [simulationId, radiusMeters]);
+  const ids = result.rows
+    .map((row) => Number(row.edge_id))
+    .filter((id) => !Number.isNaN(id));
+
+  return Array.from(new Set(ids));
+}
+
 async function runBaselineForTable(
   tableName: 'infra_aristas_cleaned' | 'infra_aristas',
   source: number,
   target: number,
   maxDistance: number | null,
-  avoidFlood: boolean
+  avoidFlood: boolean,
+  blockedEdgeIds: number[]
 ) {
   const floodFilter = avoidFlood ? ' AND coalesce(p_fallo_arista, 0) < 0.3' : '';
   const startTime = performance.now();
+
+  let edgesSubquery = `
+    SELECT id, source, target, length_m as cost,
+           length_m as reverse_cost
+    FROM ${tableName}
+    WHERE length_m IS NOT NULL AND length_m > 0
+  `;
+  edgesSubquery += floodFilter;
+  edgesSubquery += highwayFilterExpression;
+  if (blockedEdgeIds.length) {
+    edgesSubquery += ` AND id NOT IN (${blockedEdgeIds.join(',')})`;
+  }
+
+  const safeEdgesSubquery = edgesSubquery.replace(/'/g, "''");
 
   const query = `
     SELECT 
@@ -66,9 +143,7 @@ async function runBaselineForTable(
         ), '[]'::json)
       ) as route
     FROM pgr_dijkstra(
-      'SELECT id, source, target, length_m as cost, 
-       length_m as reverse_cost 
-       FROM ${tableName} WHERE length_m IS NOT NULL AND length_m > 0${floodFilter}',
+        '${safeEdgesSubquery}',
       $1::BIGINT,
       $2::BIGINT,
       true
@@ -104,11 +179,11 @@ async function runBaselineForTable(
   };
 }
 
-async function runBaseline(source: number, target: number, maxDistance: number | null, avoidFlood: boolean) {
+async function runBaseline(source: number, target: number, maxDistance: number | null, avoidFlood: boolean, blockedEdgeIds: number[]) {
   const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
   for (let i = 0; i < tables.length; i++) {
     const tableName = tables[i];
-    const result = await runBaselineForTable(tableName, source, target, maxDistance, avoidFlood);
+    const result = await runBaselineForTable(tableName, source, target, maxDistance, avoidFlood, blockedEdgeIds);
     if (result.metrics.num_segments > 0 || i === tables.length - 1) {
       if (result.metrics.num_segments === 0 && i < tables.length - 1) {
         console.warn(`[baseline] Sin segmentos usando ${tableName}, probando tabla alternativa`);
@@ -126,7 +201,8 @@ async function runResilientForTable(
   k: number,
   maxRisk: number | null,
   maxDistance: number | null,
-  avoidFlood: boolean
+  avoidFlood: boolean,
+  blockedEdgeIds: number[]
 ) {
   const client = await pool.connect();
   const startTime = performance.now();
@@ -144,6 +220,7 @@ async function runResilientForTable(
       FROM ${tableName} a
       WHERE a.length_m IS NOT NULL
     `;
+    edgesQuery += highwayFilterAliasA;
 
     if (maxRisk !== null) {
       edgesQuery += ` AND a.p_fallo_arista <= ${maxRisk}`;
@@ -153,6 +230,9 @@ async function runResilientForTable(
     }
     if (avoidFlood) {
       edgesQuery += ` AND coalesce(a.p_fallo_arista, 0) < 0.3`;
+    }
+    if (blockedEdgeIds.length) {
+      edgesQuery += ` AND a.id NOT IN (${blockedEdgeIds.join(',')})`;
     }
 
     const safeEdgesQuery = edgesQuery.replace(/'/g, "''");
@@ -227,11 +307,19 @@ async function runResilientForTable(
   }
 }
 
-async function runResilient(source: number, target: number, k: number, maxRisk: number | null, maxDistance: number | null, avoidFlood: boolean) {
+async function runResilient(
+  source: number,
+  target: number,
+  k: number,
+  maxRisk: number | null,
+  maxDistance: number | null,
+  avoidFlood: boolean,
+  blockedEdgeIds: number[]
+) {
   const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
   for (let i = 0; i < tables.length; i++) {
     const tableName = tables[i];
-    const result = await runResilientForTable(tableName, source, target, k, maxRisk, maxDistance, avoidFlood);
+    const result = await runResilientForTable(tableName, source, target, k, maxRisk, maxDistance, avoidFlood, blockedEdgeIds);
     if (result.metrics.num_segments > 0 || i === tables.length - 1) {
       if (result.metrics.num_segments === 0 && i < tables.length - 1) {
         console.warn(`[resilient] Sin segmentos usando ${tableName}, probando tabla alternativa`);
@@ -316,6 +404,11 @@ export async function GET(request: Request) {
     const usedSource = nodeResolution.adjustedSource;
     const usedTarget = nodeResolution.adjustedTarget;
 
+    let blockedEdgeIds: number[] = [];
+    if (avoidFlood && simulationId) {
+      blockedEdgeIds = await fetchFloodBlockedEdgeIds(client, simulationId);
+    }
+
     const baseUrl = new URL(request.url).origin;
 
     const sharedParams = new URLSearchParams({
@@ -330,8 +423,14 @@ export async function GET(request: Request) {
     });
 
     const [baselineResult, resilientResult, astarResult, cplexResult] = await Promise.all([
-      withTimeout(runBaseline(usedSource, usedTarget, maxDistanceNum, avoidFlood), 'baseline'),
-      withTimeout(runResilient(usedSource, usedTarget, kNum, maxRiskNum, maxDistanceNum, avoidFlood), 'resilient'),
+      withTimeout(
+        runBaseline(usedSource, usedTarget, maxDistanceNum, avoidFlood, blockedEdgeIds),
+        'baseline'
+      ),
+      withTimeout(
+        runResilient(usedSource, usedTarget, kNum, maxRiskNum, maxDistanceNum, avoidFlood, blockedEdgeIds),
+        'resilient'
+      ),
       withTimeout(
         fetch(`${baseUrl}/api/route/metaheuristic?${sharedParams.toString()}&risk_weight=${riskWeightNum}`).then(r => r.json()),
         'astar'

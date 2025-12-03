@@ -137,7 +137,7 @@ class CplexResilientRouter:
         )
 
         cur.execute(
-            """
+        """
             SELECT 
                 a.id,
                 a.source,
@@ -150,6 +150,7 @@ class CplexResilientRouter:
             WHERE 
                 a.length_m IS NOT NULL
                 AND ST_Intersects(a.geom, ST_MakeEnvelope(%s, %s, %s, %s, 4326))
+                AND coalesce(a.highway, '') NOT IN ('footway','pedestrian','cycleway','path','steps','track','bridleway')
                 AND (%s = false OR coalesce(a.p_fallo_arista, 0.0) < %s)
             """,
             (xmin, ymin, xmax, ymax, avoid_flood_zones, flood_threshold),

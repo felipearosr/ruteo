@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // 1. Obtener nodos semilla (initial failures based on probability)
     const { data: nodos, error: nodosError } = await supabase
-      .from('infra_nodos_cleaned')
+      .from('infra_nodos')
       .select('id, p_fallo_nodo')
       .gt('p_fallo_nodo', min_probability);
 
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     const failedNodeIds = new Set<number>();
     const failedEdgeIds = new Set<number>();
+    const processedEdgeIds = new Set<number>();
     const queue: number[] = [];
     const simulaciones = [];
 
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       // Fetch neighbors for this batch of nodes
       // We query edges where source OR target is in currentBatch
       const { data: edges, error: edgesError } = await supabase
-        .from('infra_aristas_cleaned')
+        .from('infra_aristas')
         .select('id, source, target')
         .or(`source.in.(${currentBatch.join(',')}),target.in.(${currentBatch.join(',')})`);
 
@@ -100,6 +101,8 @@ export async function POST(request: NextRequest) {
         console.error(`Error fetching neighbors:`, edgesError);
         throw new Error(`Error al obtener vecinos: ${edgesError.message}`);
       }
+
+      edges?.forEach(edge => processedEdgeIds.add(edge.id));
 
       // Process each edge to find neighbors
       for (const edge of edges || []) {
@@ -163,15 +166,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const totalNodesChecked = nodos?.length ?? 0;
+    const totalEntitiesFailed = failedNodeIds.size + failedEdgeIds.size;
+    const totalEdgesProcessed = processedEdgeIds.size;
+
     return NextResponse.json({
       success: true,
       simulation_id: simulationId,
       summary: {
-        total_nodos_checked: nodos?.length || 0,
+        total_nodos_checked: totalNodesChecked,
         initial_seeds: nodosFailedCount,
         propagated_nodes: propagatedCount,
         total_nodes_failed: failedNodeIds.size,
         total_edges_failed: failedEdgeIds.size,
+        total_failed: totalEntitiesFailed,
+        total_entities: totalEntitiesFailed,
+        nodos_failed: failedNodeIds.size,
+        total_nodos: totalNodesChecked,
+        aristas_failed: failedEdgeIds.size,
+        total_aristas: totalEdgesProcessed,
         steps: step,
         note: 'Simulación con propagación tipo agua completada'
       },
@@ -270,7 +283,7 @@ export async function GET(request: NextRequest) {
       if (nodosData.length > 0) {
         const nodeIds = nodosData.map(n => n.entity_id);
         const { data: nodesGeom } = await supabase
-          .from('infra_nodos_cleaned')
+          .from('infra_nodos')
           .select('id, geom')
           .in('id', nodeIds);
 
@@ -287,7 +300,7 @@ export async function GET(request: NextRequest) {
       if (aristasData.length > 0) {
         const edgeIds = aristasData.map(a => a.entity_id);
         const { data: edgesGeom } = await supabase
-          .from('infra_aristas_cleaned')
+          .from('infra_aristas')
           .select('id, geom')
           .in('id', edgeIds);
 

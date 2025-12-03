@@ -473,9 +473,9 @@ export default function HomePage() {
 
   // Cargar caso de ejemplo predefinido
   const loadExample = () => {
-    // Configurar parámetros del caso de ejemplo (nodos cercanos válidos)
-    setSourceNode('81615');
-    setTargetNode('79672');
+    // Configurar parámetros del caso de ejemplo (~50km de distancia, extremos del mapa)
+    setSourceNode('1');
+    setTargetNode('130517');
     setK(5.0);
 
 
@@ -492,7 +492,7 @@ export default function HomePage() {
     }, 300);
 
     toast.info('Ejemplo cargado', {
-      description: 'Origen: Nodo 81615, Destino: Nodo 79672. Ejecutando comparacion de rutas...',
+      description: 'Origen: Nodo 55110, Destino: Nodo 59764. Ejecutando comparacion de rutas...',
       duration: 3000,
     });
   };
@@ -1655,7 +1655,7 @@ function MapEventBridge({
         </div>
 
         {/* Leyenda en el mapa */}
-        <div className="absolute bottom-4 right-4 z-[1000] bg-background p-4 rounded-lg shadow-lg border border-border">
+        <div className="absolute bottom-4 left-4 z-[1000] bg-background p-4 rounded-lg shadow-lg border border-border">
           <h3 className="font-semibold mb-2 text-sm text-foreground">Leyenda de Rutas</h3>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
