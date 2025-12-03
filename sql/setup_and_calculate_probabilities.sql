@@ -20,8 +20,8 @@ CREATE INDEX IF NOT EXISTS idx_aristas_p_fallo ON infra_aristas(p_fallo_arista) 
 
 UPDATE infra_nodos n
 SET p_fallo_nodo = LEAST(1.0, GREATEST(0.0,
-  -- Inundaciones (40% weight, 500m radius)
-  0.4 * COALESCE((
+  -- Inundaciones historicas (50% weight, 500m radius)
+  0.5 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(n.geom, 3857),
       ST_Transform(i.geom, 3857)
@@ -33,23 +33,23 @@ SET p_fallo_nodo = LEAST(1.0, GREATEST(0.0,
       2000
     )
   ), 0.0) +
-  
-  -- DGA stations (30% weight, 1000m radius)
-  0.3 * COALESCE((
+
+  -- Pasos bajo nivel / puntos criticos (25% weight, 100m radius)
+  0.25 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(n.geom, 3857),
-      ST_Transform(d.geom, 3857)
-    )) / 1000.0)
-    FROM amenaza_dga d
+      ST_Transform(p.geom, 3857)
+    )) / 100.0)
+    FROM amenaza_pasos_bajo_nivel p
     WHERE ST_DWithin(
       ST_Transform(n.geom, 3857),
-      ST_Transform(d.geom, 3857),
-      3000
+      ST_Transform(p.geom, 3857),
+      500
     )
   ), 0.0) +
-  
-  -- Reportes ciudadanos (20% weight, 200m radius)
-  0.2 * COALESCE((
+
+  -- Reportes ciudadanos (15% weight, 200m radius)
+  0.15 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(n.geom, 3857),
       ST_Transform(r.geom, 3857)
@@ -61,7 +61,7 @@ SET p_fallo_nodo = LEAST(1.0, GREATEST(0.0,
       1000
     )
   ), 0.0) +
-  
+
   -- Lluvia (10% weight, normalized to 50mm)
   0.1 * COALESCE((
     SELECT LEAST(1.0, AVG(precip_mm) / 50.0)
@@ -80,8 +80,8 @@ SET p_fallo_nodo = LEAST(1.0, GREATEST(0.0,
 
 UPDATE infra_aristas a
 SET p_fallo_arista = LEAST(1.0, GREATEST(0.0,
-  -- Inundaciones (40% weight, 500m radius)
-  0.4 * COALESCE((
+  -- Inundaciones historicas (50% weight, 500m radius)
+  0.5 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(ST_LineInterpolatePoint(a.geom, 0.5), 3857),
       ST_Transform(i.geom, 3857)
@@ -93,23 +93,23 @@ SET p_fallo_arista = LEAST(1.0, GREATEST(0.0,
       2000
     )
   ), 0.0) +
-  
-  -- DGA stations (30% weight, 1000m radius)
-  0.3 * COALESCE((
+
+  -- Pasos bajo nivel / puntos criticos (25% weight, 100m radius)
+  0.25 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(ST_LineInterpolatePoint(a.geom, 0.5), 3857),
-      ST_Transform(d.geom, 3857)
-    )) / 1000.0)
-    FROM amenaza_dga d
+      ST_Transform(p.geom, 3857)
+    )) / 100.0)
+    FROM amenaza_pasos_bajo_nivel p
     WHERE ST_DWithin(
       ST_Transform(ST_LineInterpolatePoint(a.geom, 0.5), 3857),
-      ST_Transform(d.geom, 3857),
-      3000
+      ST_Transform(p.geom, 3857),
+      500
     )
   ), 0.0) +
-  
-  -- Reportes ciudadanos (20% weight, 200m radius)
-  0.2 * COALESCE((
+
+  -- Reportes ciudadanos (15% weight, 200m radius)
+  0.15 * COALESCE((
     SELECT EXP(-MIN(ST_Distance(
       ST_Transform(ST_LineInterpolatePoint(a.geom, 0.5), 3857),
       ST_Transform(r.geom, 3857)
@@ -121,7 +121,7 @@ SET p_fallo_arista = LEAST(1.0, GREATEST(0.0,
       1000
     )
   ), 0.0) +
-  
+
   -- Lluvia (10% weight, normalized to 50mm)
   0.1 * COALESCE((
     SELECT LEAST(1.0, AVG(precip_mm) / 50.0)

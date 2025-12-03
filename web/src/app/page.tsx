@@ -37,7 +37,8 @@ import {
   X,
   AlertTriangle,
   BookOpen,
-  Layers
+  Layers,
+  Info
 } from 'lucide-react';
 
 // Importar Leaflet de forma dinámica
@@ -46,6 +47,7 @@ const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLaye
 const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 const Circle = dynamic(() => import('react-leaflet').then(mod => mod.Circle), { ssr: false });
+const Polygon = dynamic(() => import('react-leaflet').then(mod => mod.Polygon), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
 
@@ -110,6 +112,9 @@ export default function HomePage() {
   // Estado para amenazas
   const [inundaciones, setInundaciones] = useState<any[]>([]);
   const [reportes, setReportes] = useState<any[]>([]);
+  const [pasosBajoNivel, setPasosBajoNivel] = useState<any[]>([]);
+
+  // Estado para informacion (no amenazas)
   const [dgaStations, setDgaStations] = useState<any[]>([]);
 
   // Estado para metadata
@@ -138,7 +143,10 @@ export default function HomePage() {
   // Controles de visualización de capas (amenazas)
   const [showInundaciones, setShowInundaciones] = useState(true);
   const [showReportes, setShowReportes] = useState(true);
-  const [showDgaStations, setShowDgaStations] = useState(true);
+  const [showPasosBajoNivel, setShowPasosBajoNivel] = useState(true);
+
+  // Controles de visualización de informacion (no amenazas)
+  const [showDgaStations, setShowDgaStations] = useState(false);
 
 
   // Controles de visualización de rutas
@@ -182,6 +190,12 @@ export default function HomePage() {
     if (data) setReportes(data);
   };
 
+  const loadPasosBajoNivel = async () => {
+    const { data } = await supabase.from('amenaza_pasos_bajo_nivel').select('*');
+    if (data) setPasosBajoNivel(data);
+  };
+
+  // Funciones para cargar informacion (no amenazas)
   const loadDgaStations = async () => {
     const { data } = await supabase.from('amenaza_dga').select('*');
     if (data) setDgaStations(data);
@@ -220,6 +234,8 @@ export default function HomePage() {
     // Cargar amenazas al montar el componente
     loadInundaciones();
     loadReportes();
+    loadPasosBajoNivel();
+    // Cargar informacion (no amenazas)
     loadDgaStations();
     // Cargar metadata
     loadElevaciones();
@@ -1310,6 +1326,9 @@ function MapEventBridge({
                 <AlertTriangle className="w-4 h-4" />
                 Amenazas
               </CardTitle>
+              <CardDescription>
+                Datos que afectan el calculo de riesgo
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-2">
@@ -1326,6 +1345,18 @@ function MapEventBridge({
 
               <div className="flex items-center space-x-2">
                 <Checkbox
+                  id="showPasosBajoNivel"
+                  checked={showPasosBajoNivel}
+                  onCheckedChange={(checked) => setShowPasosBajoNivel(!!checked)}
+                />
+                <div className="w-2 h-2 rounded-full bg-purple-600" />
+                <Label htmlFor="showPasosBajoNivel" className="text-sm">
+                  Pasos Bajo Nivel ({pasosBajoNivel.length})
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
                   id="showReportes"
                   checked={showReportes}
                   onCheckedChange={(checked) => setShowReportes(!!checked)}
@@ -1333,18 +1364,6 @@ function MapEventBridge({
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
                 <Label htmlFor="showReportes" className="text-sm">
                   Reportes Ciudadanos ({reportes.length})
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="showDgaStations"
-                  checked={showDgaStations}
-                  onCheckedChange={(checked) => setShowDgaStations(!!checked)}
-                />
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <Label htmlFor="showDgaStations" className="text-sm">
-                  Estaciones DGA ({dgaStations.length})
                 </Label>
               </div>
 
@@ -1365,6 +1384,35 @@ function MapEventBridge({
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Informacion (no amenazas) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                Informacion
+              </CardTitle>
+              <CardDescription>
+                Datos de referencia (no afectan rutas)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="showDgaStations"
+                  checked={showDgaStations}
+                  onCheckedChange={(checked) => setShowDgaStations(!!checked)}
+                />
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <Label htmlFor="showDgaStations" className="text-sm">
+                  Estaciones DGA ({dgaStations.length})
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Red de monitoreo hidrologico. No afecta el calculo de riesgo.
+              </p>
             </CardContent>
           </Card>
 
@@ -1596,17 +1644,46 @@ function MapEventBridge({
           {showInundaciones && !onlySimulatedThreats && inundaciones.map((item, idx) => {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
+
+            // Determinar color segun severidad
+            const severityColors: Record<string, string> = {
+              'muy_alta': '#8B0000',
+              'alta': '#DC143C',
+              'media': '#FF6347',
+              'baja': '#FFA07A'
+            };
+            const fillColor = severityColors[item.severity] || '#FF6347';
+
+            // Si es poligono, renderizar como Polygon
+            if (item.geom?.type === 'Polygon' && coords.length > 2) {
+              return (
+                <Polygon
+                  key={`inund-${idx}`}
+                  positions={coords}
+                  pathOptions={{ color: fillColor, fillColor: fillColor, fillOpacity: 0.4, weight: 2 }}
+                >
+                  <Popup>
+                    <b>{item.properties?.name || 'Zona de Inundacion'}</b><br />
+                    Severidad: {item.severity || 'N/A'}<br />
+                    Fuente: {item.source || 'N/A'}<br />
+                    {item.properties?.description && <>{item.properties.description}<br /></>}
+                  </Popup>
+                </Polygon>
+              );
+            }
+
+            // Fallback a CircleMarker para puntos
             return (
               <CircleMarker
                 key={`inund-${idx}`}
                 center={coords[0]}
                 radius={8}
-                pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.5 }}
+                pathOptions={{ color: fillColor, fillColor: fillColor, fillOpacity: 0.5 }}
               >
                 <Popup>
-                  <b>Inundación Histórica</b><br />
-                  Fecha: {item.fecha || 'N/A'}<br />
-                  Fuente: {item.fuente || 'N/A'}
+                  <b>Zona de Inundacion</b><br />
+                  Severidad: {item.severity || 'N/A'}<br />
+                  Fuente: {item.source || 'N/A'}
                 </Popup>
               </CircleMarker>
             );
@@ -1616,6 +1693,12 @@ function MapEventBridge({
           {showReportes && !onlySimulatedThreats && reportes.map((item, idx) => {
             const coords = extractCoords(item.geom);
             if (coords.length === 0) return null;
+
+            // Formatear fecha
+            const reportDate = item.reported_at
+              ? new Date(item.reported_at).toLocaleString('es-CL')
+              : 'N/A';
+
             return (
               <CircleMarker
                 key={`rep-${idx}`}
@@ -1625,14 +1708,52 @@ function MapEventBridge({
               >
                 <Popup>
                   <b>Reporte Ciudadano</b><br />
-                  Tipo: {item.tipo || 'N/A'}<br />
-                  Fecha: {item.fecha_reporte || 'N/A'}
+                  {item.description || 'Sin descripcion'}<br />
+                  Reportado por: {item.reporter || 'Anonimo'}<br />
+                  Fecha: {reportDate}
                 </Popup>
               </CircleMarker>
             );
           })}
 
-          {/* Estaciones DGA */}
+          {/* Pasos Bajo Nivel */}
+          {showPasosBajoNivel && !onlySimulatedThreats && pasosBajoNivel.map((paso, idx) => {
+            const coords = extractCoords(paso.geom);
+            if (coords.length === 0) return null;
+
+            // Color por severidad
+            const severityColors: Record<string, string> = {
+              'muy_alta': '#581c87', // purple-900
+              'alta': '#7c3aed',     // violet-600
+              'media': '#a78bfa',    // violet-400
+              'baja': '#c4b5fd'      // violet-300
+            };
+            const fillColor = severityColors[paso.severity] || '#9333ea';
+
+            return (
+              <CircleMarker
+                key={`paso-${idx}`}
+                center={coords[0]}
+                radius={9}
+                pathOptions={{
+                  color: '#4c1d95',
+                  fillColor: fillColor,
+                  fillOpacity: 0.8,
+                  weight: 2
+                }}
+              >
+                <Popup>
+                  <b>Paso Bajo Nivel</b><br />
+                  {paso.name || 'Sin nombre'}<br />
+                  {paso.description || ''}<br />
+                  Severidad: <span style={{color: fillColor, fontWeight: 'bold'}}>{paso.severity || 'N/A'}</span><br />
+                  {paso.last_incident && <>Ultimo incidente: {paso.last_incident}</>}
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+
+          {/* Estaciones DGA (informacion, no amenaza) */}
           {showDgaStations && !onlySimulatedThreats && dgaStations.map((station: any, idx) => {
             const coords = extractCoords(station.geom);
             if (coords.length === 0) return null;
@@ -1645,9 +1766,11 @@ function MapEventBridge({
               >
                 <Popup>
                   <b>Estacion DGA</b><br />
-                  Nombre: {station.nombre_estacion || 'N/A'}<br />
-                  Codigo: {station.codigo_estacion || 'N/A'}<br />
-                  Nivel: {station.nivel_agua_m || 'N/A'}m
+                  Nombre: {station.properties?.nombre || 'N/A'}<br />
+                  Codigo: {station.station_id || 'N/A'}<br />
+                  Tipo: {station.parameter?.type || 'N/A'}<br />
+                  Comuna: {station.parameter?.comuna || 'N/A'}<br />
+                  Altitud: {station.parameter?.altitud ? `${station.parameter.altitud}m` : 'N/A'}
                 </Popup>
               </CircleMarker>
             );

@@ -130,6 +130,18 @@ create table if not exists amenaza_reportes_ciudadanos (
 );
 create index if not exists amenaza_reportes_ciudadanos_geom_gist on amenaza_reportes_ciudadanos using gist (geom);
 
+-- Pasos bajo nivel (underpasses) - puntos criticos de inundacion
+create table if not exists amenaza_pasos_bajo_nivel (
+    id bigserial primary key,
+    geom geometry(Point,4326) not null,
+    name text,
+    description text,
+    severity text,
+    last_incident date,
+    properties jsonb
+);
+create index if not exists amenaza_pasos_bajo_nivel_geom_gist on amenaza_pasos_bajo_nivel using gist (geom);
+
 -- Vista/función de ejemplo para calcular longitud y costos en infra_aristas
 -- Esta función solo añade/updatea los campos length_m y cost basados en geom
 create or replace function infra_calcular_longitudes_costs() returns void as $$
