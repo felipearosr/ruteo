@@ -36,7 +36,8 @@ import {
   Check,
   X,
   AlertTriangle,
-  BookOpen
+  BookOpen,
+  Layers
 } from 'lucide-react';
 
 // Importar Leaflet de forma dinámica
@@ -110,6 +111,11 @@ export default function HomePage() {
   const [inundaciones, setInundaciones] = useState<any[]>([]);
   const [reportes, setReportes] = useState<any[]>([]);
   const [dgaStations, setDgaStations] = useState<any[]>([]);
+
+  // Estado para metadata
+  const [elevaciones, setElevaciones] = useState<any[]>([]);
+  const [lluvias, setLluvias] = useState<any[]>([]);
+  const [landcover, setLandcover] = useState<any[]>([]);
   const mapRef = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
   const [leafletLib, setLeafletLib] = useState<typeof import('leaflet') | null>(null);
@@ -129,10 +135,11 @@ export default function HomePage() {
   const [comparisonData, setComparisonData] = useState<ComparisonResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Controles de visualización de capas
+  // Controles de visualización de capas (amenazas)
   const [showInundaciones, setShowInundaciones] = useState(true);
   const [showReportes, setShowReportes] = useState(true);
   const [showDgaStations, setShowDgaStations] = useState(true);
+
 
   // Controles de visualización de rutas
   const [showBaseline, setShowBaseline] = useState(true);
@@ -180,6 +187,22 @@ export default function HomePage() {
     if (data) setDgaStations(data);
   };
 
+  // Funciones para cargar metadata
+  const loadElevaciones = async () => {
+    const { data } = await supabase.from('meta_elevacion').select('*');
+    if (data) setElevaciones(data);
+  };
+
+  const loadLluvias = async () => {
+    const { data } = await supabase.from('meta_lluvia').select('*');
+    if (data) setLluvias(data);
+  };
+
+  const loadLandcover = async () => {
+    const { data } = await supabase.from('meta_landcover').select('*');
+    if (data) setLandcover(data);
+  };
+
   // Cargar Leaflet solo en cliente para evitar errores de window en SSR
   useEffect(() => {
     let mounted = true;
@@ -198,9 +221,74 @@ export default function HomePage() {
     loadInundaciones();
     loadReportes();
     loadDgaStations();
+    // Cargar metadata
+    loadElevaciones();
+    loadLluvias();
+    loadLandcover();
   }, []);
 
+  // Funcion helper para encontrar metadata cercana a un punto
+  const findNearbyMetadata = (lat: number, lon: number, maxDistKm: number = 1) => {
+    const toRad = (deg: number) => deg * Math.PI / 180;
+    const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371; // km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    };
 
+    const getCoord = (item: any) => {
+      const coords = extractCoords(item.geom);
+      return coords.length > 0 ? coords[0] : null;
+    };
+
+    // Buscar elevacion mas cercana
+    let nearestElev: any = null;
+    let minElevDist = Infinity;
+    elevaciones.forEach(e => {
+      const c = getCoord(e);
+      if (c) {
+        const d = haversine(lat, lon, c[0], c[1]);
+        if (d < maxDistKm && d < minElevDist) {
+          minElevDist = d;
+          nearestElev = { ...e, distance: d };
+        }
+      }
+    });
+
+    // Buscar lluvia mas cercana
+    let nearestLluvia: any = null;
+    let minLluviaDist = Infinity;
+    lluvias.forEach(l => {
+      const c = getCoord(l);
+      if (c) {
+        const d = haversine(lat, lon, c[0], c[1]);
+        if (d < maxDistKm && d < minLluviaDist) {
+          minLluviaDist = d;
+          nearestLluvia = { ...l, distance: d };
+        }
+      }
+    });
+
+    // Buscar landcover mas cercano
+    let nearestLand: any = null;
+    let minLandDist = Infinity;
+    landcover.forEach(lc => {
+      const c = getCoord(lc);
+      if (c) {
+        const d = haversine(lat, lon, c[0], c[1]);
+        if (d < maxDistKm && d < minLandDist) {
+          minLandDist = d;
+          nearestLand = { ...lc, distance: d };
+        }
+      }
+    });
+
+    return { elevacion: nearestElev, lluvia: nearestLluvia, landcover: nearestLand };
+  };
 
   // Modo rápido: Shift + D fija el destino en la posición actual del cursor sobre el mapa
   useEffect(() => {
@@ -1225,23 +1313,38 @@ function MapEventBridge({
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="showInundaciones"
+                  checked={showInundaciones}
+                  onCheckedChange={(checked) => setShowInundaciones(!!checked)}
+                />
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <Label htmlFor="showInundaciones" className="text-sm">
+                  Zonas de Inundacion ({inundaciones.length})
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="showReportes"
+                  checked={showReportes}
+                  onCheckedChange={(checked) => setShowReportes(!!checked)}
+                />
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <Label htmlFor="showReportes" className="text-sm">
+                  Reportes Ciudadanos ({reportes.length})
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="showDgaStations"
+                  checked={showDgaStations}
+                  onCheckedChange={(checked) => setShowDgaStations(!!checked)}
+                />
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <Label className="text-sm">
-                  Zonas de Inundación
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                <Label className="text-sm">
-                  Reportes Ciudadanos
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                <Label className="text-sm">
-                  Estaciones DGA
+                <Label htmlFor="showDgaStations" className="text-sm">
+                  Estaciones DGA ({dgaStations.length})
                 </Label>
               </div>
 
@@ -1257,13 +1360,14 @@ function MapEventBridge({
                       Mostrar solo amenazas simuladas
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Oculta capas base y muestra fallas activas de la simulación.
+                      Oculta capas base y muestra fallas activas de la simulacion.
                     </p>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
+
 
           {/* Simulación de Fallas */}
           <Card>
@@ -1540,16 +1644,14 @@ function MapEventBridge({
                 pathOptions={{ color: 'darkblue', fillColor: 'lightblue', fillOpacity: 0.7 }}
               >
                 <Popup>
-                  <b>Estación DGA</b><br />
+                  <b>Estacion DGA</b><br />
                   Nombre: {station.nombre_estacion || 'N/A'}<br />
-                  Código: {station.codigo_estacion || 'N/A'}<br />
+                  Codigo: {station.codigo_estacion || 'N/A'}<br />
                   Nivel: {station.nivel_agua_m || 'N/A'}m
                 </Popup>
               </CircleMarker>
             );
           })}
-
-
 
           {/* Visualización de Fallas Simuladas */}
           {/* Zona inundada (buffer alrededor de nodos fallidos) */}
@@ -1583,6 +1685,7 @@ function MapEventBridge({
             if (coords.length === 0) return null;
 
             if (entity.entity_type === 'nodo') {
+              const meta = findNearbyMetadata(coords[0][0], coords[0][1], 5);
               return (
                 <CircleMarker
                   key={`fail-node-${idx}`}
@@ -1590,24 +1693,99 @@ function MapEventBridge({
                   radius={6}
                   pathOptions={{ color: 'red', fillColor: 'darkred', fillOpacity: 0.9, weight: 2 }}
                 >
+                  <Tooltip direction="top" offset={[0, -5]} opacity={0.95}>
+                    <div className="text-xs">
+                      <b>Nodo Fallido #{entity.entity_id}</b><br />
+                      P. Fallo: {(entity.p_fallo * 100).toFixed(1)}%
+                      {meta.elevacion && <><br />Elevacion: {meta.elevacion.elev_m?.toFixed(0)}m</>}
+                      {meta.lluvia && <><br />Lluvia: {meta.lluvia.precip_mm?.toFixed(1)}mm</>}
+                      {meta.landcover && <><br />Suelo: {meta.landcover.class}</>}
+                    </div>
+                  </Tooltip>
                   <Popup>
-                    <b>❌ Nodo Fallido</b><br />
-                    ID: {entity.entity_id}<br />
-                    Probabilidad: {(entity.p_fallo * 100).toFixed(1)}%
+                    <div style={{ minWidth: '200px' }}>
+                      <b>Nodo Fallido</b><br />
+                      <hr style={{ margin: '4px 0' }} />
+                      <b>ID:</b> {entity.entity_id}<br />
+                      <b>Probabilidad:</b> {(entity.p_fallo * 100).toFixed(1)}%<br />
+                      <b>Ubicacion:</b> {coords[0][0].toFixed(5)}, {coords[0][1].toFixed(5)}
+
+                      {(meta.elevacion || meta.lluvia || meta.landcover) && (
+                        <>
+                          <hr style={{ margin: '6px 0' }} />
+                          <b>Metadata Ambiental:</b><br />
+                          {meta.elevacion && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Elevacion: {meta.elevacion.elev_m?.toFixed(1)}m
+                              <span style={{ color: '#888', fontSize: '10px' }}> ({(meta.elevacion.distance * 1000).toFixed(0)}m)</span>
+                            </div>
+                          )}
+                          {meta.lluvia && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Precipitacion: {meta.lluvia.precip_mm?.toFixed(1)}mm
+                              <span style={{ color: '#888', fontSize: '10px' }}> ({(meta.lluvia.distance * 1000).toFixed(0)}m)</span>
+                            </div>
+                          )}
+                          {meta.landcover && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Cobertura: {meta.landcover.class} ({(meta.landcover.confidence * 100).toFixed(0)}%)
+                              <span style={{ color: '#888', fontSize: '10px' }}> ({(meta.landcover.distance * 1000).toFixed(0)}m)</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </Popup>
                 </CircleMarker>
               );
             } else if (entity.entity_type === 'arista') {
+              const midIdx = Math.floor(coords.length / 2);
+              const midPoint = coords[midIdx] || coords[0];
+              const meta = findNearbyMetadata(midPoint[0], midPoint[1], 5);
               return (
                 <Polyline
                   key={`fail-edge-${idx}`}
                   positions={coords}
                   pathOptions={{ color: 'red', weight: 6, opacity: 0.9 }}
                 >
+                  <Tooltip direction="top" offset={[0, -5]} opacity={0.95}>
+                    <div className="text-xs">
+                      <b>Arista Fallida #{entity.entity_id}</b><br />
+                      P. Fallo: {(entity.p_fallo * 100).toFixed(1)}%
+                      {meta.elevacion && <><br />Elevacion: {meta.elevacion.elev_m?.toFixed(0)}m</>}
+                      {meta.lluvia && <><br />Lluvia: {meta.lluvia.precip_mm?.toFixed(1)}mm</>}
+                      {meta.landcover && <><br />Suelo: {meta.landcover.class}</>}
+                    </div>
+                  </Tooltip>
                   <Popup>
-                    <b>❌ Arista Fallida</b><br />
-                    ID: {entity.entity_id}<br />
-                    Probabilidad: {(entity.p_fallo * 100).toFixed(1)}%
+                    <div style={{ minWidth: '200px' }}>
+                      <b>Arista Fallida</b><br />
+                      <hr style={{ margin: '4px 0' }} />
+                      <b>ID:</b> {entity.entity_id}<br />
+                      <b>Probabilidad:</b> {(entity.p_fallo * 100).toFixed(1)}%
+
+                      {(meta.elevacion || meta.lluvia || meta.landcover) && (
+                        <>
+                          <hr style={{ margin: '6px 0' }} />
+                          <b>Metadata Ambiental:</b><br />
+                          {meta.elevacion && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Elevacion: {meta.elevacion.elev_m?.toFixed(1)}m
+                            </div>
+                          )}
+                          {meta.lluvia && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Precipitacion: {meta.lluvia.precip_mm?.toFixed(1)}mm
+                            </div>
+                          )}
+                          {meta.landcover && (
+                            <div style={{ marginLeft: '8px' }}>
+                              Cobertura: {meta.landcover.class}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </Popup>
                 </Polyline>
               );
