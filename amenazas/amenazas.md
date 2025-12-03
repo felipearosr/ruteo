@@ -6,7 +6,7 @@
 
 | Amenaza | Cantidad | Peso | Fuente |
 |---------|----------|------|--------|
-| **Zonas de Inundacion** | 15 | 50% | Basado en mapas SERNAGEOMIN, registros historicos y reportes municipales |
+| **Rios y Zonas de Inundacion** | 10 rios | 50% | Geometrias reales de OpenStreetMap con buffers de riesgo |
 | **Pasos Bajo Nivel** | 20 | 25% | Basado en noticias, reportes de Carabineros y documentacion municipal |
 | **Reportes Ciudadanos** | 25 | 15% | Basado en puntos criticos de inundacion documentados en noticias |
 | **Lluvia** | (metadata) | 10% | Datos meteorologicos |
@@ -19,57 +19,40 @@
 
 ---
 
-## Zonas de Inundacion (15 zonas)
+## Rios y Zonas de Inundacion (10 rios)
 
-Poligonos realistas basados en areas documentadas con riesgo de inundacion.
+Geometrias reales de cursos de agua obtenidas de OpenStreetMap. Se genera un buffer (zona de riesgo) alrededor de cada rio.
+
+### Rios Incluidos
+
+| Rio | Tipo | Severidad | Buffer (m) | Descripcion |
+|-----|------|-----------|------------|-------------|
+| **Rio Mapocho** | river | muy_alta | 150 | Rio principal que cruza Santiago de este a oeste |
+| **Rio Maipo** | river | muy_alta | 200 | Rio principal al sur de Santiago |
+| **Quebrada de Macul** | stream | muy_alta | 120 | Quebrada con historial de aluviones - evento catastrofico 1993 |
+| **Zanjon de la Aguada** | drain | alta | 100 | Canal historico con alto riesgo de desborde |
+| **Estero Lampa** | stream | alta | 80 | Estero al norte de Santiago con historial de desbordes |
+| **Estero Las Cruces** | stream | alta | 80 | Estero en Quilicura con historial de desbordes |
+| **Quebrada de Ramon** | stream | alta | 100 | Quebrada precordillerana con riesgo de crecidas |
+| **Quebrada de Lo Canas** | stream | alta | 100 | Quebrada en sector La Florida con riesgo aluvional |
+| **Canal San Carlos** | canal | media | 75 | Canal de riego que cruza sector oriente |
+| **Rio Colina** | river | media | 60 | Rio en sector norte de Santiago |
 
 ### Por Severidad
 | Severidad | Cantidad |
 |-----------|----------|
-| Muy Alta | 1 |
-| Alta | 7 |
-| Media | 5 |
-| Baja | 2 |
+| Muy Alta | 3 |
+| Alta | 5 |
+| Media | 2 |
 
-### Por Fuente
-| Fuente | Cantidad |
-|--------|----------|
-| SERNAGEOMIN | 7 |
-| Registro municipal | 7 |
-| DGA | 1 |
-
-### Zonas Incluidas
-
-#### Rio Mapocho
-- Providencia (evento 1982)
-- Santiago Centro / Parque Forestal (evento 1997)
-- Pudahuel sector poniente (evento 2016)
-
-#### Zanjon de la Aguada
-- San Miguel (evento 1993)
-- Pedro Aguirre Cerda (zona recurrente)
-
-#### Quebradas Precordilleranas
-- **Quebrada de Macul** - Aluvion historico 1993 (26 fallecidos)
-- **Quebrada Lo Canas** - Zona de riesgo aluvional
-- **Quebrada de Ramon** - La Reina/Penalolen
-- **Quebradas Lo Barnechea** - Sector cordillerano (evento 2017)
-
-#### Rio Maipo
-- El Monte sector rural (evento 2008)
-- Puente Alto ribera norte (evento 2013)
-
-#### Esteros
-- Estero Lampa (evento 2017)
-- Estero Colina (evento 2015)
-
-#### Otros
-- Canal San Carlos - Nunoa
-- Vitacura - El Golf (drenaje insuficiente)
+### Fuente de Datos
+- OpenStreetMap via Overpass API
+- Geometrias reales con miles de puntos de coordenadas
+- Buffers generados con PostGIS ST_Buffer()
 
 ### Referencias
+- OpenStreetMap contributors
 - SERNAGEOMIN: Peligro de Remociones en Masa e Inundacion, Cuenca de Santiago
-- https://www.sernageomin.cl/peligrosgeologicos/
 
 ---
 

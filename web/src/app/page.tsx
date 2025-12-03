@@ -110,7 +110,7 @@ interface ComparisonResult {
 
 export default function HomePage() {
   // Estado para amenazas
-  const [inundaciones, setInundaciones] = useState<any[]>([]);
+  const [inundaciones, setInundaciones] = useState<any[]>([]); // Rios con buffers
   const [reportes, setReportes] = useState<any[]>([]);
   const [pasosBajoNivel, setPasosBajoNivel] = useState<any[]>([]);
 
@@ -181,24 +181,47 @@ export default function HomePage() {
 
   // Funciones para cargar datos de amenazas
   const loadInundaciones = async () => {
-    const { data } = await supabase.from('amenaza_inundaciones_hist').select('*');
-    if (data) setInundaciones(data);
+    // Cargar rios con buffers desde la nueva tabla amenaza_rios
+    const { data, error } = await supabase.rpc('get_rios_geojson');
+    if (error) {
+      // Fallback si no existe la funcion RPC
+      console.error('Error loading rios:', error);
+      const { data: fallbackData } = await supabase.from('amenaza_rios').select('*');
+      if (fallbackData) setInundaciones(fallbackData);
+    } else if (data) {
+      setInundaciones(data);
+    }
   };
 
   const loadReportes = async () => {
-    const { data } = await supabase.from('amenaza_reportes_ciudadanos').select('*');
-    if (data) setReportes(data);
+    const { data, error } = await supabase.rpc('get_reportes_geojson');
+    if (error) {
+      const { data: fallbackData } = await supabase.from('amenaza_reportes_ciudadanos').select('*');
+      if (fallbackData) setReportes(fallbackData);
+    } else if (data) {
+      setReportes(data);
+    }
   };
 
   const loadPasosBajoNivel = async () => {
-    const { data } = await supabase.from('amenaza_pasos_bajo_nivel').select('*');
-    if (data) setPasosBajoNivel(data);
+    const { data, error } = await supabase.rpc('get_pasos_bajo_nivel_geojson');
+    if (error) {
+      const { data: fallbackData } = await supabase.from('amenaza_pasos_bajo_nivel').select('*');
+      if (fallbackData) setPasosBajoNivel(fallbackData);
+    } else if (data) {
+      setPasosBajoNivel(data);
+    }
   };
 
   // Funciones para cargar informacion (no amenazas)
   const loadDgaStations = async () => {
-    const { data } = await supabase.from('amenaza_dga').select('*');
-    if (data) setDgaStations(data);
+    const { data, error } = await supabase.rpc('get_dga_geojson');
+    if (error) {
+      const { data: fallbackData } = await supabase.from('amenaza_dga').select('*');
+      if (fallbackData) setDgaStations(fallbackData);
+    } else if (data) {
+      setDgaStations(data);
+    }
   };
 
   // Funciones para cargar metadata
@@ -621,6 +644,24 @@ export default function HomePage() {
       }
       if (geom.type === 'Point') {
         return [[geom.coordinates[1], geom.coordinates[0]]];
+      }
+      // Handle Polygon - coordinates[0] is the outer ring
+      if (geom.type === 'Polygon') {
+        const outerRing = geom.coordinates[0];
+        if (Array.isArray(outerRing)) {
+          return outerRing.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+        }
+        return [];
+      }
+      // Handle MultiPolygon
+      if (geom.type === 'MultiPolygon') {
+        return geom.coordinates.flatMap((polygon: any) => {
+          const outerRing = polygon[0];
+          if (Array.isArray(outerRing)) {
+            return outerRing.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
+          }
+          return [];
+        });
       }
       if (geom.type === 'GeometryCollection' && Array.isArray(geom.geometries)) {
         return geom.geometries.flatMap((g: any) => extractCoords(g));
@@ -1339,7 +1380,7 @@ function MapEventBridge({
                 />
                 <div className="w-2 h-2 rounded-full bg-red-500" />
                 <Label htmlFor="showInundaciones" className="text-sm">
-                  Zonas de Inundacion ({inundaciones.length})
+                  Rios y Zonas de Riesgo ({inundaciones.length})
                 </Label>
               </div>
 
@@ -1640,52 +1681,44 @@ function MapEventBridge({
 
 
 
-          {/* Inundaciones históricas */}
+          {/* Zonas de riesgo de inundacion (buffers alrededor de rios reales de OSM) */}
           {showInundaciones && !onlySimulatedThreats && inundaciones.map((item, idx) => {
-            const coords = extractCoords(item.geom);
-            if (coords.length === 0) return null;
+            // Usar geom_buffer para el poligono de zona de riesgo
+            const bufferCoords = extractCoords(item.geom_buffer);
 
-            // Determinar color segun severidad
-            const severityColors: Record<string, string> = {
-              'muy_alta': '#8B0000',
-              'alta': '#DC143C',
-              'media': '#FF6347',
-              'baja': '#FFA07A'
+            if (bufferCoords.length < 3) return null;
+
+            // Colores y opacidad segun severidad
+            const severityStyles: Record<string, { color: string; fillOpacity: number; weight: number }> = {
+              'muy_alta': { color: '#8B0000', fillOpacity: 0.35, weight: 2 },
+              'alta': { color: '#DC143C', fillOpacity: 0.30, weight: 1.5 },
+              'media': { color: '#FF6347', fillOpacity: 0.25, weight: 1 },
+              'baja': { color: '#FFA07A', fillOpacity: 0.20, weight: 1 }
             };
-            const fillColor = severityColors[item.severity] || '#FF6347';
+            const style = severityStyles[item.severity] || severityStyles['media'];
 
-            // Si es poligono, renderizar como Polygon
-            if (item.geom?.type === 'Polygon' && coords.length > 2) {
-              return (
-                <Polygon
-                  key={`inund-${idx}`}
-                  positions={coords}
-                  pathOptions={{ color: fillColor, fillColor: fillColor, fillOpacity: 0.4, weight: 2 }}
-                >
-                  <Popup>
-                    <b>{item.properties?.name || 'Zona de Inundacion'}</b><br />
-                    Severidad: {item.severity || 'N/A'}<br />
-                    Fuente: {item.source || 'N/A'}<br />
-                    {item.properties?.description && <>{item.properties.description}<br /></>}
-                  </Popup>
-                </Polygon>
-              );
-            }
-
-            // Fallback a CircleMarker para puntos
             return (
-              <CircleMarker
-                key={`inund-${idx}`}
-                center={coords[0]}
-                radius={8}
-                pathOptions={{ color: fillColor, fillColor: fillColor, fillOpacity: 0.5 }}
+              <Polygon
+                key={`rio-buffer-${idx}`}
+                positions={bufferCoords}
+                pathOptions={{
+                  color: style.color,
+                  fillColor: style.color,
+                  fillOpacity: style.fillOpacity,
+                  weight: style.weight,
+                  dashArray: item.severity === 'baja' ? '5, 5' : undefined
+                }}
               >
                 <Popup>
-                  <b>Zona de Inundacion</b><br />
-                  Severidad: {item.severity || 'N/A'}<br />
-                  Fuente: {item.source || 'N/A'}
+                  <b>{item.name || 'Zona de Riesgo'}</b><br />
+                  <span style={{ color: style.color, fontWeight: 'bold' }}>
+                    Riesgo: {item.severity?.replace('_', ' ').toUpperCase() || 'N/A'}
+                  </span><br />
+                  {item.description && <>{item.description}<br /></>}
+                  Buffer: {item.buffer_m}m<br />
+                  Tipo: {item.type || 'N/A'}
                 </Popup>
-              </CircleMarker>
+              </Polygon>
             );
           })}
 
