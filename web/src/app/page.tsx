@@ -7,7 +7,7 @@
  */
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useMapEvents } from 'react-leaflet';
 import { createClient } from '@supabase/supabase-js';
@@ -1681,44 +1681,39 @@ function MapEventBridge({
 
 
 
-          {/* Zonas de riesgo de inundacion (buffers alrededor de rios reales de OSM) */}
+          {/* Rios - solo lineas, el calculo de riesgo usa buffers internamente */}
           {showInundaciones && !onlySimulatedThreats && inundaciones.map((item, idx) => {
-            // Usar geom_buffer para el poligono de zona de riesgo
-            const bufferCoords = extractCoords(item.geom_buffer);
+            const lineCoords = extractCoords(item.geom_line);
+            if (lineCoords.length < 2) return null;
 
-            if (bufferCoords.length < 3) return null;
-
-            // Colores y opacidad segun severidad
-            const severityStyles: Record<string, { color: string; fillOpacity: number; weight: number }> = {
-              'muy_alta': { color: '#8B0000', fillOpacity: 0.35, weight: 2 },
-              'alta': { color: '#DC143C', fillOpacity: 0.30, weight: 1.5 },
-              'media': { color: '#FF6347', fillOpacity: 0.25, weight: 1 },
-              'baja': { color: '#FFA07A', fillOpacity: 0.20, weight: 1 }
+            // Colores segun severidad
+            const severityColors: Record<string, string> = {
+              'muy_alta': '#ef4444',  // Red
+              'alta': '#f97316',       // Orange
+              'media': '#eab308',      // Yellow
+              'baja': '#84cc16'        // Lime
             };
-            const style = severityStyles[item.severity] || severityStyles['media'];
+            const baseColor = severityColors[item.severity] || severityColors['media'];
 
             return (
-              <Polygon
-                key={`rio-buffer-${idx}`}
-                positions={bufferCoords}
+              <Polyline
+                key={`rio-${idx}`}
+                positions={lineCoords}
                 pathOptions={{
-                  color: style.color,
-                  fillColor: style.color,
-                  fillOpacity: style.fillOpacity,
-                  weight: style.weight,
-                  dashArray: item.severity === 'baja' ? '5, 5' : undefined
+                  color: baseColor,
+                  weight: item.severity === 'muy_alta' ? 3 : item.severity === 'alta' ? 2.5 : 2,
+                  opacity: 0.85
                 }}
               >
                 <Popup>
-                  <b>{item.name || 'Zona de Riesgo'}</b><br />
-                  <span style={{ color: style.color, fontWeight: 'bold' }}>
+                  <b>{item.name || 'Curso de Agua'}</b><br />
+                  <span style={{ color: baseColor, fontWeight: 'bold' }}>
                     Riesgo: {item.severity?.replace('_', ' ').toUpperCase() || 'N/A'}
                   </span><br />
                   {item.description && <>{item.description}<br /></>}
-                  Buffer: {item.buffer_m}m<br />
                   Tipo: {item.type || 'N/A'}
                 </Popup>
-              </Polygon>
+              </Polyline>
             );
           })}
 
