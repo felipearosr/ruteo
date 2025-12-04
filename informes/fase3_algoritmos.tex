@@ -1,0 +1,242 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+    basicstyle=\small\ttfamily,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\title{Fase 3: Algoritmos de Ruteo Resiliente\\Sistema de Ruteo ante Inundaciones}
+\author{Felipe Aros}
+\date{Noviembre 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Modelo de Probabilidad de Falla}
+
+Cada arista $e$ de la red tiene una probabilidad de falla $p_e$ calculada como:
+
+\begin{equation}
+p_e = w_1 \cdot f_{inund} + w_2 \cdot f_{dga} + w_3 \cdot f_{rep} + w_4 \cdot f_{lluvia}
+\end{equation}
+
+Donde los pesos son:
+\begin{itemize}
+    \item $w_1 = 0.4$ (inundacion historica)
+    \item $w_2 = 0.3$ (proximidad a estacion DGA)
+    \item $w_3 = 0.2$ (reportes ciudadanos)
+    \item $w_4 = 0.1$ (precipitacion)
+\end{itemize}
+
+Cada factor $f_i$ se calcula con funcion exponencial decreciente:
+
+\begin{equation}
+f_i = e^{-d_i / r_i}
+\end{equation}
+
+Donde $d_i$ es la distancia a la amenaza y $r_i$ el radio de influencia.
+
+\section{Algoritmo 1: Dijkstra Baseline}
+
+Ruta mas corta usando solo distancia como costo.
+
+\begin{lstlisting}[language=SQL]
+SELECT * FROM pgr_dijkstra(
+    'SELECT id, source, target, length_m AS cost
+     FROM infra_aristas',
+    source_node, target_node
+);
+\end{lstlisting}
+
+\textbf{Endpoint}: \texttt{/api/route/baseline}
+
+\section{Algoritmo 2: Dijkstra Resiliente}
+
+Incorpora probabilidad de falla en el costo:
+
+\begin{equation}
+cost_e = length_e \cdot (1 + k \cdot p_e)
+\end{equation}
+
+Donde $k$ es el factor de penalizacion (default: 5.0).
+
+\begin{lstlisting}[language=SQL]
+SELECT * FROM pgr_dijkstra(
+    'SELECT id, source, target,
+            length_m * (1 + 5.0 * p_fallo_arista) AS cost
+     FROM infra_aristas',
+    source_node, target_node
+);
+\end{lstlisting}
+
+\textbf{Endpoint}: \texttt{/api/route/resilient?k=5.0}
+
+\section{Algoritmo 3: CPLEX MILP}
+
+Formulacion como problema de programacion lineal entera mixta:
+
+\subsection{Variables}
+\begin{itemize}
+    \item $x_e \in \{0, 1\}$: Variable binaria indicando si la arista $e$ pertenece a la ruta
+\end{itemize}
+
+\subsection{Funcion Objetivo}
+\begin{equation}
+\min \sum_{e \in E} x_e \cdot (length_e + \lambda \cdot length_e \cdot p_e)
+\end{equation}
+
+\subsection{Restricciones de Flujo}
+\begin{equation}
+\sum_{e \in out(v)} x_e - \sum_{e \in in(v)} x_e =
+\begin{cases}
+1 & \text{si } v = source \\
+-1 & \text{si } v = target \\
+0 & \text{en otro caso}
+\end{cases}
+\end{equation}
+
+\subsection{Restricciones Opcionales}
+\begin{align}
+\sum_{e \in E} x_e \cdot p_e &\leq max\_risk \cdot |E| \\
+\sum_{e \in E} x_e \cdot length_e &\leq max\_distance
+\end{align}
+
+\begin{lstlisting}[language=Python]
+from docplex.mp.model import Model
+
+m = Model(name="resilient_routing")
+x = {e['id']: m.binary_var(name=f"x_{e['id']}")
+     for e in aristas}
+
+# Funcion objetivo
+m.minimize(m.sum(
+    x[e['id']] * (e['length_m'] + lambda_risk * e['length_m'] * e['p_fallo'])
+    for e in aristas
+))
+
+# Restricciones de flujo
+for v in nodos:
+    flow = sum(x[e] for e in out_edges[v]) - sum(x[e] for e in in_edges[v])
+    if v == source:
+        m.add_constraint(flow == 1)
+    elif v == target:
+        m.add_constraint(flow == -1)
+    else:
+        m.add_constraint(flow == 0)
+
+solution = m.solve()
+\end{lstlisting}
+
+\textbf{Endpoint}: \texttt{/api/route/optimize?lambda\_risk=5.0}
+
+\section{Algoritmo 4: A* Metaheuristica}
+
+A* modificado con heuristica que considera riesgo.
+
+\subsection{Funcion de Costo}
+\begin{equation}
+g(n) = \sum_{e \in path(s,n)} length_e \cdot (1 + w_{risk} \cdot p_e)
+\end{equation}
+
+\subsection{Heuristica}
+\begin{equation}
+h(n) = w_h \cdot dist_{euclidiana}(n, target)
+\end{equation}
+
+\begin{algorithm}
+\caption{A* Resiliente}
+\begin{algorithmic}[1]
+\State $open \gets \{source\}$, $closed \gets \emptyset$
+\State $g[source] \gets 0$
+\State $f[source] \gets h(source)$
+\While{$open \neq \emptyset$}
+    \State $current \gets \arg\min_{n \in open} f[n]$
+    \If{$current = target$}
+        \State \Return reconstruir\_ruta()
+    \EndIf
+    \State $open \gets open \setminus \{current\}$
+    \State $closed \gets closed \cup \{current\}$
+    \ForAll{$neighbor \in vecinos(current)$}
+        \If{$neighbor \in closed$}
+            \State continue
+        \EndIf
+        \State $tentative\_g \gets g[current] + cost(current, neighbor)$
+        \If{$tentative\_g < g[neighbor]$}
+            \State $g[neighbor] \gets tentative\_g$
+            \State $f[neighbor] \gets g[neighbor] + h(neighbor)$
+            \State $parent[neighbor] \gets current$
+            \State $open \gets open \cup \{neighbor\}$
+        \EndIf
+    \EndFor
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Endpoint}: \texttt{/api/route/metaheuristic?risk\_weight=3.0}
+
+\section{Simulacion de Fallas}
+
+La simulacion activa fallas aleatoriamente segun la probabilidad de cada elemento:
+
+\begin{lstlisting}[language=SQL]
+INSERT INTO sim_fallas_activas (simulation_id, entity_type, entity_id,
+                                 p_fallo, random_value, is_failed)
+SELECT
+    gen_random_uuid(),
+    'arista',
+    id,
+    p_fallo_arista,
+    random(),
+    random() < p_fallo_arista
+FROM infra_aristas;
+\end{lstlisting}
+
+\textbf{Endpoint}: \texttt{POST /api/simulate-failures}
+
+\section{Comparacion de Algoritmos}
+
+El endpoint \texttt{/api/route/compare} ejecuta los 4 algoritmos simultaneamente y retorna:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Algoritmo} & \textbf{Distancia} & \textbf{Riesgo} & \textbf{Tiempo} & \textbf{Optimalidad} \\
+\midrule
+Baseline & Minima & Alto & Rapido & Local \\
+Resiliente & Moderada & Bajo & Rapido & Local \\
+CPLEX & Optima & Configurable & Lento & Global \\
+A* & Buena & Bajo & Moderado & Heuristica \\
+\bottomrule
+\end{tabular}
+\caption{Comparacion de caracteristicas de los algoritmos}
+\end{table}
+
+\section{Interfaz Web}
+
+La interfaz permite:
+\begin{itemize}
+    \item Seleccionar origen/destino (GPS, geocodificacion, ID manual)
+    \item Visualizar las 4 rutas simultaneamente
+    \item Activar/desactivar capas de amenazas
+    \item Simular fallas con diferentes tasas (10\%, 30\%, 50\%)
+    \item Comparar metricas en tabla
+\end{itemize}
+
+\end{document}

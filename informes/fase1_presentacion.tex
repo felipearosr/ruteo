@@ -1,0 +1,147 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+
+\title{Fase 1: Sistema de Ruteo Resiliente ante Inundaciones Urbanas}
+\author{Felipe Aros}
+\date{Noviembre 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Problematica Identificada}
+
+Las inundaciones urbanas representan una de las amenazas mas significativas para la movilidad en ciudades como Santiago de Chile. Estudios recientes respaldan esta problematica:
+
+\begin{enumerate}
+    \item \textbf{IPCC (2021)}: El Panel Intergubernamental sobre Cambio Climatico indica que eventos de precipitacion extrema han aumentado su frecuencia e intensidad en zonas urbanas de America del Sur.
+
+    \item \textbf{SERNAGEOMIN (2020)}: El Servicio Nacional de Geologia y Mineria de Chile documenta multiples zonas de riesgo de inundacion en la Region Metropolitana, particularmente en areas cercanas al rio Mapocho y quebradas andinas.
+
+    \item \textbf{MOP Chile (2019)}: El Ministerio de Obras Publicas reporta que los pasos bajo nivel y sectores de baja elevacion presentan alta vulnerabilidad durante eventos de precipitacion intensa.
+\end{enumerate}
+
+\section{Hipotesis}
+
+\textit{Es posible mejorar la resiliencia del transporte urbano mediante un sistema de ruteo inteligente basado en SIG que considere probabilidades de falla dinamicas derivadas de amenazas hidrometeorologicas, permitiendo seleccionar rutas alternativas que minimicen el riesgo de interrupcion por inundaciones.}
+
+\section{Objetivos}
+
+\subsection{Objetivo General}
+Desarrollar un sistema de ruteo resiliente que calcule rutas optimas considerando amenazas de inundacion en tiempo real, utilizando sistemas de informacion geografica (SIG) y algoritmos de optimizacion.
+
+\subsection{Objetivos Especificos}
+\begin{enumerate}
+    \item Extraer y modelar la red vial de Santiago desde OpenStreetMap como grafo georreferenciado.
+    \item Integrar fuentes de metadata ambiental (elevacion, precipitacion, cobertura de suelo).
+    \item Incorporar datos de amenazas (zonas de inundacion historica, estaciones DGA, reportes ciudadanos).
+    \item Calcular probabilidades de falla para cada elemento de la red basado en proximidad a amenazas.
+    \item Implementar algoritmos de ruteo que consideren tanto distancia como riesgo.
+\end{enumerate}
+
+\section{Infraestructura}
+
+\subsection{Fuente de Datos}
+La infraestructura vial se obtiene de \textbf{OpenStreetMap} mediante la API Overpass.
+
+\subsection{Estructura de la Red}
+\begin{itemize}
+    \item \textbf{Nodos}: 42,534 intersecciones y vertices de la red
+    \item \textbf{Aristas}: 89,021 segmentos viales con geometria LineString
+    \item \textbf{SRID}: WGS84 (EPSG:4326)
+\end{itemize}
+
+\subsection{Automatizacion ETL}
+\begin{lstlisting}[language=Python, basicstyle=\small\ttfamily]
+# infraestructura/osm_infra_etl.py
+import requests
+
+OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+query = """
+[out:json][timeout:300];
+area["name"="Santiago"]->.a;
+way(area.a)["highway"];
+out geom;
+"""
+response = requests.post(OVERPASS_URL, data={'data': query})
+\end{lstlisting}
+
+\section{Metadata}
+
+Se integran 3 fuentes de metadata ambiental:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Fuente} & \textbf{Tipo} & \textbf{API/BD} & \textbf{Uso} \\
+\midrule
+SRTM & Elevacion & NASA Earthdata & Identificar zonas bajas \\
+CHIRPS & Precipitacion & UCSB Climate & Lluvia historica \\
+ESA WorldCover & Landcover & Copernicus & Permeabilidad del suelo \\
+\bottomrule
+\end{tabular}
+\caption{Fuentes de metadata ambiental}
+\end{table}
+
+\section{Amenazas}
+
+Se identifican 3 tipos de amenazas geolocalizadas:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}llp{6cm}@{}}
+\toprule
+\textbf{Amenaza} & \textbf{Fuente} & \textbf{Descripcion} \\
+\midrule
+Estaciones DGA & MMA Chile & Estaciones de monitoreo hidrologico \\
+Inundaciones Historicas & SERNAGEOMIN & Poligonos de zonas afectadas \\
+Reportes Ciudadanos & Crowdsourcing & Puntos reportados por usuarios \\
+\bottomrule
+\end{tabular}
+\caption{Fuentes de amenazas}
+\end{table}
+
+\subsection{Factibilidad Tecnica}
+Todos los datos son accesibles via APIs publicas o descarga directa:
+\begin{itemize}
+    \item DGA: Portal de Datos Abiertos MMA (\url{https://lineasdebasepublicas.mma.gob.cl})
+    \item Inundaciones: Capas SERNAGEOMIN disponibles en GeoPortal
+    \item OSM: Overpass API sin limite de consultas razonable
+\end{itemize}
+
+\section{Diagrama de Base de Datos}
+
+\begin{lstlisting}[language=SQL, basicstyle=\small\ttfamily]
+-- Tablas principales
+CREATE TABLE infra_nodos (
+    id BIGSERIAL PRIMARY KEY,
+    geom GEOMETRY(Point, 4326),
+    p_fallo_nodo DOUBLE PRECISION DEFAULT 0.0
+);
+
+CREATE TABLE infra_aristas (
+    id BIGSERIAL PRIMARY KEY,
+    source BIGINT REFERENCES infra_nodos(id),
+    target BIGINT REFERENCES infra_nodos(id),
+    geom GEOMETRY(LineString, 4326),
+    length_m DOUBLE PRECISION,
+    p_fallo_arista DOUBLE PRECISION DEFAULT 0.0
+);
+
+-- Tablas de amenazas
+CREATE TABLE amenaza_inundaciones_hist (...);
+CREATE TABLE amenaza_dga (...);
+CREATE TABLE amenaza_reportes_ciudadanos (...);
+\end{lstlisting}
+
+\end{document}

@@ -146,8 +146,8 @@ export function AddressInput({
     try {
       // Llamar a find_nearest_node
       const { data, error } = await supabase.rpc('find_nearest_node', {
-        p_lat: result.lat,
-        p_lon: result.lon
+        lat: result.lat,
+        lon: result.lon
       });
 
       if (error || !data || data.length === 0) {

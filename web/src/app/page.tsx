@@ -534,8 +534,8 @@ export default function HomePage() {
         try {
           // Encontrar nodo más cercano usando función de Supabase
           const { data, error } = await supabase.rpc('find_nearest_node', {
-            p_lat: latitude,
-            p_lon: longitude
+            lat: latitude,
+            lon: longitude
           });
 
           if (error) {
@@ -628,6 +628,16 @@ export default function HomePage() {
   const extractCoords = (geom: any): [number, number][] => {
     if (!geom) return [];
 
+    // Si geom es un string JSON, parsearlo
+    let parsedGeom = geom;
+    if (typeof geom === 'string') {
+      try {
+        parsedGeom = JSON.parse(geom);
+      } catch {
+        return [];
+      }
+    }
+
     const handleCoords = (coords: any): [number, number][] => {
       if (!Array.isArray(coords)) return [];
       // Handles [lon, lat] pairs
@@ -638,24 +648,24 @@ export default function HomePage() {
       return coords.flatMap((c: any) => handleCoords(c));
     };
 
-    if (typeof geom === 'object' && geom.type && geom.coordinates) {
-      if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
-        return handleCoords(geom.coordinates);
+    if (typeof parsedGeom === 'object' && parsedGeom.type && parsedGeom.coordinates) {
+      if (parsedGeom.type === 'LineString' || parsedGeom.type === 'MultiLineString') {
+        return handleCoords(parsedGeom.coordinates);
       }
-      if (geom.type === 'Point') {
-        return [[geom.coordinates[1], geom.coordinates[0]]];
+      if (parsedGeom.type === 'Point') {
+        return [[parsedGeom.coordinates[1], parsedGeom.coordinates[0]]];
       }
       // Handle Polygon - coordinates[0] is the outer ring
-      if (geom.type === 'Polygon') {
-        const outerRing = geom.coordinates[0];
+      if (parsedGeom.type === 'Polygon') {
+        const outerRing = parsedGeom.coordinates[0];
         if (Array.isArray(outerRing)) {
           return outerRing.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
         }
         return [];
       }
       // Handle MultiPolygon
-      if (geom.type === 'MultiPolygon') {
-        return geom.coordinates.flatMap((polygon: any) => {
+      if (parsedGeom.type === 'MultiPolygon') {
+        return parsedGeom.coordinates.flatMap((polygon: any) => {
           const outerRing = polygon[0];
           if (Array.isArray(outerRing)) {
             return outerRing.map((coord: number[]) => [coord[1], coord[0]] as [number, number]);
@@ -663,8 +673,8 @@ export default function HomePage() {
           return [];
         });
       }
-      if (geom.type === 'GeometryCollection' && Array.isArray(geom.geometries)) {
-        return geom.geometries.flatMap((g: any) => extractCoords(g));
+      if (parsedGeom.type === 'GeometryCollection' && Array.isArray(parsedGeom.geometries)) {
+        return parsedGeom.geometries.flatMap((g: any) => extractCoords(g));
       }
     }
 
@@ -1965,10 +1975,10 @@ function MapEventBridge({
             <CircleMarker
               center={targetLatLng as [number, number]}
               radius={15}
-              pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.8, weight: 3 }}
+              pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.8, weight: 3 }}
             >
               <Popup>
-                <b>🔴 Nodo Destino</b><br />
+                <b>🔵 Nodo Destino</b><br />
                 ID: {targetNode}<br />
                 {targetMarker?.label && <>Dir: {targetMarker.label}<br /></>}
                 {targetMarker?.distance !== undefined && <>Dist: {targetMarker.distance.toFixed(0)} m<br /></>}

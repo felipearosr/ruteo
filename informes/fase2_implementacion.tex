@@ -1,0 +1,270 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{forest}
+
+\geometry{margin=2.5cm}
+
+\lstset{
+    basicstyle=\small\ttfamily,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\title{Fase 2: Implementacion ETL y Sitio Web\\Sistema de Ruteo Resiliente}
+\author{Felipe Aros}
+\date{Noviembre 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Estructura del Proyecto}
+
+El proyecto sigue una arquitectura modular con las siguientes carpetas:
+
+\begin{verbatim}
+ruteo/
+├── infraestructura/     # ETL red vial OSM
+├── metadata/            # ETL datos ambientales
+├── amenazas/            # ETL fuentes de amenazas
+├── sql/                 # Esquema y funciones BD
+├── web/                 # Frontend Next.js
+├── docker/              # Contenedores
+├── main.py              # Orquestador ETL
+└── load_to_supabase.py  # Carga a BD
+\end{verbatim}
+
+\section{Diagrama de Base de Datos}
+
+El esquema utiliza PostgreSQL con las extensiones PostGIS y pgRouting:
+
+\begin{lstlisting}[language=SQL]
+-- Extensiones requeridas
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS pgrouting;
+
+-- Tabla de nodos (42,534 registros)
+CREATE TABLE infra_nodos (
+    id BIGSERIAL PRIMARY KEY,
+    geom GEOMETRY(Point, 4326) NOT NULL,
+    osm_id BIGINT,
+    tags JSONB,
+    p_fallo_nodo DOUBLE PRECISION DEFAULT 0.0
+);
+
+-- Tabla de aristas (89,021 registros)
+CREATE TABLE infra_aristas (
+    id BIGSERIAL PRIMARY KEY,
+    source BIGINT REFERENCES infra_nodos(id),
+    target BIGINT REFERENCES infra_nodos(id),
+    geom GEOMETRY(LineString, 4326) NOT NULL,
+    length_m DOUBLE PRECISION,
+    cost DOUBLE PRECISION,
+    p_fallo_arista DOUBLE PRECISION DEFAULT 0.0,
+    highway TEXT
+);
+
+-- Indices espaciales GiST
+CREATE INDEX ON infra_nodos USING GIST(geom);
+CREATE INDEX ON infra_aristas USING GIST(geom);
+\end{lstlisting}
+
+\section{Carpeta Infraestructura}
+
+\subsection{Archivo: osm\_infra\_etl.py}
+
+Automatiza la extraccion de la red vial desde OpenStreetMap:
+
+\begin{lstlisting}[language=Python]
+# Consulta Overpass API
+OVERPASS_QUERY = """
+[out:json][timeout:300];
+area["name"="Santiago"]["admin_level"="8"]->.a;
+(
+  way(area.a)["highway"];
+  way(area.a)["highway"~"primary|secondary|tertiary"];
+);
+out geom;
+"""
+\end{lstlisting}
+
+\textbf{Salida}: \texttt{infraestructura.geojson}
+
+\subsection{Estructura del JSON}
+
+\begin{lstlisting}[language=json]
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-70.65, -33.45], ...]
+      },
+      "properties": {
+        "osm_id": 123456,
+        "highway": "primary",
+        "name": "Av. Providencia"
+      }
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Carpeta Metadata}
+
+\subsection{Archivo 1: elevacion\_etl.py}
+
+Descarga datos de elevacion SRTM de NASA Earthdata.
+
+\textbf{Salida}: \texttt{elevacion.geojson} con campos:
+\begin{itemize}
+    \item \texttt{elev\_m}: Elevacion en metros sobre el nivel del mar
+    \item \texttt{source}: "SRTM"
+\end{itemize}
+
+\subsection{Archivo 2: lluvia\_etl.py}
+
+Obtiene datos de precipitacion historica.
+
+\textbf{Salida}: \texttt{lluvia.geojson} con campos:
+\begin{itemize}
+    \item \texttt{precip\_mm}: Precipitacion en milimetros
+    \item \texttt{observed\_at}: Fecha de observacion
+\end{itemize}
+
+\subsection{Archivo 3: landcover\_etl.py}
+
+Clasifica la cobertura del suelo para estimar permeabilidad.
+
+\textbf{Salida}: \texttt{landcover.geojson} con campos:
+\begin{itemize}
+    \item \texttt{class}: Tipo de cobertura (urbano, vegetacion, agua)
+    \item \texttt{confidence}: Nivel de confianza
+\end{itemize}
+
+\section{Carpeta Amenazas}
+
+\subsection{Archivo 1: dga\_etl.py}
+
+Extrae estaciones de monitoreo de la Direccion General de Aguas.
+
+\textbf{Fuente}: Portal MMA (\url{https://lineasdebasepublicas.mma.gob.cl})
+
+\textbf{Salida}: \texttt{dga\_estaciones.json}
+
+\subsection{Archivo 2: inundaciones\_hist\_etl.py}
+
+Procesa zonas de inundacion historica basadas en SERNAGEOMIN.
+
+\textbf{Salida}: \texttt{inundaciones\_hist.json} con campos:
+\begin{itemize}
+    \item \texttt{geometry}: Poligono de zona afectada
+    \item \texttt{source}: Fuente (ej: "Rio Mapocho")
+    \item \texttt{severity}: Nivel de severidad
+\end{itemize}
+
+\subsection{Archivo 3: reportes\_ciudadanos\_etl.py}
+
+Geocodifica reportes ciudadanos de inundaciones.
+
+\textbf{Salida}: \texttt{reportes\_ciudadanos.json}
+
+\section{Sitio Web con Leaflet}
+
+El frontend se implementa con Next.js 14 y Leaflet:
+
+\begin{lstlisting}[language=JavaScript]
+// web/src/app/page.tsx
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+
+export default function HomePage() {
+  return (
+    <MapContainer center={[-33.45, -70.65]} zoom={12}>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <GeoJSON data={infraestructura} />
+      <GeoJSON data={inundaciones} style={{color: 'red'}} />
+      <GeoJSON data={ruta} style={{color: 'blue', weight: 5}} />
+    </MapContainer>
+  );
+}
+\end{lstlisting}
+
+\section{Ruta con pgr\_dijkstra}
+
+Ejemplo de ruta basica usando solo distancia como costo:
+
+\begin{lstlisting}[language=SQL]
+SELECT seq, edge, cost, agg_cost, ST_AsGeoJSON(geom)
+FROM pgr_dijkstra(
+    'SELECT id, source, target, length_m AS cost
+     FROM infra_aristas',
+    (SELECT id FROM infra_nodos ORDER BY geom <->
+     ST_SetSRID(ST_MakePoint(-70.60, -33.42), 4326) LIMIT 1),
+    (SELECT id FROM infra_nodos ORDER BY geom <->
+     ST_SetSRID(ST_MakePoint(-70.65, -33.45), 4326) LIMIT 1)
+) AS di
+JOIN infra_aristas a ON di.edge = a.id;
+\end{lstlisting}
+
+\section{Archivo main.py}
+
+Orquesta todo el proceso ETL:
+
+\begin{lstlisting}[language=Python]
+#!/usr/bin/env python3
+"""Orquestador ETL principal"""
+
+from infraestructura import osm_infra_etl
+from metadata import elevacion_etl, lluvia_etl, landcover_etl
+from amenazas import dga_etl, inundaciones_hist_etl, reportes_ciudadanos_etl
+
+def main():
+    print("1. Extrayendo infraestructura OSM...")
+    osm_infra_etl.run()
+
+    print("2. Procesando metadata...")
+    elevacion_etl.run()
+    lluvia_etl.run()
+    landcover_etl.run()
+
+    print("3. Procesando amenazas...")
+    dga_etl.run()
+    inundaciones_hist_etl.run()
+    reportes_ciudadanos_etl.run()
+
+    print("ETL completado!")
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\section{Docker}
+
+\begin{lstlisting}[language=yaml]
+# docker/docker-compose.yml
+version: '3.8'
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.app
+    ports:
+      - "3000:3000"
+    environment:
+      - SUPABASE_DB_HOST=${SUPABASE_DB_HOST}
+      - SUPABASE_DB_PORT=6543
+    volumes:
+      - ..:/app
+\end{lstlisting}
+
+\end{document}
