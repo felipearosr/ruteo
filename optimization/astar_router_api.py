@@ -49,6 +49,7 @@ def main():
             'route': geojson,
             'metrics': {
                 'distance_m': solution['total_distance'],
+                'travel_time_min': solution.get('travel_time_min', 0),
                 'computation_time_ms': solution['computation_time'] * 1000,  # s to ms
                 'risk_score': solution['total_risk'],
                 'num_segments': len(solution['route']),

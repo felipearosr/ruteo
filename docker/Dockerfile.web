@@ -1,0 +1,32 @@
+# Dockerfile para la aplicacion web Next.js con Python 3.10 para CPLEX
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Instalar Node.js 20
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar dependencias Python para optimizacion
+RUN pip3 install psycopg2-binary python-dotenv six
+
+# Copiar archivos de dependencias
+COPY web/package*.json ./
+
+# Instalar dependencias
+RUN npm ci --prefer-offline --no-audit
+
+# Copiar codigo fuente
+COPY web/ ./
+
+# Copiar scripts de optimizacion
+COPY optimization/ /app/optimization/
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando de inicio
+CMD ["npm", "run", "dev"]

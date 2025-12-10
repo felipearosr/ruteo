@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_bb90aa95510d8c32ba8f177e8c00f796 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_bb90aa95510d8c32ba8f177e8c00f796" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_bb90aa95510d8c32ba8f177e8c00f796 = L.map(
+                "map_bb90aa95510d8c32ba8f177e8c00f796",
+                {
+                    center: [-33.45, -70.65],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 11,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_b8df70b27d65dbe0e20f2a5a58e2399a = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_b8df70b27d65dbe0e20f2a5a58e2399a.addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        function geo_json_7b8616a4ca55495ba88dc86bb6d132c5_styler(feature) {
+            switch(feature.properties.id) {
+                default:
+                    return {"color": "#e74c3c", "opacity": 0.7, "weight": 3};
+            }
+        }
+
+        function geo_json_7b8616a4ca55495ba88dc86bb6d132c5_onEachFeature(feature, layer) {
+
+            layer.on({
+            });
+        };
+        var geo_json_7b8616a4ca55495ba88dc86bb6d132c5 = L.geoJson(null, {
+                onEachFeature: geo_json_7b8616a4ca55495ba88dc86bb6d132c5_onEachFeature,
+            
+                style: geo_json_7b8616a4ca55495ba88dc86bb6d132c5_styler,
+            ...{
+}
+        });
+
+        function geo_json_7b8616a4ca55495ba88dc86bb6d132c5_add (data) {
+            geo_json_7b8616a4ca55495ba88dc86bb6d132c5
+                .addData(data);
+        }
+            geo_json_7b8616a4ca55495ba88dc86bb6d132c5_add({"crs": {"properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}, "type": "name"}, "features": [{"geometry": {"coordinates": [[-70.654329, -33.460284], [-70.65435, -33.4601]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225611, "length_m": 24.6628159759281, "p_fallo_arista": 0.350230268396069, "source": 603649, "target": 812105}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.654023, -33.454812], [-70.653907, -33.454813], [-70.653629, -33.454814], [-70.653232, -33.454804]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 156080, "length_m": 88.0748307109535, "p_fallo_arista": 0.350858685319558, "source": 691148, "target": 863938}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639479, -33.461777], [-70.639444, -33.46177], [-70.638485, -33.461578], [-70.638396, -33.46156], [-70.637285, -33.461337], [-70.637231, -33.461326], [-70.637152, -33.46131], [-70.636639, -33.461207], [-70.636594, -33.461198], [-70.636555, -33.46119], [-70.636054, -33.461089], [-70.635962, -33.461071]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140779, "length_m": 402.685400874524, "p_fallo_arista": 0.350884510234386, "source": 631789, "target": 951514}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.636324, -33.454379], [-70.636585, -33.453261], [-70.636597, -33.453199], [-70.636858, -33.452049], [-70.636878, -33.451951]], "type": "LineString"}, "properties": {"highway": "residential", "id": 186783, "length_m": 329.775624715461, "p_fallo_arista": 0.351507468604767, "source": 971456, "target": 1016478}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656457, -33.460527], [-70.656408, -33.460522], [-70.656373, -33.460518]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246176, "length_m": 9.42787548089034, "p_fallo_arista": 0.351692246811569, "source": 628255, "target": 1084256}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.658134, -33.458167], [-70.658005, -33.458181], [-70.657919, -33.458201], [-70.65784, -33.458224], [-70.657772, -33.458257], [-70.657716, -33.458294], [-70.657667, -33.458337], [-70.657617, -33.458403], [-70.657584, -33.458451], [-70.65756, -33.458517], [-70.657554, -33.458591], [-70.657556, -33.458667], [-70.657579, -33.458756], [-70.65763, -33.458888]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200084, "length_m": 136.057234631414, "p_fallo_arista": 0.352718530184998, "source": 751784, "target": 950571}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656565, -33.460537], [-70.656546, -33.460534], [-70.656457, -33.460527]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246177, "length_m": 12.1039842603471, "p_fallo_arista": 0.353141098036092, "source": 830953, "target": 628255}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656456, -33.460598], [-70.656457, -33.460527], [-70.656462, -33.460345], [-70.656465, -33.460276], [-70.656465, -33.460249]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246178, "length_m": 46.5815212015678, "p_fallo_arista": 0.353318170610223, "source": 693657, "target": 889098}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.6564, -33.460336], [-70.656415, -33.460337], [-70.656462, -33.460345]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246175, "length_m": 7.01491720595799, "p_fallo_arista": 0.353484477912472, "source": 859304, "target": 1107451}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656462, -33.460345], [-70.656579, -33.460364], [-70.656593, -33.460366]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246174, "length_m": 14.8499899109344, "p_fallo_arista": 0.354990788367605, "source": 1107451, "target": 1125715}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.636914, -33.457088], [-70.636942, -33.456987], [-70.636963, -33.456908]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 237012, "length_m": 24.629032228046, "p_fallo_arista": 0.3556345316777, "source": 912924, "target": 696483}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653555, -33.44776], [-70.653716, -33.447779], [-70.654254, -33.447844], [-70.654318, -33.447852]], "type": "LineString"}, "properties": {"highway": "primary", "id": 180586, "length_m": 85.8192324581267, "p_fallo_arista": 0.35586599406644, "source": 724728, "target": 853485}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638585, -33.446732], [-70.638346, -33.447422], [-70.638229, -33.447759], [-70.638211, -33.44781]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140151, "length_m": 149.724908605951, "p_fallo_arista": 0.356212055205883, "source": 647080, "target": 776535}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.636973, -33.451967], [-70.636708, -33.453149], [-70.636695, -33.45322], [-70.636432, -33.454346], [-70.63642, -33.454398]], "type": "LineString"}, "properties": {"highway": "residential", "id": 186553, "length_m": 330.149503377858, "p_fallo_arista": 0.35623644678662, "source": 1077626, "target": 883875}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.657148, -33.460701], [-70.657136, -33.460887], [-70.65712, -33.46112]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246181, "length_m": 55.9960229103084, "p_fallo_arista": 0.359738709954637, "source": 1085398, "target": 1125817}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638346, -33.447422], [-70.638274, -33.447404]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 252347, "length_m": 8.36703297963091, "p_fallo_arista": 0.360291897398302, "source": 859289, "target": 614612}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656593, -33.460366], [-70.65685, -33.460406], [-70.65696, -33.460415], [-70.657021, -33.460418], [-70.657087, -33.460419], [-70.657137, -33.460416], [-70.657179, -33.460411], [-70.657231, -33.460401]], "type": "LineString"}, "properties": {"highway": "primary", "id": 138976, "length_m": 71.8007331175736, "p_fallo_arista": 0.362388132171445, "source": 1125715, "target": 743355}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.654252, -33.452819], [-70.654258, -33.452766], [-70.654317, -33.452221], [-70.654348, -33.451951], [-70.65438, -33.451705], [-70.654393, -33.451611], [-70.654486, -33.45111], [-70.654621, -33.450297], [-70.654693, -33.449854], [-70.654751, -33.449509], [-70.654845, -33.448957], [-70.654999, -33.447934]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 181425, "length_m": 657.154268259349, "p_fallo_arista": 0.362759602276517, "source": 643814, "target": 777818}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.66044, -33.458289], [-70.660528, -33.458294], [-70.660768, -33.458309], [-70.660838, -33.458313], [-70.661024, -33.458325]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 264419, "length_m": 65.1882125313045, "p_fallo_arista": 0.362805963200646, "source": 630868, "target": 717038}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652854, -33.457486], [-70.653085, -33.455897], [-70.653087, -33.455886], [-70.65309, -33.455863], [-70.653232, -33.454804], [-70.653278, -33.454483], [-70.653284, -33.454423], [-70.653412, -33.453532], [-70.653427, -33.453425], [-70.653436, -33.453379], [-70.653528, -33.452711], [-70.653537, -33.452656]], "type": "LineString"}, "properties": {"highway": "residential", "id": 200251, "length_m": 648.932941434273, "p_fallo_arista": 0.365398655333827, "source": 1050756, "target": 1000930}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653376, -33.460174], [-70.653398, -33.45999]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 237006, "length_m": 24.6735854594334, "p_fallo_arista": 0.366830301325484, "source": 968226, "target": 1076113}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.660443, -33.458177], [-70.66044, -33.458289], [-70.660439, -33.458356]], "type": "LineString"}, "properties": {"highway": "primary", "id": 193256, "length_m": 23.8884998563208, "p_fallo_arista": 0.367279628866085, "source": 954414, "target": 728617}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.634962, -33.449528], [-70.635868, -33.449702], [-70.636295, -33.449781], [-70.636384, -33.449798], [-70.638213, -33.450164], [-70.638717, -33.450284]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140152, "length_m": 430.066203296815, "p_fallo_arista": 0.367280146314971, "source": 880057, "target": 715551}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.657178, -33.460279], [-70.657148, -33.460701]], "type": "LineString"}, "properties": {"highway": "primary", "id": 149256, "length_m": 56.408098666511, "p_fallo_arista": 0.367923448590037, "source": 738141, "target": 1085398}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.659804, -33.458295], [-70.659398, -33.458264], [-70.658134, -33.458167]], "type": "LineString"}, "properties": {"highway": "primary", "id": 243921, "length_m": 186.686440491476, "p_fallo_arista": 0.368894485414878, "source": 826345, "target": 751784}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.659398, -33.458264], [-70.659428, -33.458113]], "type": "LineString"}, "properties": {"highway": "residential", "id": 246183, "length_m": 20.4228982999771, "p_fallo_arista": 0.369932739503369, "source": 743425, "target": 1095666}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652346, -33.447606], [-70.652361, -33.447534], [-70.652366, -33.447509], [-70.65262, -33.446263], [-70.652642, -33.446153]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 187433, "length_m": 196.629879715673, "p_fallo_arista": 0.370295950967248, "source": 881843, "target": 654475}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.657128, -33.459403], [-70.65715, -33.45961], [-70.657177, -33.459947], [-70.657182, -33.460052], [-70.657183, -33.460156], [-70.657178, -33.460279]], "type": "LineString"}, "properties": {"highway": "primary", "id": 182292, "length_m": 117.116952731441, "p_fallo_arista": 0.371028644072544, "source": 633186, "target": 738141}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.641068, -33.447283], [-70.641367, -33.446254], [-70.641377, -33.446219]], "type": "LineString"}, "properties": {"highway": "residential", "id": 219053, "length_m": 146.059523129173, "p_fallo_arista": 0.371109097945142, "source": 750169, "target": 609134}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652156, -33.462575], [-70.652336, -33.461267], [-70.652509, -33.460166], [-70.652526, -33.460073]], "type": "LineString"}, "properties": {"highway": "residential", "id": 265075, "length_m": 336.40190930932, "p_fallo_arista": 0.371646581619367, "source": 612098, "target": 776838}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652525, -33.454407], [-70.653284, -33.454423], [-70.654068, -33.45444]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 250337, "length_m": 171.822409229918, "p_fallo_arista": 0.372931811354085, "source": 811362, "target": 765552}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.660524, -33.458363], [-70.660439, -33.458356]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 246182, "length_m": 9.50814356281289, "p_fallo_arista": 0.373059965379525, "source": 1103111, "target": 728617}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644825, -33.462274], [-70.644745, -33.462268], [-70.644294, -33.462234], [-70.643912, -33.462205], [-70.643422, -33.462164], [-70.642955, -33.462132], [-70.642916, -33.462129], [-70.642812, -33.462121]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225895, "length_m": 225.018594752243, "p_fallo_arista": 0.373796150113158, "source": 880324, "target": 636449}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.655782, -33.45622], [-70.655742, -33.456206], [-70.655688, -33.456193], [-70.655467, -33.456164], [-70.655275, -33.456139], [-70.654809, -33.456083], [-70.65415, -33.455992], [-70.653993, -33.45597], [-70.653885, -33.455956], [-70.653827, -33.455949], [-70.65346, -33.455909], [-70.653159, -33.45587], [-70.65309, -33.455863], [-70.652406, -33.455785], [-70.652314, -33.455773], [-70.652236, -33.455764], [-70.65175, -33.4557], [-70.651455, -33.455665], [-70.651385, -33.455656], [-70.651282, -33.455646], [-70.651197, -33.455639], [-70.649928, -33.455494], [-70.649817, -33.455481]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 225880, "length_m": 671.568435264375, "p_fallo_arista": 0.374607702960005, "source": 990721, "target": 1076824}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644852, -33.44804], [-70.644956, -33.447603], [-70.645082, -33.447117], [-70.645099, -33.447052], [-70.645149, -33.446868], [-70.64518, -33.44675], [-70.645219, -33.446606], [-70.645246, -33.446507], [-70.645295, -33.446323]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224845, "length_m": 234.330968013181, "p_fallo_arista": 0.37478087493476, "source": 684597, "target": 1092603}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.637902, -33.457299], [-70.637513, -33.45868], [-70.637494, -33.458748], [-70.637071, -33.46025], [-70.637055, -33.460307]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140767, "length_m": 412.287984241085, "p_fallo_arista": 0.376641804557934, "source": 771901, "target": 1015621}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.65763, -33.458888], [-70.657663, -33.458968], [-70.657686, -33.459042], [-70.657697, -33.459081], [-70.657711, -33.459126], [-70.657716, -33.459178], [-70.657734, -33.459414]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200085, "length_m": 71.5532476949181, "p_fallo_arista": 0.378344978874154, "source": 950571, "target": 765034}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.660439, -33.458356], [-70.660171, -33.458348], [-70.660084, -33.458342], [-70.65997, -33.45833], [-70.659804, -33.458295]], "type": "LineString"}, "properties": {"highway": "primary", "id": 243922, "length_m": 71.4215963688727, "p_fallo_arista": 0.378617704032206, "source": 728617, "target": 826345}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.654845, -33.448957], [-70.653454, -33.44883], [-70.653393, -33.448812]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 262017, "length_m": 162.972318731336, "p_fallo_arista": 0.380947958627835, "source": 894453, "target": 1106033}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.657734, -33.459414], [-70.657747, -33.459813], [-70.657749, -33.459872], [-70.657749, -33.459964], [-70.65774, -33.460044], [-70.65772, -33.460123], [-70.657688, -33.460189], [-70.65767, -33.460221], [-70.657636, -33.460271], [-70.657578, -33.460333], [-70.657515, -33.460392], [-70.657484, -33.460417], [-70.657451, -33.460441], [-70.657424, -33.460458], [-70.657395, -33.460477], [-70.657353, -33.460501], [-70.657311, -33.460523], [-70.657271, -33.460538], [-70.657227, -33.460549], [-70.657179, -33.460557], [-70.657132, -33.46056], [-70.657047, -33.460558], [-70.656803, -33.46055], [-70.656593, -33.46054], [-70.656565, -33.460537]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200089, "length_m": 250.459581974055, "p_fallo_arista": 0.381174769666371, "source": 765034, "target": 830953}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642812, -33.462121], [-70.642727, -33.462113], [-70.642696, -33.46211], [-70.641746, -33.462019], [-70.641351, -33.461982], [-70.641052, -33.461953], [-70.640743, -33.461923], [-70.640416, -33.461892], [-70.640123, -33.461864], [-70.640024, -33.461855]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140782, "length_m": 312.382193571721, "p_fallo_arista": 0.381853975290442, "source": 636449, "target": 740022}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.657231, -33.460401], [-70.657281, -33.460378], [-70.657323, -33.460355], [-70.657357, -33.460332], [-70.657389, -33.460307], [-70.657426, -33.460277], [-70.657463, -33.460239], [-70.657501, -33.460195], [-70.657533, -33.460145], [-70.657557, -33.46009], [-70.657569, -33.460049], [-70.657575, -33.460014], [-70.657573, -33.459978], [-70.657564, -33.459743], [-70.657545, -33.459443], [-70.657522, -33.459306], [-70.657508, -33.459226], [-70.657487, -33.459109], [-70.657452, -33.458975], [-70.657405, -33.458829], [-70.657374, -33.45872]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200087, "length_m": 241.654245417856, "p_fallo_arista": 0.382085880203298, "source": 743355, "target": 714465}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.65256, -33.459909], [-70.652578, -33.459749], [-70.652602, -33.459605], [-70.652725, -33.458715], [-70.65273, -33.458678], [-70.652808, -33.4579], [-70.652835, -33.457623], [-70.65285, -33.457517], [-70.652854, -33.457486]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225594, "length_m": 325.007268590906, "p_fallo_arista": 0.382223360711164, "source": 1049609, "target": 1050756}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640887, -33.446106], [-70.640554, -33.447184], [-70.640444, -33.447558], [-70.64044, -33.447575], [-70.640438, -33.447591], [-70.640439, -33.447608], [-70.640447, -33.447626], [-70.640458, -33.447638], [-70.640475, -33.447648], [-70.640507, -33.447657], [-70.640919, -33.447743]], "type": "LineString"}, "properties": {"highway": "residential", "id": 139712, "length_m": 264.553514041935, "p_fallo_arista": 0.382554775919948, "source": 778521, "target": 686631}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.636963, -33.456908], [-70.63716, -33.456053], [-70.637179, -33.45597], [-70.637416, -33.454936], [-70.637492, -33.454607], [-70.637762, -33.453429]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 237013, "length_m": 472.633110884762, "p_fallo_arista": 0.384979662135248, "source": 696483, "target": 892418}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.648942, -33.462465], [-70.648877, -33.462464], [-70.647229, -33.462343], [-70.647166, -33.462338], [-70.647115, -33.462334]], "type": "LineString"}, "properties": {"highway": "residential", "id": 200254, "length_m": 204.147769369845, "p_fallo_arista": 0.386900223328795, "source": 918286, "target": 912379}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.656419, -33.461411], [-70.656272, -33.461404], [-70.655548, -33.461371], [-70.655401, -33.461364], [-70.655341, -33.461361], [-70.654287, -33.461335], [-70.654222, -33.461332], [-70.653283, -33.461301], [-70.653236, -33.4613], [-70.652373, -33.461269], [-70.652336, -33.461267], [-70.651498, -33.461242], [-70.651454, -33.461241], [-70.651394, -33.461239], [-70.650718, -33.461216], [-70.65055, -33.46121], [-70.650509, -33.461208], [-70.650454, -33.461207], [-70.649224, -33.461167], [-70.649159, -33.461161], [-70.649114, -33.461155], [-70.64902, -33.461151], [-70.64895, -33.461143], [-70.648886, -33.461139], [-70.648789, -33.461133], [-70.647173, -33.461027]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140138, "length_m": 1030.74757860013, "p_fallo_arista": 0.38812933110563, "source": 1008886, "target": 942707}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64229, -33.447525], [-70.642355, -33.447542], [-70.643637, -33.447792], [-70.643696, -33.447802], [-70.644852, -33.44804]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 219057, "length_m": 293.387125030267, "p_fallo_arista": 0.388601087809676, "source": 694654, "target": 684597}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652526, -33.460073], [-70.652554, -33.459941], [-70.65256, -33.459909]], "type": "LineString"}, "properties": {"highway": "residential", "id": 265074, "length_m": 22.2086476710027, "p_fallo_arista": 0.39101657386829, "source": 776838, "target": 1049609}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639708, -33.460858], [-70.639239, -33.460761], [-70.638811, -33.460672], [-70.638726, -33.460654], [-70.638629, -33.460634], [-70.637502, -33.4604], [-70.637055, -33.460307], [-70.63685, -33.460265], [-70.636307, -33.460152], [-70.636211, -33.460132]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140786, "length_m": 401.156895488542, "p_fallo_arista": 0.392405119730527, "source": 679153, "target": 631363}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64928, -33.458671], [-70.650415, -33.458672], [-70.650843, -33.458672], [-70.651585, -33.45867], [-70.651788, -33.458669], [-70.651814, -33.458669], [-70.651864, -33.458669], [-70.652675, -33.458678], [-70.65273, -33.458678], [-70.653495, -33.458678], [-70.653556, -33.45868], [-70.654429, -33.458678], [-70.65446, -33.458678], [-70.654524, -33.458678], [-70.654585, -33.458678], [-70.655112, -33.458678], [-70.655458, -33.458678], [-70.6555, -33.458679], [-70.655575, -33.458679]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140137, "length_m": 700.772588308786, "p_fallo_arista": 0.392472357862266, "source": 698685, "target": 1060003}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651241, -33.462549], [-70.651234, -33.46258], [-70.651196, -33.462769]], "type": "LineString"}, "properties": {"highway": "primary", "id": 225882, "length_m": 29.7812769969591, "p_fallo_arista": 0.393170333249232, "source": 757939, "target": 876784}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644356, -33.461598], [-70.644298, -33.462168], [-70.644294, -33.462234]], "type": "LineString"}, "properties": {"highway": "residential", "id": 196933, "length_m": 85.1502297267327, "p_fallo_arista": 0.394100555610565, "source": 640356, "target": 722461}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652525, -33.454407], [-70.652457, -33.45485], [-70.652403, -33.455197], [-70.652377, -33.455365], [-70.652348, -33.45555], [-70.652324, -33.455705], [-70.652314, -33.455773], [-70.652222, -33.456362], [-70.652109, -33.45709], [-70.652079, -33.4573], [-70.652069, -33.457345], [-70.652015, -33.457701], [-70.651964, -33.458031], [-70.651912, -33.458361], [-70.651897, -33.458462], [-70.651873, -33.458613], [-70.651864, -33.458669], [-70.651708, -33.459683], [-70.651704, -33.459707], [-70.651702, -33.459724], [-70.651688, -33.459811]], "type": "LineString"}, "properties": {"highway": "primary", "id": 199395, "length_m": 727.057329434981, "p_fallo_arista": 0.394321064287438, "source": 811362, "target": 958559}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.637657, -33.457059], [-70.637688, -33.456946]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 242573, "length_m": 15.4673153990822, "p_fallo_arista": 0.395271746454118, "source": 613942, "target": 756461}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643912, -33.462205], [-70.643916, -33.462164], [-70.643919, -33.462137], [-70.643985, -33.461538]], "type": "LineString"}, "properties": {"highway": "residential", "id": 196934, "length_m": 89.372406369147, "p_fallo_arista": 0.396399235628236, "source": 830945, "target": 815859}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651662, -33.459974], [-70.65165, -33.46005], [-70.651648, -33.460061], [-70.651454, -33.461241], [-70.651277, -33.462362], [-70.651259, -33.462479], [-70.651241, -33.462549]], "type": "LineString"}, "properties": {"highway": "primary", "id": 225883, "length_m": 346.806877145581, "p_fallo_arista": 0.396585700111626, "source": 1004509, "target": 757939}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639792, -33.447021], [-70.640554, -33.447184], [-70.641068, -33.447283], [-70.642233, -33.447514], [-70.64229, -33.447525]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 180486, "length_m": 286.102944224076, "p_fallo_arista": 0.39723704667314, "source": 774223, "target": 694654}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64709, -33.44548], [-70.647074, -33.445923], [-70.647052, -33.446706], [-70.64706, -33.447356], [-70.647063, -33.44752], [-70.647064, -33.447609], [-70.647065, -33.447748], [-70.647065, -33.447928], [-70.647065, -33.447967], [-70.647066, -33.448064], [-70.647053, -33.448496]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 139706, "length_m": 402.456485083065, "p_fallo_arista": 0.397626092975393, "source": 764374, "target": 647749}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.641972, -33.44874], [-70.641918, -33.448722], [-70.640802, -33.448446], [-70.6407, -33.448421], [-70.639421, -33.448112], [-70.639381, -33.448102], [-70.638211, -33.44781], [-70.637489, -33.44763], [-70.637072, -33.447521], [-70.636951, -33.447493], [-70.635564, -33.447174]], "type": "LineString"}, "properties": {"highway": "residential", "id": 219061, "length_m": 743.366574168346, "p_fallo_arista": 0.400369351223321, "source": 1127824, "target": 800470}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652156, -33.462575], [-70.651413, -33.462554], [-70.651303, -33.462551], [-70.651241, -33.462549], [-70.65118, -33.462548], [-70.65046, -33.462519], [-70.65035, -33.462517], [-70.650316, -33.462516], [-70.649052, -33.462464], [-70.648942, -33.462465]], "type": "LineString"}, "properties": {"highway": "residential", "id": 200252, "length_m": 358.111635993344, "p_fallo_arista": 0.401197088027381, "source": 612098, "target": 918286}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.637688, -33.456946], [-70.637824, -33.456444]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 140790, "length_m": 68.6705879291558, "p_fallo_arista": 0.401509679758604, "source": 756461, "target": 629359}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639069, -33.449192], [-70.638974, -33.449168], [-70.638107, -33.448947], [-70.636704, -33.448589]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 216483, "length_m": 275.288254165017, "p_fallo_arista": 0.406682082202639, "source": 906751, "target": 629212}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.645295, -33.446323], [-70.64606, -33.446501], [-70.647052, -33.446706], [-70.648014, -33.446881], [-70.64805, -33.446888], [-70.648097, -33.446896], [-70.648115, -33.446899], [-70.648214, -33.446917], [-70.648285, -33.44693], [-70.648914, -33.447044], [-70.649733, -33.447195], [-70.650138, -33.447272], [-70.650948, -33.447427], [-70.65108, -33.447444]], "type": "LineString"}, "properties": {"highway": "primary", "id": 138992, "length_m": 661.288003687844, "p_fallo_arista": 0.41012982770234, "source": 1092603, "target": 676450}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.65377, -33.450998], [-70.653689, -33.451527]], "type": "LineString"}, "properties": {"highway": "residential", "id": 154581, "length_m": 71.1527291080425, "p_fallo_arista": 0.412314491752395, "source": 910537, "target": 839939}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653804, -33.446339], [-70.653631, -33.447264], [-70.653555, -33.44776], [-70.653393, -33.448812], [-70.65322, -33.44992], [-70.653063, -33.450887]], "type": "LineString"}, "properties": {"highway": "primary", "id": 224653, "length_m": 612.388437545347, "p_fallo_arista": 0.416777883556439, "source": 627885, "target": 1072850}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650231, -33.452759], [-70.650544, -33.4528], [-70.650823, -33.452848], [-70.652705, -33.453237], [-70.653436, -33.453379], [-70.653673, -33.453425], [-70.654079, -33.453503], [-70.654108, -33.453509], [-70.654176, -33.453522], [-70.655005, -33.453681], [-70.655726, -33.453822]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237004, "length_m": 628.053907359191, "p_fallo_arista": 0.416958248215117, "source": 1118774, "target": 948795}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643607, -33.448182], [-70.643271, -33.44812], [-70.643241, -33.448127], [-70.643219, -33.448141], [-70.643011, -33.448941]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 171318, "length_m": 154.069974516287, "p_fallo_arista": 0.422089836564328, "source": 822423, "target": 1026579}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.637655, -33.452078], [-70.637977, -33.452146], [-70.638065, -33.452163]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 231241, "length_m": 47.030501580908, "p_fallo_arista": 0.423802537470941, "source": 783690, "target": 899048}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.65108, -33.447444], [-70.651183, -33.447457], [-70.652246, -33.447593], [-70.652346, -33.447606], [-70.652759, -33.447658], [-70.652941, -33.447682], [-70.653083, -33.4477], [-70.653118, -33.447704], [-70.653555, -33.44776]], "type": "LineString"}, "properties": {"highway": "primary", "id": 232064, "length_m": 278.723524789856, "p_fallo_arista": 0.425365323401418, "source": 676450, "target": 724728}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651688, -33.459811], [-70.651662, -33.459974]], "type": "LineString"}, "properties": {"highway": "primary", "id": 265741, "length_m": 21.9413276908279, "p_fallo_arista": 0.426170826568026, "source": 958559, "target": 1004509}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651556, -33.457265], [-70.651591, -33.456974], [-70.651691, -33.456134], [-70.651738, -33.455773], [-70.651747, -33.455721], [-70.65175, -33.4557]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 140135, "length_m": 209.936153752547, "p_fallo_arista": 0.4283794618254, "source": 667097, "target": 972169}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638213, -33.450164], [-70.637942, -33.451075], [-70.637683, -33.451998], [-70.637655, -33.452078]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140799, "length_m": 262.828871275032, "p_fallo_arista": 0.429883614559882, "source": 791198, "target": 783690}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652821, -33.452484], [-70.65282, -33.452545], [-70.652705, -33.453237], [-70.652525, -33.454407]], "type": "LineString"}, "properties": {"highway": "primary", "id": 224651, "length_m": 258.737546200056, "p_fallo_arista": 0.432051122186092, "source": 1111532, "target": 811362}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638247, -33.457188], [-70.638473, -33.456258], [-70.638482, -33.456222]], "type": "LineString"}, "properties": {"highway": "residential", "id": 171172, "length_m": 131.519661784441, "p_fallo_arista": 0.440067518324539, "source": 914459, "target": 726431}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.65068, -33.459864], [-70.650627, -33.460279], [-70.650579, -33.460658], [-70.650509, -33.461208], [-70.650361, -33.462368], [-70.650356, -33.462471], [-70.65035, -33.462517], [-70.65018, -33.463782], [-70.650175, -33.463823], [-70.650168, -33.463879]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140132, "length_m": 538.801653231807, "p_fallo_arista": 0.440972082938731, "source": 642317, "target": 1021696}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647274, -33.459057], [-70.647397, -33.459086], [-70.647434, -33.459091], [-70.648189, -33.459255], [-70.648981, -33.459435], [-70.649016, -33.459446], [-70.649045, -33.459455], [-70.649143, -33.459478], [-70.649253, -33.459502], [-70.649281, -33.459505], [-70.650695, -33.459694], [-70.651558, -33.459796], [-70.651611, -33.459801], [-70.65164, -33.459805], [-70.651688, -33.459811], [-70.651785, -33.459821], [-70.6518, -33.459824], [-70.652024, -33.459849], [-70.652182, -33.459866], [-70.652478, -33.4599], [-70.65256, -33.459909], [-70.653246, -33.459975], [-70.653331, -33.459982], [-70.653398, -33.45999], [-70.653511, -33.460003], [-70.65435, -33.4601], [-70.655352, -33.460217], [-70.655444, -33.460227]], "type": "LineString"}, "properties": {"highway": "primary", "id": 175244, "length_m": 924.237500949948, "p_fallo_arista": 0.442870804975006, "source": 602763, "target": 687156}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653376, -33.460174], [-70.653313, -33.460167], [-70.652526, -33.460073], [-70.651791, -33.459989], [-70.651778, -33.459987], [-70.651765, -33.459986], [-70.651662, -33.459974], [-70.651606, -33.459968], [-70.651585, -33.459965], [-70.65068, -33.459864], [-70.649612, -33.459738], [-70.649257, -33.459689], [-70.649248, -33.459688], [-70.649216, -33.459685], [-70.649108, -33.459666]], "type": "LineString"}, "properties": {"highway": "primary", "id": 158815, "length_m": 479.971152559816, "p_fallo_arista": 0.448102968449156, "source": 968226, "target": 936023}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639824, -33.456481], [-70.639746, -33.456468], [-70.639713, -33.456461], [-70.639303, -33.45638], [-70.638902, -33.456303], [-70.638482, -33.456222], [-70.637179, -33.45597]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140763, "length_m": 302.236704769431, "p_fallo_arista": 0.451753678950588, "source": 871685, "target": 840110}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644745, -33.448649], [-70.644852, -33.44804]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224844, "length_m": 82.1183776912997, "p_fallo_arista": 0.452616256140609, "source": 987849, "target": 684597}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638065, -33.452163], [-70.638542, -33.452258]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 231240, "length_m": 54.591227570566, "p_fallo_arista": 0.45311744441115, "source": 899048, "target": 824809}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652948, -33.451674], [-70.652923, -33.451823], [-70.652826, -33.452385], [-70.652821, -33.452484]], "type": "LineString"}, "properties": {"highway": "primary", "id": 187711, "length_m": 109.050141846858, "p_fallo_arista": 0.456113122043126, "source": 904741, "target": 1111532}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643419, -33.448994], [-70.643011, -33.448941], [-70.642064, -33.448775], [-70.641972, -33.44874]], "type": "LineString"}, "properties": {"highway": "residential", "id": 219060, "length_m": 164.942024689012, "p_fallo_arista": 0.456465703933151, "source": 873936, "target": 1127824}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651463, -33.454398], [-70.65145, -33.454488], [-70.651333, -33.455294], [-70.651296, -33.455547], [-70.651291, -33.455579], [-70.651282, -33.455646], [-70.651274, -33.455704], [-70.651255, -33.455834], [-70.651248, -33.45588], [-70.65123, -33.456007], [-70.651106, -33.45686], [-70.651065, -33.457139], [-70.65106, -33.457177], [-70.651052, -33.457232], [-70.651016, -33.457478], [-70.650887, -33.458355], [-70.650849, -33.458631], [-70.650843, -33.458672], [-70.650756, -33.459271], [-70.650716, -33.459561], [-70.650711, -33.459581], [-70.650695, -33.459694]], "type": "LineString"}, "properties": {"highway": "residential", "id": 224580, "length_m": 711.804137988367, "p_fallo_arista": 0.457637931373127, "source": 672645, "target": 1001934}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640508, -33.457854], [-70.639522, -33.457644], [-70.639458, -33.45763], [-70.637902, -33.457299], [-70.636914, -33.457088]], "type": "LineString"}, "properties": {"highway": "primary", "id": 187271, "length_m": 412.931235204514, "p_fallo_arista": 0.460534257554503, "source": 1098333, "target": 912924}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64019, -33.460958], [-70.639798, -33.460878], [-70.639708, -33.460858]], "type": "LineString"}, "properties": {"highway": "residential", "id": 196958, "length_m": 55.2920235914344, "p_fallo_arista": 0.461615799767962, "source": 991637, "target": 679153}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652158, -33.448526], [-70.652149, -33.448504], [-70.652148, -33.448481], [-70.652326, -33.447696], [-70.652346, -33.447606]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 140120, "length_m": 124.972655282735, "p_fallo_arista": 0.462868228902278, "source": 692488, "target": 881843}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638629, -33.454836], [-70.638532, -33.455192]], "type": "LineString"}, "properties": {"highway": "residential", "id": 217815, "length_m": 48.7113941161202, "p_fallo_arista": 0.462941314072129, "source": 718226, "target": 1024798}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640348, -33.449508], [-70.640373, -33.449433], [-70.640683, -33.448474], [-70.6407, -33.448421], [-70.640919, -33.447743], [-70.641047, -33.447348], [-70.641068, -33.447283]], "type": "LineString"}, "properties": {"highway": "residential", "id": 139711, "length_m": 307.47963095233, "p_fallo_arista": 0.465019292490796, "source": 762563, "target": 750169}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653393, -33.448812], [-70.652924, -33.448709], [-70.652749, -33.448673], [-70.652569, -33.448637], [-70.652202, -33.448561], [-70.652176, -33.448546], [-70.652158, -33.448526]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 232066, "length_m": 143.605830212239, "p_fallo_arista": 0.465668633861074, "source": 1106033, "target": 692488}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.653063, -33.450887], [-70.653017, -33.451194], [-70.652983, -33.451443], [-70.652966, -33.451573], [-70.652948, -33.451674]], "type": "LineString"}, "properties": {"highway": "primary", "id": 237003, "length_m": 105.786263451877, "p_fallo_arista": 0.466503214018471, "source": 1072850, "target": 904741}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638658, -33.457273], [-70.638683, -33.457173], [-70.638887, -33.456363], [-70.638902, -33.456303]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140791, "length_m": 132.244956163086, "p_fallo_arista": 0.468989023960329, "source": 988422, "target": 839166}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.63387, -33.453862], [-70.633959, -33.453883], [-70.634821, -33.454066], [-70.63493, -33.454091], [-70.635345, -33.454184], [-70.635614, -33.45424], [-70.635867, -33.454293], [-70.636262, -33.454369], [-70.636293, -33.454375], [-70.636324, -33.454379], [-70.63642, -33.454398], [-70.637379, -33.454587], [-70.637415, -33.454594], [-70.637492, -33.454607], [-70.637602, -33.45463], [-70.638574, -33.454826], [-70.638629, -33.454836], [-70.640072, -33.45511], [-70.640136, -33.455122], [-70.640186, -33.455129], [-70.640953, -33.455275], [-70.64147, -33.455374], [-70.64161, -33.4554], [-70.641661, -33.45541], [-70.642605, -33.455587], [-70.643625, -33.455778]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140134, "length_m": 1115.72343547551, "p_fallo_arista": 0.475323181272005, "source": 1065785, "target": 686220}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647173, -33.461027], [-70.647071, -33.461018], [-70.64613, -33.46094], [-70.646086, -33.460936], [-70.645999, -33.460929], [-70.645075, -33.460851], [-70.644997, -33.460845]], "type": "LineString"}, "properties": {"highway": "residential", "id": 155061, "length_m": 243.446316467992, "p_fallo_arista": 0.477020792550916, "source": 942707, "target": 689942}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643696, -33.447802], [-70.643607, -33.448182], [-70.643419, -33.448994], [-70.643303, -33.449348], [-70.642989, -33.450296]], "type": "LineString"}, "properties": {"highway": "residential", "id": 171319, "length_m": 342.177110313628, "p_fallo_arista": 0.483729286598383, "source": 752937, "target": 928404}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644997, -33.460845], [-70.644919, -33.460839], [-70.643076, -33.460692], [-70.642984, -33.460685]], "type": "LineString"}, "properties": {"highway": "residential", "id": 186977, "length_m": 225.100995964916, "p_fallo_arista": 0.487656575105496, "source": 689942, "target": 1102302}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652426, -33.451382], [-70.652983, -33.451443]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140125, "length_m": 62.5368035208089, "p_fallo_arista": 0.488237788030447, "source": 1114571, "target": 1036064}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.637762, -33.453429], [-70.637948, -33.45252], [-70.63796, -33.452473], [-70.637978, -33.45241], [-70.638004, -33.452334], [-70.638065, -33.452163], [-70.638102, -33.452063], [-70.638404, -33.451188], [-70.638717, -33.450284], [-70.639069, -33.449192], [-70.639091, -33.449125], [-70.639299, -33.448485], [-70.639421, -33.448112], [-70.639792, -33.447021], [-70.640172, -33.445949], [-70.640402, -33.445289]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 149288, "length_m": 1125.76389454392, "p_fallo_arista": 0.490428727537734, "source": 892418, "target": 900687}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638542, -33.452258], [-70.638869, -33.451302], [-70.639177, -33.450397]], "type": "LineString"}, "properties": {"highway": "residential", "id": 149301, "length_m": 258.160693926169, "p_fallo_arista": 0.496072335755249, "source": 824809, "target": 921125}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652821, -33.452484], [-70.651791, -33.452232], [-70.651592, -33.452183]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 158822, "length_m": 142.584190415204, "p_fallo_arista": 0.49906610832348, "source": 1111532, "target": 765557}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639303, -33.45638], [-70.639092, -33.457239], [-70.639087, -33.457262], [-70.639063, -33.457357]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140792, "length_m": 133.070171367198, "p_fallo_arista": 0.499536761893497, "source": 867908, "target": 952911}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650029, -33.454157], [-70.650563, -33.45425], [-70.651403, -33.454393], [-70.651439, -33.454397], [-70.651463, -33.454398], [-70.652096, -33.454406], [-70.652485, -33.454407], [-70.652525, -33.454407]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 200257, "length_m": 281.108401121173, "p_fallo_arista": 0.501161775015377, "source": 767318, "target": 811362}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639239, -33.460761], [-70.639642, -33.459225], [-70.639651, -33.459191]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140772, "length_m": 214.451865113914, "p_fallo_arista": 0.504324216442764, "source": 903887, "target": 1079777}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642989, -33.450296], [-70.642887, -33.450271], [-70.641589, -33.449882], [-70.641549, -33.449871], [-70.640348, -33.449508], [-70.639069, -33.449192]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 175241, "length_m": 460.738357519233, "p_fallo_arista": 0.507705404064713, "source": 928404, "target": 906751}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.648731, -33.456762], [-70.649485, -33.456897], [-70.649576, -33.456914], [-70.649693, -33.456935], [-70.651016, -33.457169], [-70.65106, -33.457177], [-70.651556, -33.457265], [-70.651979, -33.457329], [-70.652069, -33.457345]], "type": "LineString"}, "properties": {"highway": "residential", "id": 224654, "length_m": 379.66017337179, "p_fallo_arista": 0.509634062935163, "source": 999517, "target": 1077117}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.648546, -33.448796], [-70.648706, -33.448032], [-70.648793, -33.447619], [-70.648914, -33.447044]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237011, "length_m": 237.305179900704, "p_fallo_arista": 0.516469879549235, "source": 603470, "target": 1070289}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.635998, -33.458423], [-70.63656, -33.458542], [-70.637494, -33.458748], [-70.638205, -33.458894], [-70.639069, -33.459075], [-70.639141, -33.459085], [-70.639255, -33.459109], [-70.639651, -33.459191], [-70.639811, -33.459225], [-70.639874, -33.459238], [-70.639965, -33.459263], [-70.64002, -33.459282], [-70.640081, -33.459311], [-70.640124, -33.459335], [-70.640199, -33.459375], [-70.64062, -33.459466], [-70.641739, -33.45971], [-70.641778, -33.459718], [-70.642957, -33.459937], [-70.642988, -33.459942], [-70.643072, -33.459958]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140769, "length_m": 814.979832335346, "p_fallo_arista": 0.516800965091432, "source": 668585, "target": 944439}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.639566, -33.457461], [-70.639535, -33.457579], [-70.639522, -33.457644]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224643, "length_m": 24.9112504360576, "p_fallo_arista": 0.525564735141392, "source": 702197, "target": 628616}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644852, -33.44804], [-70.645346, -33.448141], [-70.64567, -33.448207], [-70.646063, -33.448287], [-70.647053, -33.448496], [-70.6475, -33.448589], [-70.648546, -33.448796], [-70.649359, -33.448981]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 140149, "length_m": 517.21819923293, "p_fallo_arista": 0.529091749978901, "source": 684597, "target": 860477}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642812, -33.462121], [-70.642968, -33.460815], [-70.642984, -33.460685], [-70.643008, -33.460485], [-70.643072, -33.459958], [-70.643114, -33.459609], [-70.643128, -33.459493], [-70.643238, -33.458559], [-70.643242, -33.458532], [-70.643253, -33.45844]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 175248, "length_m": 493.617973163075, "p_fallo_arista": 0.533201817115792, "source": 636449, "target": 869539}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640212, -33.458996], [-70.639221, -33.458786]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 209990, "length_m": 113.82061210565, "p_fallo_arista": 0.5332315446998, "source": 863493, "target": 907578}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64644, -33.456851], [-70.646277, -33.456822], [-70.646128, -33.456795]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200949, "length_m": 35.526395434431, "p_fallo_arista": 0.536716766641843, "source": 1023326, "target": 978331}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649143, -33.459478], [-70.649169, -33.45932], [-70.649171, -33.45931], [-70.649261, -33.458784], [-70.64928, -33.458671], [-70.649333, -33.458353], [-70.649346, -33.45828], [-70.649368, -33.458146], [-70.64956, -33.457006], [-70.649576, -33.456914], [-70.649587, -33.456846], [-70.649667, -33.456372], [-70.649803, -33.455563], [-70.649817, -33.455481]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200256, "length_m": 538.570559989656, "p_fallo_arista": 0.536755460577292, "source": 675776, "target": 1076824}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646225, -33.458841], [-70.646246, -33.458763], [-70.64625, -33.45875], [-70.6464, -33.458209], [-70.646444, -33.458051], [-70.646564, -33.457617], [-70.646575, -33.457575], [-70.646827, -33.456671], [-70.646897, -33.456419], [-70.647245, -33.455161], [-70.647266, -33.455086], [-70.647279, -33.455041]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225879, "length_m": 520.42870291009, "p_fallo_arista": 0.537396370382911, "source": 870770, "target": 1072965}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650579, -33.460658], [-70.650546, -33.460655], [-70.649055, -33.46053]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 156083, "length_m": 170.508605115272, "p_fallo_arista": 0.537671474001367, "source": 862261, "target": 708491}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643064, -33.453128], [-70.642873, -33.454172], [-70.642859, -33.454251], [-70.642612, -33.455545], [-70.642605, -33.455587]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140800, "length_m": 332.048661240532, "p_fallo_arista": 0.538276136664969, "source": 843531, "target": 862577}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640124, -33.459335], [-70.64, -33.459789], [-70.639759, -33.460672], [-70.639708, -33.460858]], "type": "LineString"}, "properties": {"highway": "residential", "id": 220054, "length_m": 208.428677534932, "p_fallo_arista": 0.539420133555068, "source": 773778, "target": 679153}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643718, -33.455102], [-70.643764, -33.454771]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224846, "length_m": 44.4597049729211, "p_fallo_arista": 0.541664038204841, "source": 697051, "target": 964837}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643008, -33.460485], [-70.642934, -33.460468], [-70.642894, -33.460458], [-70.641688, -33.460181], [-70.640497, -33.459907], [-70.640482, -33.459904], [-70.640084, -33.459809], [-70.64, -33.459789]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140768, "length_m": 347.493322299696, "p_fallo_arista": 0.543057200527745, "source": 1073214, "target": 671281}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646277, -33.454834], [-70.646256, -33.454924], [-70.646158, -33.455326], [-70.645954, -33.456165], [-70.645938, -33.456232], [-70.645764, -33.456947], [-70.645674, -33.457316], [-70.645666, -33.457358]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224884, "length_m": 343.575678363377, "p_fallo_arista": 0.545431728440771, "source": 637221, "target": 1049137}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644788, -33.456008], [-70.645853, -33.456216], [-70.645938, -33.456232], [-70.646033, -33.456251], [-70.64675, -33.45639], [-70.646852, -33.45641], [-70.646897, -33.456419], [-70.647786, -33.456598], [-70.648422, -33.456709], [-70.648459, -33.456716], [-70.648501, -33.456723], [-70.648731, -33.456762]], "type": "LineString"}, "properties": {"highway": "residential", "id": 214118, "length_m": 450.347141946787, "p_fallo_arista": 0.545791827563051, "source": 832357, "target": 999517}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643764, -33.454771], [-70.643812, -33.454422]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 231247, "length_m": 46.8708746553279, "p_fallo_arista": 0.546012649786476, "source": 964837, "target": 728752}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64902, -33.461151], [-70.649055, -33.46053], [-70.649076, -33.460144], [-70.649096, -33.459775], [-70.649098, -33.459748], [-70.649108, -33.459666]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200253, "length_m": 198.40756163384, "p_fallo_arista": 0.547377115375084, "source": 1060829, "target": 936023}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650695, -33.459694], [-70.65068, -33.459864]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225595, "length_m": 22.744971807831, "p_fallo_arista": 0.549576079685487, "source": 1001934, "target": 642317}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643812, -33.454422], [-70.643911, -33.45373]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 231245, "length_m": 92.9849024524178, "p_fallo_arista": 0.552807505473633, "source": 728752, "target": 688992}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644426, -33.450499], [-70.644471, -33.450238], [-70.644572, -33.449663], [-70.64458, -33.44962], [-70.644614, -33.449419], [-70.644745, -33.448649]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 187273, "length_m": 249.364199011398, "p_fallo_arista": 0.555556298092012, "source": 1033883, "target": 987849}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640497, -33.459907], [-70.640613, -33.459491], [-70.64062, -33.459466]], "type": "LineString"}, "properties": {"highway": "residential", "id": 206273, "length_m": 60.4158784533358, "p_fallo_arista": 0.556709727867162, "source": 1009613, "target": 1106204}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647253, -33.459277], [-70.647246, -33.459367], [-70.647245, -33.459387], [-70.64721, -33.46022], [-70.647203, -33.460386], [-70.647176, -33.460966], [-70.647173, -33.461027]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 178161, "length_m": 233.683347352607, "p_fallo_arista": 0.558853902183429, "source": 773072, "target": 942707}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643911, -33.45373], [-70.643975, -33.45328]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 231246, "length_m": 60.4616874453997, "p_fallo_arista": 0.560361058108369, "source": 688992, "target": 691006}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.648731, -33.456762], [-70.648739, -33.45671], [-70.648933, -33.455419], [-70.648942, -33.455364]], "type": "LineString"}, "properties": {"highway": "residential", "id": 194856, "length_m": 188.004712804746, "p_fallo_arista": 0.560556640525406, "source": 999517, "target": 1007857}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638999, -33.453636], [-70.639318, -33.452482], [-70.639335, -33.452422], [-70.639966, -33.450597], [-70.640315, -33.449607], [-70.640348, -33.449508]], "type": "LineString"}, "properties": {"highway": "residential", "id": 219052, "length_m": 571.047415949619, "p_fallo_arista": 0.561502770484885, "source": 1074561, "target": 762563}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651598, -33.449003], [-70.651974, -33.449084], [-70.651875, -33.44958]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 178537, "length_m": 110.314861118667, "p_fallo_arista": 0.562072022986352, "source": 1076866, "target": 653925}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640508, -33.457854], [-70.640487, -33.457936], [-70.640233, -33.458915], [-70.640212, -33.458996], [-70.64017, -33.459157], [-70.640124, -33.459335]], "type": "LineString"}, "properties": {"highway": "residential", "id": 220055, "length_m": 202.182070830774, "p_fallo_arista": 0.562172637632037, "source": 1098333, "target": 773778}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640233, -33.458915], [-70.640901, -33.459058], [-70.641816, -33.459254], [-70.641867, -33.459264], [-70.643012, -33.45947], [-70.643051, -33.459478], [-70.643128, -33.459493]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140773, "length_m": 331.427477996922, "p_fallo_arista": 0.56428062230272, "source": 856965, "target": 916253}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638542, -33.452258], [-70.639335, -33.452422], [-70.640749, -33.452724], [-70.640796, -33.452733], [-70.642344, -33.453007], [-70.643064, -33.453128], [-70.643881, -33.453266], [-70.643975, -33.45328], [-70.644034, -33.453291], [-70.64527, -33.453522], [-70.645341, -33.453534], [-70.646414, -33.453722], [-70.646485, -33.453724], [-70.646602, -33.453727], [-70.647554, -33.453874], [-70.648087, -33.453956], [-70.648255, -33.45398], [-70.648283, -33.45398], [-70.648329, -33.453974], [-70.648617, -33.453963], [-70.64868, -33.45396], [-70.648728, -33.45396], [-70.648788, -33.453961], [-70.648844, -33.453965], [-70.648911, -33.45397], [-70.648976, -33.453981], [-70.64909, -33.454], [-70.650029, -33.454157]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 186741, "length_m": 1306.12301693636, "p_fallo_arista": 0.566929546034326, "source": 824809, "target": 767318}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643227, -33.459624], [-70.643114, -33.459609]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 262019, "length_m": 12.7373380665421, "p_fallo_arista": 0.567516736697417, "source": 1094761, "target": 815045}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650778, -33.449308], [-70.65087, -33.448698], [-70.650908, -33.448468], [-70.651066, -33.447526], [-70.65108, -33.447444]], "type": "LineString"}, "properties": {"highway": "primary", "id": 186608, "length_m": 250.953552458602, "p_fallo_arista": 0.568814256314612, "source": 1002596, "target": 676450}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644634, -33.460478], [-70.644076, -33.460426], [-70.644166, -33.459705], [-70.643227, -33.459624]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 170134, "length_m": 264.314601055075, "p_fallo_arista": 0.56897066532183, "source": 729844, "target": 1094761}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642315, -33.456967], [-70.642151, -33.457809], [-70.642141, -33.457861], [-70.642137, -33.457881], [-70.642115, -33.457991], [-70.642097, -33.458087], [-70.642078, -33.458183], [-70.642058, -33.458287], [-70.641867, -33.459264], [-70.641778, -33.459718], [-70.641695, -33.460147], [-70.641688, -33.460181]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140764, "length_m": 434.490999059192, "p_fallo_arista": 0.570396985248197, "source": 632285, "target": 805476}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643796, -33.451097], [-70.642848, -33.450908]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 171316, "length_m": 108.5017340508, "p_fallo_arista": 0.570536814453166, "source": 1077029, "target": 662102}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.645269, -33.458861], [-70.645245, -33.458963], [-70.645241, -33.458975], [-70.645236, -33.458998], [-70.645215, -33.45911], [-70.645193, -33.459242], [-70.645007, -33.460765], [-70.644997, -33.460845]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224886, "length_m": 266.562870030145, "p_fallo_arista": 0.5723536698178, "source": 931129, "target": 689942}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643253, -33.45844], [-70.643155, -33.458419], [-70.642078, -33.458183], [-70.641196, -33.458001], [-70.640878, -33.457933], [-70.640508, -33.457854]], "type": "LineString"}, "properties": {"highway": "primary", "id": 246646, "length_m": 315.422887644588, "p_fallo_arista": 0.573011751058152, "source": 869539, "target": 1098333}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640606, -33.456626], [-70.640484, -33.457117]], "type": "LineString"}, "properties": {"highway": "residential", "id": 217816, "length_m": 66.9062336299806, "p_fallo_arista": 0.574287614850846, "source": 994696, "target": 1046951}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649076, -33.460144], [-70.649205, -33.460155], [-70.650593, -33.460276], [-70.650627, -33.460279]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 156084, "length_m": 173.593714991901, "p_fallo_arista": 0.574965062428738, "source": 774485, "target": 977979}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643957, -33.450433], [-70.64309, -33.450314], [-70.642989, -33.450296]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 216429, "length_m": 109.308055794217, "p_fallo_arista": 0.575067862396957, "source": 1123184, "target": 928404}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.636963, -33.456908], [-70.637657, -33.457059], [-70.638247, -33.457188], [-70.638658, -33.457273], [-70.639063, -33.457357], [-70.639507, -33.457448], [-70.639566, -33.457461], [-70.640933, -33.457744], [-70.641053, -33.457769], [-70.642115, -33.457991], [-70.642353, -33.458038], [-70.642614, -33.458092], [-70.642909, -33.458154], [-70.64298, -33.458168], [-70.643133, -33.4582], [-70.643163, -33.458207], [-70.643279, -33.458231], [-70.643409, -33.458257], [-70.644325, -33.458439], [-70.644854, -33.458553], [-70.645224, -33.458632], [-70.645249, -33.458637], [-70.645282, -33.458644], [-70.645339, -33.458656], [-70.645442, -33.458678], [-70.645483, -33.458686], [-70.646101, -33.458815], [-70.646126, -33.45882], [-70.646225, -33.458841], [-70.646362, -33.458868], [-70.647141, -33.459029], [-70.647199, -33.45904], [-70.647226, -33.459049], [-70.647274, -33.459057]], "type": "LineString"}, "properties": {"highway": "primary", "id": 175245, "length_m": 1183.15321653843, "p_fallo_arista": 0.575403454037188, "source": 696483, "target": 602763}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.641314, -33.456757], [-70.640606, -33.456626], [-70.639918, -33.456498], [-70.639824, -33.456481]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237014, "length_m": 169.905168916136, "p_fallo_arista": 0.5760866053226, "source": 1013970, "target": 871685}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646414, -33.454109], [-70.646374, -33.454321], [-70.646288, -33.454776], [-70.646277, -33.454834]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224890, "length_m": 97.9277742249393, "p_fallo_arista": 0.576127935515486, "source": 1012469, "target": 637221}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643975, -33.45328], [-70.643988, -33.453202], [-70.644216, -33.451784], [-70.644225, -33.451735], [-70.644233, -33.451681], [-70.644295, -33.451247]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 187272, "length_m": 273.581653752988, "p_fallo_arista": 0.576664347307224, "source": 691006, "target": 801662}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643253, -33.45844], [-70.643269, -33.458309], [-70.643271, -33.458296], [-70.643279, -33.458231]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224848, "length_m": 28.0373585277575, "p_fallo_arista": 0.578458146748072, "source": 869539, "target": 1105327}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652112, -33.449634], [-70.652053, -33.450127], [-70.65205, -33.450153], [-70.651983, -33.450724]], "type": "LineString"}, "properties": {"highway": "residential", "id": 178503, "length_m": 146.133144175449, "p_fallo_arista": 0.580773631360467, "source": 616136, "target": 846144}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649359, -33.448981], [-70.650778, -33.449308], [-70.651436, -33.449479], [-70.651607, -33.449518], [-70.651875, -33.44958], [-70.652063, -33.449623], [-70.652112, -33.449634], [-70.652363, -33.449694], [-70.652541, -33.449747], [-70.652715, -33.449791], [-70.65322, -33.44992], [-70.653984, -33.450126], [-70.654621, -33.450297]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 188991, "length_m": 611.64172908568, "p_fallo_arista": 0.580841646665747, "source": 860477, "target": 915333}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.640953, -33.455275], [-70.640606, -33.456626]], "type": "LineString"}, "properties": {"highway": "residential", "id": 170135, "length_m": 184.352239500555, "p_fallo_arista": 0.581952827423908, "source": 1110298, "target": 994696}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647253, -33.459277], [-70.647178, -33.45926], [-70.646616, -33.459144], [-70.646353, -33.459088], [-70.646316, -33.45908], [-70.646306, -33.459079], [-70.646244, -33.459065], [-70.646076, -33.45903], [-70.645402, -33.45889], [-70.645394, -33.458888], [-70.645365, -33.458882], [-70.645269, -33.458861], [-70.645203, -33.458846], [-70.645185, -33.458845], [-70.645152, -33.458836], [-70.64498, -33.458801], [-70.644784, -33.45876], [-70.643402, -33.458471], [-70.643377, -33.458466], [-70.643253, -33.45844]], "type": "LineString"}, "properties": {"highway": "primary", "id": 175243, "length_m": 459.12823293339, "p_fallo_arista": 0.582206155259089, "source": 773072, "target": 869539}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649108, -33.459666], [-70.648997, -33.459647], [-70.648969, -33.459641], [-70.648097, -33.459463], [-70.647397, -33.459308], [-70.647368, -33.459302], [-70.647353, -33.459297], [-70.647253, -33.459277]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200255, "length_m": 212.959150151486, "p_fallo_arista": 0.583329941242233, "source": 936023, "target": 773072}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.645339, -33.458656], [-70.645307, -33.458752], [-70.645269, -33.458861]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224885, "length_m": 28.4422031924258, "p_fallo_arista": 0.583395154300077, "source": 607252, "target": 931129}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646244, -33.459065], [-70.646232, -33.458927], [-70.646225, -33.458841]], "type": "LineString"}, "properties": {"highway": "residential", "id": 155213, "length_m": 29.9635074859379, "p_fallo_arista": 0.58458939269081, "source": 695856, "target": 870770}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647274, -33.459057], [-70.647265, -33.459151], [-70.647253, -33.459277]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 205279, "length_m": 29.4479710098532, "p_fallo_arista": 0.585056152066377, "source": 602763, "target": 773072}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643424, -33.4572], [-70.643331, -33.45718], [-70.642315, -33.456967], [-70.642055, -33.456913], [-70.641472, -33.45679], [-70.641368, -33.456768], [-70.641314, -33.456757]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237015, "length_m": 242.207870668083, "p_fallo_arista": 0.585065777999986, "source": 669076, "target": 1013970}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647279, -33.455041], [-70.647403, -33.454514], [-70.647531, -33.453971], [-70.647554, -33.453874]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237010, "length_m": 158.687475495311, "p_fallo_arista": 0.587313909957878, "source": 1072965, "target": 764047}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649108, -33.459666], [-70.649126, -33.459556], [-70.649143, -33.459478]], "type": "LineString"}, "properties": {"highway": "primary", "id": 225596, "length_m": 25.3921218297215, "p_fallo_arista": 0.589269638925033, "source": 936023, "target": 675776}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644426, -33.450499], [-70.643957, -33.450433]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 186607, "length_m": 52.946219523255, "p_fallo_arista": 0.589450382719271, "source": 1033883, "target": 1123184}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649817, -33.455481], [-70.64983, -33.455402], [-70.649908, -33.454915], [-70.649957, -33.45461], [-70.650029, -33.454157]], "type": "LineString"}, "properties": {"highway": "primary", "id": 225881, "length_m": 178.224579469576, "p_fallo_arista": 0.590740203500434, "source": 1076824, "target": 767318}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644854, -33.458553], [-70.644872, -33.45847], [-70.644878, -33.458445], [-70.645121, -33.457322], [-70.645129, -33.457287]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140845, "length_m": 171.67474824484, "p_fallo_arista": 0.590831065588387, "source": 926891, "target": 1047135}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644295, -33.451247], [-70.644426, -33.450499]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 216428, "length_m": 100.857399890902, "p_fallo_arista": 0.591639058334837, "source": 801662, "target": 1033883}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643279, -33.458231], [-70.643294, -33.45812], [-70.643424, -33.4572], [-70.643433, -33.457135], [-70.64344, -33.457085], [-70.643536, -33.456407], [-70.643625, -33.455778]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 187270, "length_m": 329.559203139487, "p_fallo_arista": 0.591701292031161, "source": 1105327, "target": 686220}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.645666, -33.457358], [-70.645365, -33.45855], [-70.64536, -33.45857], [-70.645357, -33.458579], [-70.645339, -33.458656]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224883, "length_m": 176.980157612254, "p_fallo_arista": 0.592199214807951, "source": 1049137, "target": 607252}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.6455, -33.451885], [-70.64527, -33.453522]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140128, "length_m": 219.907437211998, "p_fallo_arista": 0.593810787025797, "source": 702797, "target": 736048}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647544, -33.45776], [-70.647303, -33.458917], [-70.647297, -33.458946], [-70.647274, -33.459057]], "type": "LineString"}, "properties": {"highway": "residential", "id": 225597, "length_m": 175.650397295111, "p_fallo_arista": 0.594198189929625, "source": 932177, "target": 602763}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.644325, -33.458439], [-70.644341, -33.458357], [-70.644347, -33.458326], [-70.644552, -33.45725], [-70.644557, -33.457222], [-70.644563, -33.457189], [-70.644782, -33.456038], [-70.644788, -33.456008]], "type": "LineString"}, "properties": {"highway": "residential", "id": 186453, "length_m": 328.435705232688, "p_fallo_arista": 0.59609500270298, "source": 1071464, "target": 832357}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.638717, -33.450284], [-70.639177, -33.450397], [-70.639966, -33.450597], [-70.641165, -33.450879], [-70.641205, -33.450893], [-70.641263, -33.450912]], "type": "LineString"}, "properties": {"highway": "residential", "id": 217147, "length_m": 295.613840772492, "p_fallo_arista": 0.597180580710798, "source": 715551, "target": 677954}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.641331, -33.453484], [-70.640648, -33.453354]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 170541, "length_m": 77.9845786199247, "p_fallo_arista": 0.599671749263271, "source": 688764, "target": 782954}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647544, -33.45776], [-70.646618, -33.457584], [-70.646575, -33.457575], [-70.646235, -33.457506], [-70.645885, -33.457413], [-70.645792, -33.457387], [-70.645749, -33.457378], [-70.645666, -33.457358], [-70.645585, -33.45734], [-70.645129, -33.457287], [-70.644557, -33.457222], [-70.643556, -33.4571], [-70.643521, -33.457095], [-70.64344, -33.457085]], "type": "LineString"}, "properties": {"highway": "residential", "id": 178160, "length_m": 466.498593654854, "p_fallo_arista": 0.600005838303437, "source": 932177, "target": 654412}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649817, -33.455481], [-70.649727, -33.455469], [-70.648942, -33.455364], [-70.648737, -33.455331], [-70.648533, -33.455295], [-70.648302, -33.455251], [-70.64818, -33.455226], [-70.648071, -33.455204], [-70.647279, -33.455041], [-70.64639, -33.454857], [-70.646277, -33.454834], [-70.646212, -33.454826], [-70.64613, -33.454815], [-70.646078, -33.454808], [-70.645995, -33.454801], [-70.645905, -33.454792], [-70.645679, -33.454757], [-70.645437, -33.454714], [-70.643812, -33.454422], [-70.642859, -33.454251], [-70.641994, -33.454095], [-70.640533, -33.453828], [-70.640505, -33.453825], [-70.639562, -33.453715], [-70.638999, -33.453636], [-70.63889, -33.453621], [-70.637762, -33.453429], [-70.636695, -33.45322], [-70.636597, -33.453199], [-70.635816, -33.453038], [-70.635239, -33.452909], [-70.635208, -33.452902], [-70.635092, -33.45288], [-70.634271, -33.452708], [-70.634169, -33.452686], [-70.634077, -33.452666], [-70.633207, -33.452485], [-70.633152, -33.452474], [-70.633111, -33.452465]], "type": "LineString"}, "properties": {"highway": "tertiary", "id": 140133, "length_m": 1903.81422858447, "p_fallo_arista": 0.600848776929355, "source": 1076824, "target": 714672}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646235, -33.457506], [-70.646262, -33.457392]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200948, "length_m": 15.5050509535472, "p_fallo_arista": 0.602077850398633, "source": 644442, "target": 657278}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.648396, -33.457902], [-70.647666, -33.457787], [-70.647544, -33.45776]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140136, "length_m": 96.749923667282, "p_fallo_arista": 0.602952982228764, "source": 635444, "target": 932177}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646262, -33.457392], [-70.646295, -33.457265]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 266087, "length_m": 17.3391161389908, "p_fallo_arista": 0.603735834283047, "source": 657278, "target": 984069}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64634, -33.457273], [-70.646295, -33.457265], [-70.646169, -33.457241], [-70.646023, -33.457213]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200951, "length_m": 36.1855275937662, "p_fallo_arista": 0.604375328294655, "source": 706643, "target": 674315}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.645901, -33.456973], [-70.645764, -33.456947]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 266086, "length_m": 15.6403627398397, "p_fallo_arista": 0.606242187257709, "source": 734307, "target": 1119817}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642989, -33.450296], [-70.642848, -33.450908], [-70.642734, -33.451415], [-70.642721, -33.451473], [-70.642707, -33.451537], [-70.642533, -33.45224], [-70.642344, -33.453007], [-70.642185, -33.453605], [-70.642126, -33.453828], [-70.642105, -33.453885], [-70.642072, -33.45395], [-70.642027, -33.454035], [-70.641994, -33.454095], [-70.641715, -33.455204], [-70.641675, -33.455357], [-70.641661, -33.45541], [-70.641336, -33.456671], [-70.641314, -33.456757], [-70.641091, -33.457624], [-70.641082, -33.457658], [-70.641053, -33.457769]], "type": "LineString"}, "properties": {"highway": "residential", "id": 171317, "length_m": 1020.8295300469, "p_fallo_arista": 0.606270206852519, "source": 928404, "target": 1069366}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646073, -33.457003], [-70.645917, -33.456975], [-70.645901, -33.456973]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200954, "length_m": 19.5641596762145, "p_fallo_arista": 0.606695503494511, "source": 992697, "target": 734307}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646023, -33.457213], [-70.646073, -33.457003], [-70.646128, -33.456795]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200952, "length_m": 56.9879687155079, "p_fallo_arista": 0.60692915105819, "source": 674315, "target": 978331}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.646277, -33.456822], [-70.646169, -33.457241]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200953, "length_m": 57.1847088865303, "p_fallo_arista": 0.607308552812806, "source": 913644, "target": 1093780}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.642618, -33.446132], [-70.642573, -33.446343], [-70.642542, -33.446488], [-70.642432, -33.446963], [-70.64229, -33.447525], [-70.642227, -33.447763], [-70.641972, -33.44874], [-70.641589, -33.449882], [-70.641263, -33.450912], [-70.641171, -33.451218], [-70.641099, -33.451497], [-70.640796, -33.452733], [-70.640648, -33.453354], [-70.640533, -33.453828], [-70.640265, -33.454833], [-70.640186, -33.455129], [-70.639888, -33.45624], [-70.639847, -33.456394], [-70.639824, -33.456481], [-70.639566, -33.457461]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224644, "length_m": 1549.72095992591, "p_fallo_arista": 0.607497919824827, "source": 749903, "target": 702197}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64644, -33.456851], [-70.64634, -33.457273]], "type": "LineString"}, "properties": {"highway": "living_street", "id": 200950, "length_m": 57.3967798488421, "p_fallo_arista": 0.607708468177197, "source": 1023326, "target": 706643}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643625, -33.455778], [-70.644788, -33.456008]], "type": "LineString"}, "properties": {"highway": "residential", "id": 237016, "length_m": 133.0520186923, "p_fallo_arista": 0.608511665641261, "source": 686220, "target": 832357}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.643625, -33.455778], [-70.64364, -33.455663], [-70.643718, -33.455102]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 224847, "length_m": 90.7886590878649, "p_fallo_arista": 0.609099773873531, "source": 686220, "target": 697051}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.641171, -33.451218], [-70.642427, -33.451489], [-70.642707, -33.451537], [-70.643885, -33.451686], [-70.644225, -33.451735], [-70.644291, -33.451744], [-70.6455, -33.451885], [-70.646722, -33.452036], [-70.647815, -33.452264], [-70.64787, -33.452276], [-70.648639, -33.452438], [-70.650231, -33.452759]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140127, "length_m": 1030.49277749356, "p_fallo_arista": 0.613015010646687, "source": 1124361, "target": 1118774}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.651592, -33.452183], [-70.651489, -33.452158], [-70.651476, -33.452155], [-70.650942, -33.452024], [-70.650562, -33.451931], [-70.650513, -33.451918], [-70.650379, -33.451886]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 204253, "length_m": 140.726812750801, "p_fallo_arista": 0.616317338226726, "source": 765557, "target": 955716}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649149, -33.453686], [-70.64909, -33.454]], "type": "LineString"}, "properties": {"highway": "residential", "id": 263107, "length_m": 42.4067611818747, "p_fallo_arista": 0.617701477547507, "source": 640195, "target": 766715}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.64685, -33.450893], [-70.646728, -33.450873], [-70.646535, -33.450842], [-70.645339, -33.450652], [-70.644426, -33.450499]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 186606, "length_m": 274.914091641275, "p_fallo_arista": 0.624831700243738, "source": 1020123, "target": 1033883}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.652033, -33.451339], [-70.651742, -33.451307], [-70.650632, -33.451182], [-70.650498, -33.451167]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140126, "length_m": 172.409605739809, "p_fallo_arista": 0.634895122883507, "source": 1124754, "target": 766269}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650029, -33.454157], [-70.650142, -33.453372], [-70.650231, -33.452759], [-70.650363, -33.451975], [-70.650369, -33.45194], [-70.650379, -33.451886]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200258, "length_m": 305.51317328963, "p_fallo_arista": 0.635164070111, "source": 767318, "target": 955716}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649273, -33.453017], [-70.649149, -33.453686]], "type": "LineString"}, "properties": {"highway": "residential", "id": 170539, "length_m": 90.3210299436003, "p_fallo_arista": 0.635687899998893, "source": 1117063, "target": 640195}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647053, -33.448496], [-70.646996, -33.449347], [-70.646965, -33.449885], [-70.646961, -33.449954], [-70.646908, -33.450426], [-70.64685, -33.450893], [-70.646833, -33.451065], [-70.646811, -33.451282], [-70.646722, -33.452036], [-70.646485, -33.453724], [-70.646414, -33.454109]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 186492, "length_m": 752.578497899892, "p_fallo_arista": 0.654491207425659, "source": 647749, "target": 1012469}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.649733, -33.447195], [-70.649508, -33.448257], [-70.649437, -33.448603], [-70.649359, -33.448981], [-70.649142, -33.450268], [-70.648861, -33.45143], [-70.648844, -33.451502], [-70.648639, -33.452438], [-70.648329, -33.453974], [-70.648314, -33.454048], [-70.648078, -33.455169], [-70.648071, -33.455204], [-70.647793, -33.456565], [-70.647786, -33.456598], [-70.647681, -33.45711], [-70.647661, -33.457207], [-70.647544, -33.45776]], "type": "LineString"}, "properties": {"highway": "residential", "id": 191154, "length_m": 1430.66799817599, "p_fallo_arista": 0.665988210182299, "source": 1068900, "target": 932177}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.647554, -33.453874], [-70.647577, -33.453757], [-70.647862, -33.45232], [-70.647863, -33.452315], [-70.64787, -33.452276], [-70.648071, -33.451262], [-70.648196, -33.450632], [-70.648293, -33.450142], [-70.648546, -33.448796]], "type": "LineString"}, "properties": {"highway": "residential", "id": 156583, "length_m": 686.452057859457, "p_fallo_arista": 0.700885880863283, "source": 764047, "target": 603470}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650379, -33.451886], [-70.650306, -33.451868], [-70.649855, -33.451757], [-70.648844, -33.451502], [-70.648071, -33.451262], [-70.647466, -33.45108], [-70.646927, -33.450911], [-70.64685, -33.450893]], "type": "LineString"}, "properties": {"highway": "secondary", "id": 200259, "length_m": 414.798064017128, "p_fallo_arista": 0.718133404759693, "source": 955716, "target": 1020123}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.650379, -33.451886], [-70.650391, -33.451804], [-70.650435, -33.451542], [-70.650498, -33.451167], [-70.650605, -33.450538], [-70.650723, -33.449742], [-70.650758, -33.449469], [-70.650778, -33.449308]], "type": "LineString"}, "properties": {"highway": "primary", "id": 200260, "length_m": 346.838742520445, "p_fallo_arista": 0.764841862892165, "source": 955716, "target": 1002596}, "type": "Feature"}, {"geometry": {"coordinates": [[-70.654486, -33.45111], [-70.653813, -33.451005], [-70.65377, -33.450998], [-70.653063, -33.450887], [-70.65252, -33.450791], [-70.652343, -33.450768], [-70.652163, -33.450744], [-70.651983, -33.450724], [-70.651914, -33.450715], [-70.650605, -33.450538], [-70.649142, -33.450268], [-70.648414, -33.450159], [-70.648293, -33.450142], [-70.647056, -33.449967], [-70.647023, -33.449962], [-70.646961, -33.449954], [-70.646877, -33.449942], [-70.644644, -33.449629], [-70.64458, -33.44962], [-70.644511, -33.449606], [-70.643534, -33.449397], [-70.643344, -33.449357], [-70.643303, -33.449348]], "type": "LineString"}, "properties": {"highway": "residential", "id": 140124, "length_m": 1267.4686085279, "p_fallo_arista": 0.795244567422143, "source": 990572, "target": 856250}, "type": "Feature"}], "name": "corredores_riesgo", "type": "FeatureCollection"});
+
+        
+    
+            geo_json_7b8616a4ca55495ba88dc86bb6d132c5.addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+            var circle_d1a01cddd10385833e8286a55c07d5e2 = L.circle(
+                [-33.451654016, -70.649489909],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1000, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_34b527c3511913f75c816649edce8bf5 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_97fa3c1a82025176c5947e1fcda40ce0 = $(`<div id="html_97fa3c1a82025176c5947e1fcda40ce0" style="width: 100.0%; height: 100.0%;"><b>Cluster 11</b><br>Aristas: 40<br>Riesgo prom: 0.657</div>`)[0];
+                popup_34b527c3511913f75c816649edce8bf5.setContent(html_97fa3c1a82025176c5947e1fcda40ce0);
+            
+        
+
+        circle_d1a01cddd10385833e8286a55c07d5e2.bindPopup(popup_34b527c3511913f75c816649edce8bf5)
+        ;
+
+        
+    
+    
+            var circle_9db2dd10dabd60db798d8f98f1bff70e = L.circle(
+                [-33.461234261, -70.649359321],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 500, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_7bf9915619c4c8591133e990ee1511aa = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8cf4464c0e5e7852b97cd1f96cef3306 = $(`<div id="html_8cf4464c0e5e7852b97cd1f96cef3306" style="width: 100.0%; height: 100.0%;"><b>Cluster 9</b><br>Aristas: 15<br>Riesgo prom: 0.500</div>`)[0];
+                popup_7bf9915619c4c8591133e990ee1511aa.setContent(html_8cf4464c0e5e7852b97cd1f96cef3306);
+            
+        
+
+        circle_9db2dd10dabd60db798d8f98f1bff70e.bindPopup(popup_7bf9915619c4c8591133e990ee1511aa)
+        ;
+
+        
+    
+    
+            var circle_de115619fbcd79484e36f531a7f65f12 = L.circle(
+                [-33.452828122, -70.640937576],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 540, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_5589ec06fc5b85bc799694e1cd0cb0ad = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_4e62fe6b70d77b0129aec8fbf13d72fd = $(`<div id="html_4e62fe6b70d77b0129aec8fbf13d72fd" style="width: 100.0%; height: 100.0%;"><b>Cluster 15</b><br>Aristas: 17<br>Riesgo prom: 0.554</div>`)[0];
+                popup_5589ec06fc5b85bc799694e1cd0cb0ad.setContent(html_4e62fe6b70d77b0129aec8fbf13d72fd);
+            
+        
+
+        circle_de115619fbcd79484e36f531a7f65f12.bindPopup(popup_5589ec06fc5b85bc799694e1cd0cb0ad)
+        ;
+
+        
+    
+    
+            var circle_6c5b48a26a236f916d3a76e288a6b057 = L.circle(
+                [-33.458233007, -70.648672154],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 580, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_c6a7ed81a0ab8b3917f547a3ac39f8c3 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_88a4db9e76221c348a2e3f68c02e5a34 = $(`<div id="html_88a4db9e76221c348a2e3f68c02e5a34" style="width: 100.0%; height: 100.0%;"><b>Cluster 19</b><br>Aristas: 19<br>Riesgo prom: 0.583</div>`)[0];
+                popup_c6a7ed81a0ab8b3917f547a3ac39f8c3.setContent(html_88a4db9e76221c348a2e3f68c02e5a34);
+            
+        
+
+        circle_6c5b48a26a236f916d3a76e288a6b057.bindPopup(popup_c6a7ed81a0ab8b3917f547a3ac39f8c3)
+        ;
+
+        
+    
+    
+            var circle_e7dc3fa8e3d5595b2ca697292ffd0398 = L.circle(
+                [-33.45944921, -70.645138387],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 780, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_ebf7683ca2283e86ef2ea0d9959b2cd7 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_57538ef35f9ab88faaab6668540950b6 = $(`<div id="html_57538ef35f9ab88faaab6668540950b6" style="width: 100.0%; height: 100.0%;"><b>Cluster 3</b><br>Aristas: 29<br>Riesgo prom: 0.573</div>`)[0];
+                popup_ebf7683ca2283e86ef2ea0d9959b2cd7.setContent(html_57538ef35f9ab88faaab6668540950b6);
+            
+        
+
+        circle_e7dc3fa8e3d5595b2ca697292ffd0398.bindPopup(popup_ebf7683ca2283e86ef2ea0d9959b2cd7)
+        ;
+
+        
+    
+    
+            var circle_6a3ebeaaa3b05847f07623d270c114b3 = L.circle(
+                [-33.451926098, -70.652804381],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1440, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_cf70f3c2e7a4e87075e4524e90981fff = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f6cef192ee2440fe55c103a8d9a83c69 = $(`<div id="html_f6cef192ee2440fe55c103a8d9a83c69" style="width: 100.0%; height: 100.0%;"><b>Cluster 17</b><br>Aristas: 62<br>Riesgo prom: 0.480</div>`)[0];
+                popup_cf70f3c2e7a4e87075e4524e90981fff.setContent(html_f6cef192ee2440fe55c103a8d9a83c69);
+            
+        
+
+        circle_6a3ebeaaa3b05847f07623d270c114b3.bindPopup(popup_cf70f3c2e7a4e87075e4524e90981fff)
+        ;
+
+        
+    
+    
+            var circle_329bb269ff7470d888beb8d2e7df5777 = L.circle(
+                [-33.458058245, -70.639501612],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 500, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_f81df708f4aa3fd7ba19c9ff8657dc22 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_74a1bb0428f6cf10547d48940c6a55f2 = $(`<div id="html_74a1bb0428f6cf10547d48940c6a55f2" style="width: 100.0%; height: 100.0%;"><b>Cluster 5</b><br>Aristas: 15<br>Riesgo prom: 0.511</div>`)[0];
+                popup_f81df708f4aa3fd7ba19c9ff8657dc22.setContent(html_74a1bb0428f6cf10547d48940c6a55f2);
+            
+        
+
+        circle_329bb269ff7470d888beb8d2e7df5777.bindPopup(popup_f81df708f4aa3fd7ba19c9ff8657dc22)
+        ;
+
+        
+    
+    
+            var circle_00b90d8cf7694fb935b309f95b9790e4 = L.circle(
+                [-33.451996279, -70.645225703],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 800, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_b00e420230afe539e5405fa973e4d409 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_04e5864973c863339cf8658b24b4a5e6 = $(`<div id="html_04e5864973c863339cf8658b24b4a5e6" style="width: 100.0%; height: 100.0%;"><b>Cluster 4</b><br>Aristas: 30<br>Riesgo prom: 0.614</div>`)[0];
+                popup_b00e420230afe539e5405fa973e4d409.setContent(html_04e5864973c863339cf8658b24b4a5e6);
+            
+        
+
+        circle_00b90d8cf7694fb935b309f95b9790e4.bindPopup(popup_b00e420230afe539e5405fa973e4d409)
+        ;
+
+        
+    
+    
+            var circle_d4f588f3d8edffb90a08e98520533ba9 = L.circle(
+                [-33.449019057, -70.639125315],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 500, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_0bd896b0329ee0465aa1b6e8cd78c61e = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_5096670a2427c4623db939522c65c2c7 = $(`<div id="html_5096670a2427c4623db939522c65c2c7" style="width: 100.0%; height: 100.0%;"><b>Cluster 0</b><br>Aristas: 15<br>Riesgo prom: 0.451</div>`)[0];
+                popup_0bd896b0329ee0465aa1b6e8cd78c61e.setContent(html_5096670a2427c4623db939522c65c2c7);
+            
+        
+
+        circle_d4f588f3d8edffb90a08e98520533ba9.bindPopup(popup_0bd896b0329ee0465aa1b6e8cd78c61e)
+        ;
+
+        
+    
+    
+            var circle_196d26f7472d993221b9a03ac4d02f36 = L.circle(
+                [-33.457018918, -70.642701287],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 760, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_2fbaf83b09cca8f2435207b06b644b1f = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_fb663f0b87a7aeff009883896d4f73b6 = $(`<div id="html_fb663f0b87a7aeff009883896d4f73b6" style="width: 100.0%; height: 100.0%;"><b>Cluster 10</b><br>Aristas: 28<br>Riesgo prom: 0.575</div>`)[0];
+                popup_2fbaf83b09cca8f2435207b06b644b1f.setContent(html_fb663f0b87a7aeff009883896d4f73b6);
+            
+        
+
+        circle_196d26f7472d993221b9a03ac4d02f36.bindPopup(popup_2fbaf83b09cca8f2435207b06b644b1f)
+        ;
+
+        
+    
+    
+            var circle_8ff430799ba9cff0812a0c3b068df9cd = L.circle(
+                [-33.455796663, -70.651150132],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 800, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_c1c06add8c643be9e6db2e131a0cacce = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_26215d22e2692fa5fb0faf8c52f6186f = $(`<div id="html_26215d22e2692fa5fb0faf8c52f6186f" style="width: 100.0%; height: 100.0%;"><b>Cluster 6</b><br>Aristas: 30<br>Riesgo prom: 0.487</div>`)[0];
+                popup_c1c06add8c643be9e6db2e131a0cacce.setContent(html_26215d22e2692fa5fb0faf8c52f6186f);
+            
+        
+
+        circle_8ff430799ba9cff0812a0c3b068df9cd.bindPopup(popup_c1c06add8c643be9e6db2e131a0cacce)
+        ;
+
+        
+    
+    
+            var circle_f8636fa8a56b82003e8952bc1f6ecb07 = L.circle(
+                [-33.459532212, -70.660396256],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 620, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_d8a1d1fd92ab300d21ca4c8cf2c0d5b4 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a86a8b71c8233b8943b6758e0fdf288a = $(`<div id="html_a86a8b71c8233b8943b6758e0fdf288a" style="width: 100.0%; height: 100.0%;"><b>Cluster 14</b><br>Aristas: 21<br>Riesgo prom: 0.444</div>`)[0];
+                popup_d8a1d1fd92ab300d21ca4c8cf2c0d5b4.setContent(html_a86a8b71c8233b8943b6758e0fdf288a);
+            
+        
+
+        circle_f8636fa8a56b82003e8952bc1f6ecb07.bindPopup(popup_d8a1d1fd92ab300d21ca4c8cf2c0d5b4)
+        ;
+
+        
+    
+    
+            var circle_eb368097c404b96eeb0a677ac60e1db5 = L.circle(
+                [-33.456350573, -70.646562467],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 660, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_e35c1a5036bf29f89e41811cd25f3ebb = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_502ccf65dd1f21ea395e1873f79bbcde = $(`<div id="html_502ccf65dd1f21ea395e1873f79bbcde" style="width: 100.0%; height: 100.0%;"><b>Cluster 13</b><br>Aristas: 23<br>Riesgo prom: 0.576</div>`)[0];
+                popup_e35c1a5036bf29f89e41811cd25f3ebb.setContent(html_502ccf65dd1f21ea395e1873f79bbcde);
+            
+        
+
+        circle_eb368097c404b96eeb0a677ac60e1db5.bindPopup(popup_e35c1a5036bf29f89e41811cd25f3ebb)
+        ;
+
+        
+    
+    
+            var circle_9f7ff30880d9046dc0024bb83725d365 = L.circle(
+                [-33.448779384, -70.652359966],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1120, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_e824f7cc92fa13575ee161a479928d2a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_8adedbb1cade8f92a91e9203e93d7f68 = $(`<div id="html_8adedbb1cade8f92a91e9203e93d7f68" style="width: 100.0%; height: 100.0%;"><b>Cluster 2</b><br>Aristas: 46<br>Riesgo prom: 0.515</div>`)[0];
+                popup_e824f7cc92fa13575ee161a479928d2a.setContent(html_8adedbb1cade8f92a91e9203e93d7f68);
+            
+        
+
+        circle_9f7ff30880d9046dc0024bb83725d365.bindPopup(popup_e824f7cc92fa13575ee161a479928d2a)
+        ;
+
+        
+    
+    
+            var circle_5e7e00232ed698b24703af360943c658 = L.circle(
+                [-33.46016479, -70.641668962],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 500, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_6bc821743a2bb36ecf44ec783ec759dc = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_028a9ffddbb91cc85f59eb04dd8fa0d8 = $(`<div id="html_028a9ffddbb91cc85f59eb04dd8fa0d8" style="width: 100.0%; height: 100.0%;"><b>Cluster 16</b><br>Aristas: 15<br>Riesgo prom: 0.512</div>`)[0];
+                popup_6bc821743a2bb36ecf44ec783ec759dc.setContent(html_028a9ffddbb91cc85f59eb04dd8fa0d8);
+            
+        
+
+        circle_5e7e00232ed698b24703af360943c658.bindPopup(popup_6bc821743a2bb36ecf44ec783ec759dc)
+        ;
+
+        
+    
+    
+            var circle_31b68d2e45f838511cc8e1e17af11446 = L.circle(
+                [-33.447698267, -70.647945015],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1320, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_c007af4fd7a8615ce595068b7bf8d896 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_2863d82eab6c80ef21198818e02d62d5 = $(`<div id="html_2863d82eab6c80ef21198818e02d62d5" style="width: 100.0%; height: 100.0%;"><b>Cluster 7</b><br>Aristas: 56<br>Riesgo prom: 0.476</div>`)[0];
+                popup_c007af4fd7a8615ce595068b7bf8d896.setContent(html_2863d82eab6c80ef21198818e02d62d5);
+            
+        
+
+        circle_31b68d2e45f838511cc8e1e17af11446.bindPopup(popup_c007af4fd7a8615ce595068b7bf8d896)
+        ;
+
+        
+    
+    
+            var circle_c353173ad0911f804b5701fcd17bcedf = L.circle(
+                [-33.448734984, -70.644374357],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 640, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_e0b9ec8b6687576ee21af04e0a2cae74 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_c49d374152c67d2d42ce3069106235c6 = $(`<div id="html_c49d374152c67d2d42ce3069106235c6" style="width: 100.0%; height: 100.0%;"><b>Cluster 12</b><br>Aristas: 22<br>Riesgo prom: 0.456</div>`)[0];
+                popup_e0b9ec8b6687576ee21af04e0a2cae74.setContent(html_c49d374152c67d2d42ce3069106235c6);
+            
+        
+
+        circle_c353173ad0911f804b5701fcd17bcedf.bindPopup(popup_e0b9ec8b6687576ee21af04e0a2cae74)
+        ;
+
+        
+    
+    
+            var circle_3f235517328db85b340765add193077e = L.circle(
+                [-33.461942397, -70.659798968],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 420, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_6cd3f98fd6295f8093f038788fc0cf80 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_b4d75983660959187879bc358708b728 = $(`<div id="html_b4d75983660959187879bc358708b728" style="width: 100.0%; height: 100.0%;"><b>Cluster 1</b><br>Aristas: 11<br>Riesgo prom: 0.444</div>`)[0];
+                popup_6cd3f98fd6295f8093f038788fc0cf80.setContent(html_b4d75983660959187879bc358708b728);
+            
+        
+
+        circle_3f235517328db85b340765add193077e.bindPopup(popup_6cd3f98fd6295f8093f038788fc0cf80)
+        ;
+
+        
+    
+    
+            var circle_ae03337309b882c5bcca06c0f06a2d4b = L.circle(
+                [-33.459268883, -70.651205219],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 640, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_5fda21759d5d24abf45affcf933b455a = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_6687985aef1344b86c1d080f8776ef41 = $(`<div id="html_6687985aef1344b86c1d080f8776ef41" style="width: 100.0%; height: 100.0%;"><b>Cluster 18</b><br>Aristas: 22<br>Riesgo prom: 0.492</div>`)[0];
+                popup_5fda21759d5d24abf45affcf933b455a.setContent(html_6687985aef1344b86c1d080f8776ef41);
+            
+        
+
+        circle_ae03337309b882c5bcca06c0f06a2d4b.bindPopup(popup_5fda21759d5d24abf45affcf933b455a)
+        ;
+
+        
+    
+    
+            var circle_5b5c3251b1fe559b885b16b8f207bd16 = L.circle(
+                [-33.455321011, -70.638622503],
+                {"bubblingMouseEvents": true, "color": "#c0392b", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.4, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 460, "stroke": true, "weight": 3}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+        
+    
+        var popup_d4e3a95ef4abe0663faf095b2506256c = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_a755c3b8ee2c3df1f790ee76adae5622 = $(`<div id="html_a755c3b8ee2c3df1f790ee76adae5622" style="width: 100.0%; height: 100.0%;"><b>Cluster 8</b><br>Aristas: 13<br>Riesgo prom: 0.450</div>`)[0];
+                popup_d4e3a95ef4abe0663faf095b2506256c.setContent(html_a755c3b8ee2c3df1f790ee76adae5622);
+            
+        
+
+        circle_5b5c3251b1fe559b885b16b8f207bd16.bindPopup(popup_d4e3a95ef4abe0663faf095b2506256c)
+        ;
+
+        
+    
+    
+            var layer_control_55444bd8159a98ce141246efa7ec17ed_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_b8df70b27d65dbe0e20f2a5a58e2399a,
+                },
+                overlays :  {
+                    "Corredores de Riesgo" : geo_json_7b8616a4ca55495ba88dc86bb6d132c5,
+                },
+            };
+            let layer_control_55444bd8159a98ce141246efa7ec17ed = L.control.layers(
+                layer_control_55444bd8159a98ce141246efa7ec17ed_layers.base_layers,
+                layer_control_55444bd8159a98ce141246efa7ec17ed_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_bb90aa95510d8c32ba8f177e8c00f796);
+
+        
+</script>
+</html>

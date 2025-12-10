@@ -17,12 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Search, MapPin, Loader2, X } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface AddressResult {
   display_name: string;
@@ -144,19 +138,17 @@ export function AddressInput({
     setQuery(result.display_name);
 
     try {
-      // Llamar a find_nearest_node
-      const { data, error } = await supabase.rpc('find_nearest_node', {
-        lat: result.lat,
-        lon: result.lon
-      });
+      // Llamar a find_nearest_node via API local
+      const response = await fetch(`/api/node/nearest?lat=${result.lat}&lon=${result.lon}`);
+      const apiResult = await response.json();
 
-      if (error || !data || data.length === 0) {
-        console.error('Error al buscar nodo cercano:', error?.message || 'Sin resultados');
+      if (!response.ok || !apiResult.success || !apiResult.data || apiResult.data.length === 0) {
+        console.error('Error al buscar nodo cercano:', apiResult.error || 'Sin resultados');
         setIsFindingNode(false);
         return;
       }
 
-      const nearestNode = data[0];
+      const nearestNode = apiResult.data[0];
 
       // Callback al padre con el nodo seleccionado
       onNodeSelected({
@@ -249,7 +241,7 @@ export function AddressInput({
               <button
                 key={index}
                 onClick={() => handleSelectAddress(result)}
-                className="w-full p-3 text-left hover:bg-gray-50 transition-colors"
+                className="w-full p-3 text-left hover:bg-gray-800 transition-colors"
                 type="button"
               >
                 <div className="flex items-start gap-2">

@@ -1,16 +1,5 @@
 import { NextResponse } from 'next/server';
-import pg from 'pg';
-
-const { Pool } = pg;
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER,
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
+import { pool } from '@/lib/db';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

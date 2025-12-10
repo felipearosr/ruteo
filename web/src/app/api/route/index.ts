@@ -1,25 +1,13 @@
 /**
- * API route para calcular rutas usando pgr_dijkstra en Supabase (topología limpiada).
- * 
+ * API route para calcular rutas usando pgr_dijkstra en Supabase (topologia limpiada).
+ *
  * Endpoint: GET /api/route
  * Query params (opcionales): ?source=1&target=100
- * 
+ *
  * Retorna un GeoJSON de la ruta calculada con pgr_dijkstra.
  */
 import { NextResponse } from 'next/server';
-import pg from 'pg';
-
-const { Pool } = pg;
-
-// Crear pool de conexiones para PostgreSQL directo
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST,
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: 'postgres',
-  user: process.env.SUPABASE_DB_USER,
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
+import { pool } from '@/lib/db';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

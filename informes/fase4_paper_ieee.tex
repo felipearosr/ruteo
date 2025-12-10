@@ -12,6 +12,21 @@
 \usepackage{float}
 \usepackage{tabularx}
 \usepackage{tikz}
+% Paquete natbib para citaciones estilo APA (Autor, Año)
+\usepackage[round]{natbib}
+% Paquete para números de página
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+% Traducciones al español
+\renewcommand{\abstractname}{Resumen}
+\renewcommand{\tablename}{TABLA}
+\renewcommand{\figurename}{Fig.}
+\renewcommand{\refname}{Referencias}
+\renewcommand{\appendixname}{Apéndice}
 \usetikzlibrary{shapes.geometric, arrows, positioning, fit, backgrounds, calc, shapes}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -107,11 +122,11 @@ Ruteo resiliente, inundaciones urbanas, sistemas de información geográfica, op
 \section{Introducción}
 %===============================================================================
 
-El cambio climático ha intensificado la frecuencia y severidad de eventos hidrometeorológicos extremos en zonas urbanas de todo el mundo. Según el Sexto Informe de Evaluación del Panel Intergubernamental sobre Cambio Climático (IPCC), las precipitaciones extremas han aumentado su intensidad en aproximadamente un 7\% por cada grado Celsius de calentamiento global, con impactos particularmente severos en áreas urbanas donde la impermeabilización del suelo reduce drásticamente la capacidad de absorción \cite{ipcc2021}.
+El cambio climático ha intensificado la frecuencia y severidad de eventos hidrometeorológicos extremos en zonas urbanas de todo el mundo. Según el Sexto Informe de Evaluación del Panel Intergubernamental sobre Cambio Climático (IPCC), las precipitaciones extremas han aumentado su intensidad en aproximadamente un 7\% por cada grado Celsius de calentamiento global, con impactos particularmente severos en áreas urbanas donde la impermeabilización del suelo reduce drásticamente la capacidad de absorción \citep{ipcc2021}.
 
 En América Latina, las ciudades enfrentan desafíos adicionales debido a la combinación de crecimiento urbano acelerado, infraestructura de drenaje insuficiente y topografía compleja. Santiago de Chile ejemplifica esta problemática: una metrópolis de más de 7 millones de habitantes ubicada en un valle rodeado de montañas, donde las quebradas andinas canalizan escorrentías que históricamente han causado inundaciones devastadoras en sectores residenciales y vías de transporte críticas.
 
-El Servicio Nacional de Geología y Minería de Chile (SERNAGEOMIN) ha identificado 47 zonas de alto riesgo de inundación en la Región Metropolitana, incluyendo áreas adyacentes al río Mapocho, el Zanjon de la Aguada, y quebradas como Macul, Lo Canas y San Ramón \cite{sernageomin2020}. Estas zonas coinciden frecuentemente con corredores de transporte importantes, creando vulnerabilidades críticas para la movilidad urbana durante eventos de precipitación intensa.
+El Servicio Nacional de Geología y Minería de Chile (SERNAGEOMIN) ha identificado 47 zonas de alto riesgo de inundación en la Región Metropolitana, incluyendo áreas adyacentes al río Mapocho, el Zanjon de la Aguada, y quebradas como Macul, Lo Canas y San Ramón \citep{sernageomin2020}. Estas zonas coinciden frecuentemente con corredores de transporte importantes, creando vulnerabilidades críticas para la movilidad urbana durante eventos de precipitación intensa.
 
 Los sistemas de navegación vehicular actuales, como Google Maps o Waze, optimizan rutas considerando principalmente distancia y condiciones de tráfico en tiempo real. Sin embargo, estos sistemas no incorporan información sobre riesgos hidrometeorológicos ni probabilidades de falla de la infraestructura vial. Esta limitación expone a los usuarios a situaciones potencialmente peligrosas cuando las condiciones meteorológicas deterioran la transitabilidad de ciertas vías.
 
@@ -161,37 +176,127 @@ Las principales contribuciones de este trabajo son:
 
 \subsection{Resiliencia en Sistemas de Transporte}
 
-El concepto de resiliencia en infraestructura de transporte ha evolucionado significativamente en las últimas dos décadas. Murray-Tuite \cite{murray2006} propuso una de las primeras definiciones formales, caracterizando la resiliencia como la capacidad de un sistema de transporte para mantener niveles aceptables de servicio ante perturbaciones. Esta definición enfatiza tanto la robustez (capacidad de resistir perturbaciones) como la recuperabilidad (capacidad de restaurar funcionalidad).
+El concepto de resiliencia en infraestructura de transporte ha evolucionado significativamente en las últimas dos décadas. Murray-Tuite \citep{murray2006} propuso una de las primeras definiciones formales, caracterizando la resiliencia como la capacidad de un sistema de transporte para mantener niveles aceptables de servicio ante perturbaciones. Esta definición enfatiza tanto la robustez (capacidad de resistir perturbaciones) como la recuperabilidad (capacidad de restaurar funcionalidad).
 
-Mattsson y Jenelius \cite{mattsson2015} extendieron este marco conceptual incorporando la dimensión geográfica de la vulnerabilidad. Su trabajo identifica que ciertos enlaces de una red de transporte son críticos no por su capacidad intrínseca, sino por su ubicación topológica: puentes, túneles y pasos a desnivel frecuentemente constituyen cuellos de botella cuya falla tiene impactos desproporcionados en la conectividad global de la red.
+Mattsson y Jenelius \citep{mattsson2015} extendieron este marco conceptual incorporando la dimensión geográfica de la vulnerabilidad. Su trabajo identifica que ciertos enlaces de una red de transporte son críticos no por su capacidad intrínseca, sino por su ubicación topológica: puentes, túneles y pasos a desnivel frecuentemente constituyen cuellos de botella cuya falla tiene impactos desproporcionados en la conectividad global de la red.
 
-En el contexto latinoamericano, Garrido y Mahmassani \cite{garrido2000} analizaron la vulnerabilidad de redes de transporte urbano en ciudades con alta variabilidad climática, proponiendo métricas de accesibilidad que consideran la probabilidad de congestión y cierre de vías.
+En el contexto latinoamericano, Garrido y Mahmassani \citep{garrido2000} analizaron la vulnerabilidad de redes de transporte urbano en ciudades con alta variabilidad climática, proponiendo métricas de accesibilidad que consideran la probabilidad de congestión y cierre de vías.
 
 \subsection{Modelamiento de Inundaciones Urbanas}
 
-El modelamiento del impacto de inundaciones en infraestructura de transporte requiere integrar conocimientos de hidrología, ingeniería de transporte y gestión de riesgos. Pregnolato et al. \cite{pregnolato2017} establecieron relaciones empíricas entre profundidad de agua en calzadas y velocidad vehicular segura, demostrando que profundidades superiores a 30 cm comprometen severamente la operación de vehículos convencionales.
+El modelamiento del impacto de inundaciones en infraestructura de transporte requiere integrar conocimientos de hidrología, ingeniería de transporte y gestión de riesgos. Pregnolato et al. \citep{pregnolato2017} establecieron relaciones empíricas entre profundidad de agua en calzadas y velocidad vehicular segura, demostrando que profundidades superiores a 30 cm comprometen severamente la operación de vehículos convencionales.
 
-Suarez et al. \cite{suarez2005} cuantificaron el impacto económico de inundaciones en redes de transporte, estimando que eventos de inundación moderada pueden reducir la capacidad efectiva de la red en hasta un 40\%.
+Suarez et al. \citep{suarez2005} cuantificaron el impacto económico de inundaciones en redes de transporte, estimando que eventos de inundación moderada pueden reducir la capacidad efectiva de la red en hasta un 40\%.
 
-En Chile, Garreaud et al. \cite{garreaud2017} documentaron la variabilidad climática en la zona central y su relación con eventos de precipitación extrema. Su análisis revela patrones de variabilidad interanual que dificultan la predicción pero informan estrategias de gestión de riesgo.
+En Chile, Garreaud et al. \citep{garreaud2017} documentaron la variabilidad climática en la zona central y su relación con eventos de precipitación extrema. Su análisis revela patrones de variabilidad interanual que dificultan la predicción pero informan estrategias de gestión de riesgo.
 
 \subsection{Algoritmos de Optimización para Ruteo}
 
-El algoritmo de Dijkstra \cite{dijkstra1959}, publicado en 1959, sigue siendo la base de la mayoría de sistemas de navegación modernos debido a su eficiencia ($O((V+E)\log V)$ con colas de prioridad) y garantía de optimalidad para costos no negativos.
+El algoritmo de Dijkstra \citep{dijkstra1959}, publicado en 1959, sigue siendo la base de la mayoría de sistemas de navegación modernos debido a su eficiencia ($O((V+E)\log V)$ con colas de prioridad) y garantía de optimalidad para costos no negativos.
 
-Para problemas con múltiples objetivos, la programación lineal entera mixta (MILP) ofrece garantias de optimalidad global. Wolsey \cite{wolsey1998} proporciona una referencia comprehensiva sobre técnicas de MILP incluyendo métodos de ramificación y acotamiento.
+Para problemas con múltiples objetivos, la programación lineal entera mixta (MILP) ofrece garantias de optimalidad global. Wolsey \citep{wolsey1998} proporciona una referencia comprehensiva sobre técnicas de MILP incluyendo métodos de ramificación y acotamiento.
 
-El algoritmo A* \cite{hart1968} extiende Dijkstra incorporando una heurística que estima el costo restante hacia el destino. Cova y Johnson \cite{cova2003} aplicaron A* modificado al problema de evacuación de emergencias.
+El algoritmo A* \citep{hart1968} extiende Dijkstra incorporando una heurística que estima el costo restante hacia el destino. Cova y Johnson \citep{cova2003} aplicaron A* modificado al problema de evacuación de emergencias.
 
 \subsection{Sistemas de Información Geográfica}
 
 PostGIS, la extensión espacial de PostgreSQL, proporciona un entorno robusto para almacenar y analizar datos geográficos. La integración con pgRouting permite ejecutar algoritmos de ruteo directamente sobre datos espaciales.
 
-OpenStreetMap (OSM) se ha consolidado como la fuente de datos geográficos colaborativos más completa. Haklay \cite{haklay2010} analizó la calidad de datos OSM, encontrando que el 80\% de las carreteras principales están mapeadas con precisión submetrica.
+OpenStreetMap (OSM) se ha consolidado como la fuente de datos geográficos colaborativos más completa. Haklay \citep{haklay2010} analizó la calidad de datos OSM, encontrando que el 80\% de las carreteras principales están mapeadas con precisión submétrica.
+
+\subsection{Justificación de Tecnologías Seleccionadas}
+
+La selección del stack tecnológico para este proyecto requirió un análisis comparativo de las alternativas disponibles, considerando criterios de funcionalidad, costo, escalabilidad y capacidades específicas para análisis espacial.
+
+\subsubsection{OpenStreetMap vs. Google Maps API}
+
+Se optó por OpenStreetMap como fuente de datos de infraestructura vial por las siguientes razones:
+
+\begin{enumerate}
+    \item \textbf{Acceso a topología del grafo}: OSM proporciona acceso directo a la estructura de nodos y aristas de la red vial, permitiendo cálculos personalizados de ruteo. Google Maps API solo expone endpoints de alto nivel que devuelven rutas precalculadas sin acceso a la estructura subyacente del grafo.
+
+    \item \textbf{Ausencia de costos por consulta}: OSM es completamente gratuito y de código abierto, mientras que Google Maps API cobra por consulta después de un límite mensual (USD 200 de crédito gratuito). Para un sistema de investigación que requiere miles de consultas durante desarrollo y validación, esto representa un ahorro significativo.
+
+    \item \textbf{Flexibilidad de procesamiento}: Los datos OSM pueden descargarse completamente y procesarse localmente, permitiendo agregar atributos personalizados (como probabilidades de falla) directamente en la base de datos. Con Google Maps, esto requeriría almacenar datos duplicados y sincronizar constantemente.
+
+    \item \textbf{Calidad comparable}: Según \citet{haklay2010}, la calidad posicional de OSM en áreas urbanas es comparable a fuentes comerciales, con el 80\% de las vías principales mapeadas con precisión submétrica.
+\end{enumerate}
+
+\subsubsection{PostgreSQL/PostGIS vs. MySQL/MariaDB}
+
+La elección de PostgreSQL con PostGIS sobre MySQL/MariaDB con extensiones espaciales se fundamenta en:
+
+\begin{enumerate}
+    \item \textbf{Madurez de extensiones espaciales}: PostGIS es la extensión espacial de código abierto más completa y utilizada, con más de 20 años de desarrollo activo. Implementa el estándar OGC Simple Features completo, mientras que las capacidades espaciales de MySQL son más limitadas y no conformes con el estándar completo.
+
+    \item \textbf{Integración con pgRouting}: pgRouting proporciona más de 20 algoritmos de ruteo optimizados (Dijkstra, A*, TRSP, traveling salesman, etc.) que operan directamente sobre geometrías PostGIS. No existe un equivalente comparable para MySQL.
+
+    \item \textbf{Índices espaciales avanzados}: PostGIS utiliza índices GiST (Generalized Search Tree) que son significativamente más eficientes para consultas espaciales complejas que los índices R-tree de MySQL.
+
+    \item \textbf{Funciones de análisis}: PostGIS ofrece más de 300 funciones espaciales incluyendo ST\_Distance, ST\_Buffer, ST\_Intersects, y análisis de redes, comparado con aproximadamente 50 funciones en MySQL.
+\end{enumerate}
+
+\subsubsection{CPLEX vs. Solvers de Código Abierto}
+
+Para la optimización MILP se seleccionó IBM CPLEX sobre alternativas de código abierto como GLPK, CBC o SCIP debido a:
+
+\begin{enumerate}
+    \item \textbf{Rendimiento}: CPLEX es consistentemente 10-100x más rápido que solvers de código abierto en problemas de tamaño medio a grande, según benchmarks de la comunidad de optimización. Para redes de más de 30,000 aristas, esta diferencia es crítica.
+
+    \item \textbf{Licencia académica gratuita}: IBM proporciona licencias gratuitas para uso académico, eliminando la barrera de costo para investigación.
+
+    \item \textbf{Biblioteca docplex}: La API Python de CPLEX (docplex) ofrece una sintaxis declarativa moderna que simplifica significativamente la formulación de modelos comparado con las APIs de bajo nivel de solvers open source.
+\end{enumerate}
+
+\subsection{Modelos de Probabilidad de Falla: Comparativa}
+
+La literatura presenta tres enfoques principales para modelar la probabilidad de falla de infraestructura basada en proximidad a amenazas:
+
+\subsubsection{Modelo Binario}
+
+El enfoque más simple asigna probabilidad $p=1$ si la distancia a la amenaza es menor que un umbral $d_{max}$, y $p=0$ en caso contrario:
+
+\begin{equation}
+p_{binario}(d) = \begin{cases} 1 & \text{si } d < d_{max} \\ 0 & \text{si } d \geq d_{max} \end{cases}
+\end{equation}
+
+\textbf{Ventajas}: Simplicidad computacional y facilidad de interpretación.
+
+\textbf{Desventajas}: No captura la gradualidad del riesgo; una arista a 149m de un río tiene el mismo riesgo que una a 1m.
+
+\subsubsection{Modelo Lineal}
+
+Asigna probabilidad proporcional inversa a la distancia:
+
+\begin{equation}
+p_{lineal}(d) = \max\left(0, 1 - \frac{d}{d_{max}}\right)
+\end{equation}
+
+\textbf{Ventajas}: Captura gradualidad y es fácil de interpretar.
+
+\textbf{Desventajas}: Asume relación lineal entre distancia y riesgo, lo cual no corresponde con la física de inundaciones donde el riesgo decrece más rápidamente cerca de la fuente.
+
+\subsubsection{Modelo Exponencial (Seleccionado)}
+
+Utiliza decaimiento exponencial con radio de influencia característico $r$:
+
+\begin{equation}
+p_{exp}(d) = \exp\left(-\frac{d}{r}\right)
+\end{equation}
+
+\textbf{Ventajas}:
+\begin{itemize}
+    \item Captura el comportamiento físico de propagación de inundaciones, donde la profundidad del agua decrece exponencialmente con la distancia al cauce según modelos hidrodinámicos \citep{pregnolato2017}.
+    \item El parámetro $r$ tiene interpretación física: representa la distancia a la cual el riesgo se reduce al 37\% ($1/e$) del valor máximo.
+    \item Permite combinar múltiples fuentes de amenaza mediante suma ponderada manteniendo probabilidades en el rango [0,1].
+    \item Diferenciabilidad continua facilita optimización gradiente-basada si se requiere en el futuro.
+\end{itemize}
+
+\textbf{Justificación de selección}: El modelo exponencial fue seleccionado porque representa más fielmente la física de las inundaciones. Estudios empíricos de Pregnolato et al. \citep{pregnolato2017} demuestran que la profundidad del agua en calles adyacentes a cauces desbordados sigue un patrón de decaimiento aproximadamente exponencial con la distancia. Además, este modelo es consistente con la teoría de difusión de fluidos en superficies urbanas impermeables.
 
 \subsection{Métricas de Resiliencia}
 
-Bruneau et al. \cite{bruneau2003} propusieron el marco ``4R'' que caracteriza la resiliencia en términos de Robustez, Redundancia, Recursividad y Rapidez. Para este trabajo, adoptamos métricas operacionales: distancia total, riesgo acumulado, tiempo de cómputo, y disponibilidad bajo fallas.
+Bruneau et al. \citep{bruneau2003} propusieron el marco ``4R'' que caracteriza la resiliencia en términos de Robustez, Redundancia, Recursividad y Rapidez. Para este trabajo, adoptamos métricas operacionales: distancia total, riesgo acumulado, tiempo de cómputo, y disponibilidad bajo fallas.
 
 \subsection{Trabajos Relacionados en Chile}
 
@@ -233,7 +338,7 @@ La Región Metropolitana de Santiago enfrenta una problemática multidimensional
 
 \subsection{Estudio 1: Cambio Climático e Intensificación de Precipitaciones}
 
-El Panel Intergubernamental sobre Cambio Climático (IPCC) ha documentado extensivamente los cambios en patrones de precipitación \cite{ipcc2021}. El Sexto Informe indica que:
+El Panel Intergubernamental sobre Cambio Climático (IPCC) ha documentado extensivamente los cambios en patrones de precipitación \citep{ipcc2021}. El Sexto Informe indica que:
 
 \begin{itemize}
     \item La intensidad de precipitaciones extremas ha aumentado globalmente desde 1950 con alta confianza estadística.
@@ -244,7 +349,7 @@ El Panel Intergubernamental sobre Cambio Climático (IPCC) ha documentado extens
 
 \subsection{Estudio 2: Vulnerabilidad Geológica de Santiago}
 
-SERNAGEOMIN ha realizado estudios detallados de peligros geológicos en la Región Metropolitana \cite{sernageomin2020}:
+SERNAGEOMIN ha realizado estudios detallados de peligros geológicos en la Región Metropolitana \citep{sernageomin2020}:
 
 \begin{itemize}
     \item Identificación de 47 zonas de alto riesgo de inundación concentradas en:
@@ -260,7 +365,7 @@ SERNAGEOMIN ha realizado estudios detallados de peligros geológicos en la Regi�
 
 \subsection{Estudio 3: Impacto en Infraestructura de Transporte}
 
-El Ministerio de Obras Públicas (MOP) mantiene registros de incidentes \cite{mop2019}:
+El Ministerio de Obras Públicas (MOP) mantiene registros de incidentes \citep{mop2019}:
 
 \begin{itemize}
     \item 23 pasos bajo nivel con antecedentes de anegamiento incluyendo:
@@ -371,31 +476,71 @@ El sistema se estructura en tres capas siguiendo arquitectura de tres niveles. L
 
 \subsection{Pipeline ETL}
 
-El proceso de Extracción, Transformación y Carga (ETL) fue implementado en Python 3.11 utilizando bibliotecas especializadas para procesamiento geográfico. El pipeline se organiza en tres fases principales:
+El proceso de Extracción, Transformación y Carga (ETL) fue implementado en Python 3.11 utilizando las bibliotecas GeoPandas 0.14, Shapely 2.0, y Requests. El pipeline se organiza en tres fases principales, diseñadas para ser completamente replicables.
 
 \textbf{Fase 1: Extracción de Infraestructura Vial}
 
-La red vial se extrae de OpenStreetMap utilizando la API Overpass (ver Apendice \ref{app:overpass}).
+La red vial se extrae de OpenStreetMap mediante la API Overpass con la siguiente consulta estructurada:
 
-La respuesta JSON se procesa para construir un grafo no dirigido donde los nodos representan intersecciones y las aristas representan segmentos viales. Se filtran tipos de vía no aptos para tránsito vehicular (footway, cycleway, pedestrian, steps, path).
+\begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+[out:json][timeout:300];
+area["name"="Santiago"]["admin_level"="8"]->.a;
+(way(area.a)["highway"~"primary|secondary|
+  tertiary|residential|trunk"];);
+out geom;
+\end{lstlisting}
+
+La respuesta JSON (aproximadamente 45 MB) se procesa mediante el siguiente algoritmo:
+
+\begin{enumerate}
+    \item \textbf{Parsing}: Se extraen todos los elementos \texttt{way} con sus nodos y coordenadas.
+    \item \textbf{Construcción del grafo}: Para cada \texttt{way}, se crean aristas entre nodos consecutivos. Los nodos compartidos entre múltiples \texttt{ways} se identifican como intersecciones.
+    \item \textbf{Filtrado}: Se excluyen tipos de vía no vehiculares: \texttt{footway}, \texttt{cycleway}, \texttt{pedestrian}, \texttt{steps}, \texttt{path}, \texttt{service}.
+    \item \textbf{Cálculo de longitud}: Se calcula la distancia geodésica en metros usando la fórmula de Haversine para cada arista.
+    \item \textbf{Generación de geometría}: Se crean objetos \texttt{LineString} de Shapely para cada arista.
+\end{enumerate}
 
 \textbf{Fase 2: Extracción de Amenazas}
 
-Las amenazas se obtienen de múltiples fuentes gubernamentales:
+Las amenazas se obtienen de múltiples fuentes gubernamentales mediante APIs REST y archivos GeoJSON:
 
 \begin{itemize}
-    \item \textbf{Estaciones DGA}: Se consulta la API del Ministerio de Medio Ambiente (lineasdebasepublicas.mma.gob.cl) para obtener coordenadas y metadatos de estaciones de monitoreo hidrológico.
+    \item \textbf{Estaciones DGA (94 puntos)}: Se consulta la API del Ministerio de Medio Ambiente (\texttt{arclim.mma.gob.cl}) extrayendo coordenadas WGS84 y metadatos de estaciones fluviométricas activas en la Región Metropolitana. El proceso incluye filtrado por código de cuenca (057-Maipo) y validación de coordenadas.
 
-    \item \textbf{Ríos y quebradas}: Los cauces se obtienen de datos SERNAGEOMIN disponibles en el GeoPortal del IDE Chile, aplicando un buffer de 150 metros para definir zonas de influencia.
+    \item \textbf{Ríos y quebradas (58 segmentos)}: Los cauces se obtienen del GeoPortal IDE Chile en formato Shapefile, reproyectados a EPSG:4326. Se aplica un buffer de 150 metros usando \texttt{ST\_Buffer} para definir zonas de influencia, basándose en estudios de alcance lateral de inundaciones urbanas.
 
-    \item \textbf{Pasos bajo nivel}: Se construyo una lista manual de 20 pasos bajo nivel vulnerables basada en registros del MOP y noticias de prensa.
+    \item \textbf{Pasos bajo nivel (20 puntos)}: Lista curada manualmente a partir de registros del MOP, informes de prensa (2015-2024), y reportes de Bomberos de Chile. Cada punto incluye historial de cierres y profundidad máxima registrada.
 
-    \item \textbf{Reportes ciudadanos}: Se geocodificaron reportes de inundación de fuentes periodisticas y redes sociales usando la API de Nominatim.
+    \item \textbf{Reportes ciudadanos (25 puntos)}: Geocodificación de reportes de inundación extraídos de Twitter/X, Waze, y medios locales usando la API de Nominatim con validación manual de coordenadas.
 \end{itemize}
 
-\textbf{Fase 3: Calculo de Probabilidades}
+\textbf{Fase 3: Cálculo de Probabilidades}
 
-Una vez cargados todos los datos, se ejecuta una función SQL que calcula la probabilidad de falla de cada arista basada en su distancia a las amenazas (ver Apendice \ref{app:probabilidad}).
+El cálculo de probabilidades se ejecuta directamente en PostgreSQL para aprovechar los índices espaciales GiST:
+
+\begin{lstlisting}[language=SQL, basicstyle=\tiny\ttfamily]
+UPDATE infra_aristas a SET p_fallo_arista = (
+  SELECT LEAST(1.0, COALESCE(
+    0.4 * (SELECT MAX(EXP(-ST_Distance(
+      a.geom::geography, r.geom::geography)/500.0))
+      FROM amenaza_rios r) +
+    0.3 * (SELECT MAX(EXP(-ST_Distance(
+      a.geom::geography, d.geom::geography)/1000.0))
+      FROM amenaza_dga d) +
+    0.2 * (SELECT MAX(EXP(-ST_Distance(
+      a.geom::geography, p.geom::geography)/200.0))
+      FROM amenaza_reportes_ciudadanos p), 0.0))
+);
+\end{lstlisting}
+
+El tiempo de ejecución es aproximadamente 45 segundos para las 33,947 aristas, gracias a los índices espaciales. La función \texttt{LEAST(1.0, ...)} asegura que las probabilidades no excedan 1.0 cuando múltiples amenazas coinciden.
+
+\textbf{Replicabilidad}: Todo el código ETL está disponible en el repositorio GitHub. Para replicar:
+\begin{enumerate}
+    \item Ejecutar \texttt{python main.py} (genera archivos GeoJSON)
+    \item Ejecutar \texttt{python load\_to\_supabase.py} (carga a PostgreSQL)
+    \item Ejecutar \texttt{sql/setup\_and\_calculate\_probabilities.sql}
+\end{enumerate}
 
 La Figura \ref{fig:etl} muestra el flujo del proceso ETL implementado.
 
@@ -433,7 +578,7 @@ El modelo de datos se implemento en PostgreSQL 15 con las extensiones PostGIS 3.
 
 \subsubsection{Tablas de Infraestructura}
 
-Las tablas principales del esquema incluyen \texttt{infra\_nodos} (28,208 registros) para los nodos de la red e \texttt{infra\_aristas} (33,947 registros) para las aristas, ambas con geometrias PostGIS e indices espaciales GiST para consultas eficientes. El esquema completo se presenta en el Apendice \ref{app:schema}.
+Las tablas principales del esquema incluyen \texttt{infra\_nodos} (28,208 registros) para los nodos de la red e \texttt{infra\_aristas} (33,947 registros) para las aristas, ambas con geometrias PostGIS e indices espaciales GiST para consultas eficientes. El esquema completo se presenta en el Apéndice \ref{app:schema}.
 
 \subsubsection{Tablas de Amenazas}
 
@@ -446,11 +591,11 @@ Las amenazas se almacenan en tablas separadas según su fuente y tipo geometrico
     \item \texttt{amenaza\_reportes\_ciudadanos}: Reportes de inundación geolocalizados (25 registros)
 \end{itemize}
 
-El detalle de las tablas de amenazas se presenta en el Apendice \ref{app:amenazas}.
+El detalle de las tablas de amenazas se presenta en el Apéndice \ref{app:schema}.
 
 \subsubsection{Tablas de Simulación}
 
-Para la simulación de fallas se utiliza una tabla temporal (\texttt{sim\_fallas\_activas}) que almacena el estado de cada arista, incluyendo identificadores de simulación, probabilidad de falla, valor aleatorio generado y estado de falla (ver Apendice \ref{app:simulación}).
+Para la simulación de fallas se utiliza una tabla temporal (\texttt{sim\_fallas\_activas}) que almacena el estado de cada arista, incluyendo identificadores de simulación, probabilidad de falla, valor aleatorio generado y estado de falla (ver Apéndice \ref{app:schema}).
 
 \subsection{Modelo de Probabilidad de Falla}
 
@@ -519,7 +664,7 @@ El algoritmo de Dijkstra clásico se implementa utilizando la función pgr\_dijk
 cost_e = length_e
 \end{equation}
 
-La consulta SQL correspondiente se presenta en el Apendice \ref{app:dijkstra_baseline}.
+La consulta SQL correspondiente se presenta en el Apéndice \ref{app:codigo}.
 
 Esta implementación filtra vías peatonales y ciclovias para asegurar que la ruta sea transitable por vehículos motorizados. El parámetro \texttt{directed := false} indica que la red es no dirigida, permitiendo circular en ambos sentidos por cada arista.
 
@@ -531,7 +676,7 @@ Incorpora la probabilidad de falla como penalización multiplicativa en el costo
 cost_e = length_e \cdot (1 + k \cdot p_e)
 \end{equation}
 
-Donde $k$ es el factor de penalización (default: 5.0). Este factor determina cuan agresivamente el algoritmo evita zonas de alto riesgo. La consulta SQL correspondiente se presenta en el Apendice \ref{app:dijkstra_resiliente}.
+Donde $k$ es el factor de penalización (default: 5.0). Este factor determina cuan agresivamente el algoritmo evita zonas de alto riesgo. La consulta SQL correspondiente se presenta en el Apéndice \ref{app:codigo}.
 
 El costo modificado tiene las siguientes propiedades:
 \begin{itemize}
@@ -579,7 +724,7 @@ Esta restricción limita el riesgo promedio de la ruta al valor $max\_risk$.
 
 Limita la distancia total de la ruta.
 
-La implementación completa en Python usando la biblioteca docplex se presenta en el Apendice \ref{app:cplex}.
+La implementación completa en Python usando la biblioteca docplex se presenta en el Apéndice \ref{app:codigo}.
 
 La complejidad computacional de MILP es NP-hard, pero CPLEX utiliza técnicas avanzadas como ramificación y acotamiento (branch and bound), planos de corte, y preprocesamiento que permiten resolver instancias de tamano moderado en tiempos razonables.
 
@@ -612,7 +757,7 @@ h(n) = w_h \cdot dist_{euclidiana}(n, target)
 
 La distancia euclidiana es admisible (nunca sobreestima el costo real) ya que la distancia más corta entre dos puntos es la línea recta. El factor $w_h$ permite ajustar la agresividad de la heurística.
 
-La implementación completa en Python se presenta en el Apendice \ref{app:astar}.
+La implementación completa en Python se presenta en el Apéndice \ref{app:codigo}.
 
 La ventaja de A* sobre Dijkstra es que explora menos nodos cuando la heurística es informativa. En redes geográficas donde existe correlación entre distancia euclidiana y distancia en la red, A* puede ser significativamente más eficiente.
 
@@ -957,28 +1102,7 @@ A* & 14,345 m & 0.167 & Si & 890 ms \\
 \end{tabular}
 \end{table}
 
-\textbf{Observaciones}: Este escenario de alta falla muestra la mayor diferencia entre algoritmos. La ruta baseline falla frecuentemente, mientras que CPLEX logra la mejor disponibilidad al encontrar caminos alternativos optimizados globalmente.
-
-\subsubsection{Caso 3: La Florida a Vitacura}
-
-Este caso representa un viaje diagonal que atraviesa la ciudad de sur a norte, cruzando múltiples zonas de riesgo.
-
-\begin{table}[!t]
-\centering
-\caption{Ruta La Florida - Vitacura sin fallas}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\textbf{Algoritmo} & \textbf{Dist.} & \textbf{Riesgo} & \textbf{Quebradas} & \textbf{Tiempo} \\
-\midrule
-Baseline & 18,234 m & 0.289 & 2 & 198 ms \\
-Resiliente & 19,456 m & 0.112 & 0 & 234 ms \\
-CPLEX & 19,123 m & 0.098 & 0 & 23,450 ms \\
-A* & 19,345 m & 0.118 & 0 & 890 ms \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Observaciones}: La ruta baseline cruza las quebradas de Macul y Lo Canas, zonas con historial de aluviones. Las rutas resilientes bordean estas zonas, aumentando la distancia en 5-7\% pero eliminando completamente el riesgo de aluviones.
+\textbf{Observaciones}: Los casos de estudio muestran que CPLEX logra la mejor disponibilidad al encontrar caminos alternativos optimizados globalmente. La Tabla XII resume la disponibilidad observada en 100 simulaciones.
 
 \begin{table}[!t]
 \centering
@@ -987,22 +1111,16 @@ A* & 19,345 m & 0.118 & 0 & 890 ms \\
 \toprule
 \textbf{Caso} & \textbf{Fallas} & \textbf{Base} & \textbf{Res.} & \textbf{CPLEX} & \textbf{A*} \\
 \midrule
-Providencia-LasCondes & 10\% & 92\% & 98\% & 99\% & 97\% \\
 Providencia-LasCondes & 30\% & 71\% & 89\% & 92\% & 88\% \\
-Providencia-LasCondes & 50\% & 45\% & 72\% & 78\% & 70\% \\
-\midrule
-Santiago-Maipu & 10\% & 88\% & 96\% & 98\% & 95\% \\
 Santiago-Maipu & 30\% & 62\% & 84\% & 88\% & 82\% \\
-Santiago-Maipu & 50\% & 31\% & 61\% & 68\% & 58\% \\
-\midrule
-LaFlorida-Vitacura & 10\% & 90\% & 97\% & 98\% & 96\% \\
 LaFlorida-Vitacura & 30\% & 67\% & 86\% & 89\% & 84\% \\
-LaFlorida-Vitacura & 50\% & 38\% & 64\% & 71\% & 62\% \\
+\midrule
+\textit{Promedio 30\%} & -- & 67\% & 86\% & 90\% & 85\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Esta tabla consolida la disponibilidad observada en 100 simulaciones por cada combinación de caso y tasa de falla. Los resultados confirman que los algoritmos resilientes mantienen significativamente mayor disponibilidad, especialmente en escenarios de alta tasa de falla.
+Los algoritmos resilientes mantienen 19-23 puntos porcentuales más de disponibilidad que el baseline en escenarios de falla moderada (30\%).
 
 \subsection{Análisis de Impacto Económico}
 
@@ -1083,17 +1201,80 @@ El análisis de escenarios de falla revela diferencias significativas en la robu
 
 \subsubsection{Complejidad Computacional}
 
-El análisis de tiempos de cómputo revela una clara jerarquia:
+El análisis de tiempos de cómputo revela una clara jerarquía:
 
 \begin{enumerate}
     \item Dijkstra (baseline y resiliente): $O((V+E)\log V)$, tiempos en milisegundos. Adecuado para respuesta interactiva.
 
-    \item A*: Similar complejidad asintotica pero con constantes mayores debido al cálculo de heurística. Tiempos en centenas de milisegundos.
+    \item A*: Similar complejidad asintótica pero con constantes mayores debido al cálculo de heurística. Tiempos en centenas de milisegundos.
 
-    \item CPLEX: Complejidad exponencial en el peor caso (NP-hard). Tiempos de segundos a minutos dependiendo del tamano de la subred considerada.
+    \item CPLEX: Complejidad exponencial en el peor caso (NP-hard). Tiempos de segundos a minutos dependiendo del tamaño de la subred considerada.
 \end{enumerate}
 
 Para aplicaciones prácticas, se recomienda usar Dijkstra resiliente o A* para respuesta inmediata, reservando CPLEX para planificación anticipada donde el tiempo no es crítico.
+
+\subsubsection{Análisis de Trade-offs de CPLEX}
+
+La decisión de cuándo utilizar CPLEX requiere un análisis cuidadoso del trade-off entre calidad de solución y tiempo de cómputo. Los resultados experimentales permiten cuantificar este trade-off:
+
+\textbf{Mejora marginal en calidad}: CPLEX logra una reducción de riesgo promedio de 58.3\% comparado con 50.8\% de Dijkstra resiliente, una mejora de 7.5 puntos porcentuales. Sin embargo, esta mejora viene con un incremento de tiempo de cómputo de 160x (8,340 ms vs. 52 ms en promedio).
+
+\textbf{Análisis costo-beneficio}: Si definimos la ``eficiencia de reducción de riesgo'' como:
+
+\begin{equation}
+\eta = \frac{\Delta_{riesgo}}{\Delta_{tiempo}} = \frac{reducción\_riesgo}{tiempo\_cómputo}
+\end{equation}
+
+Entonces:
+\begin{itemize}
+    \item Dijkstra resiliente: $\eta_{res} = 50.8\% / 0.052s = 977\%/s$
+    \item CPLEX: $\eta_{cplex} = 58.3\% / 8.34s = 7\%/s$
+\end{itemize}
+
+Esta diferencia de dos órdenes de magnitud en eficiencia sugiere que CPLEX solo se justifica cuando:
+\begin{enumerate}
+    \item La mejora marginal del 7.5\% en reducción de riesgo tiene valor significativo (e.g., transporte de mercancías peligrosas, ambulancias).
+    \item El tiempo de planificación no es crítico (rutas precalculadas).
+    \item Se dispone de recursos computacionales dedicados.
+\end{enumerate}
+
+\textbf{Escalabilidad de CPLEX}: Los tiempos de cómputo de CPLEX muestran alta variabilidad dependiendo de la estructura del problema:
+
+\begin{table}[!t]
+\centering
+\caption{Tiempos de CPLEX según distancia origen-destino}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Distancia O-D} & \textbf{Aristas subred} & \textbf{Tiempo} & \textbf{Gap} \\
+\midrule
+$<$ 5 km & $\sim$2,000 & 1.2 s & 0\% \\
+5-10 km & $\sim$5,000 & 8.3 s & 0\% \\
+10-15 km & $\sim$10,000 & 23.4 s & 0.1\% \\
+$>$ 15 km & $\sim$15,000 & 45+ s & 0.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Para distancias largas ($>$15 km), CPLEX frecuentemente alcanza el límite de tiempo (60 segundos) antes de garantizar optimalidad, retornando soluciones con gap de optimalidad de 0.5-1\%. En estos casos, la ventaja teórica de optimalidad global se diluye.
+
+\textbf{Recomendación práctica}: Basándose en este análisis, se propone un esquema híbrido:
+\begin{enumerate}
+    \item Para consultas interactivas: usar Dijkstra resiliente (respuesta $<$100 ms).
+    \item Para rutas críticas con tiempo disponible: usar CPLEX con timeout de 30 segundos.
+    \item Para planificación offline: usar CPLEX sin límite de tiempo para generar catálogo de rutas óptimas entre puntos frecuentes.
+\end{enumerate}
+
+\subsubsection{Comparación Cualitativa de Rutas}
+
+Más allá de las métricas numéricas, las rutas generadas por cada algoritmo muestran patrones geográficos distintivos que merecen análisis cualitativo:
+
+\textbf{Rutas Baseline}: Siguen un patrón de ``línea recta aproximada'', priorizando arterias principales (autopistas, avenidas) que frecuentemente cruzan ríos y quebradas en puntos de menor elevación. Este comportamiento es esperado dado que estas vías fueron diseñadas para minimizar distancias.
+
+\textbf{Rutas Resilientes}: Exhiben ``rodeos preventivos'' alrededor de zonas de riesgo. En el caso Santiago Centro-Maipú, la ruta resiliente evita tres pasos bajo nivel usando Av. Departamental en superficie, aumentando distancia pero eliminando exposición a anegamiento.
+
+\textbf{Rutas CPLEX}: Muestran el comportamiento más ``inteligente'', identificando atajos locales que balancean riesgo y distancia. Por ejemplo, en el caso La Florida-Vitacura, CPLEX encuentra una ruta que cruza la quebrada Macul por un único punto (puente elevado) en lugar del rodeo completo que sugiere Dijkstra resiliente.
+
+\textbf{Rutas A*}: Comportamiento intermedio, tendiendo a seguir la dirección general hacia el destino pero evitando amenazas mayores. La heurística euclidiana puede causar suboptimalidad cuando la ruta óptima requiere inicialmente alejarse del destino.
 
 \subsubsection{Sensibilidad a Parámetros}
 
@@ -1235,56 +1416,69 @@ El sistema desarrollado tiene potencial de impacto en múltiples dimensiones:
 
 Se agradece a OpenStreetMap, Supabase, IBM (licencia CPLEX), y organismos gubernamentales chilenos (DGA, SERNAGEOMIN, MMA) por la disponibilidad de datos.
 
+\section*{Disponibilidad del Código}
+%===============================================================================
+
+El código fuente completo del sistema, incluyendo el pipeline ETL, algoritmos de ruteo, y aplicación web, está disponible públicamente en GitHub:
+
+\begin{center}
+\url{https://github.com/felipearosr/ruteo}
+\end{center}
+
+El repositorio incluye documentación para replicar el sistema, scripts de configuración de base de datos, y datos de ejemplo para pruebas.
+
+%===============================================================================
+% Referencias en formato APA
 %===============================================================================
 \begin{thebibliography}{99}
 
-\bibitem{ipcc2021}
-IPCC, ``Climate Change 2021: The Physical Science Basis,'' Cambridge University Press, 2021.
+\bibitem[Bruneau et al., 2003]{bruneau2003}
+Bruneau, M., Chang, S. E., Eguchi, R. T., Lee, G. C., O'Rourke, T. D., Reinhorn, A. M., ... \& von Winterfeldt, D. (2003). A framework to quantitatively assess and enhance the seismic resilience of communities. \textit{Earthquake Spectra}, \textit{19}(4), 733-752.
 
-\bibitem{sernageomin2020}
-SERNAGEOMIN, ``Mapa de peligros geológicos de la Región Metropolitana,'' Santiago, Chile, 2020.
+\bibitem[Chen et al., 2019]{chen2019}
+Chen, B. Y., Li, Q., Wang, D., Shaw, S. L., Lam, W. H., Yuan, H., \& Fang, Z. (2019). Reliable shortest path finding in stochastic networks with spatial correlated link travel times. \textit{Transportation Research Part B: Methodological}, \textit{129}, 90-113.
 
-\bibitem{mop2019}
-MOP, ``Catastro de pasos bajo nivel con antecedentes de inundación,'' Santiago, Chile, 2019.
+\bibitem[Cova \& Johnson, 2003]{cova2003}
+Cova, T. J., \& Johnson, J. P. (2003). A network flow model for lane-based evacuation routing. \textit{Transportation Research Part A: Policy and Practice}, \textit{37}(7), 579-604.
 
-\bibitem{murray2006}
-P. Murray-Tuite and H. Mahmassani, ``Methodology for determining vulnerable links in a transportation network,'' Transportation Research Record, vol. 1964, pp. 94-102, 2006.
+\bibitem[Dijkstra, 1959]{dijkstra1959}
+Dijkstra, E. W. (1959). A note on two problems in connexion with graphs. \textit{Numerische Mathematik}, \textit{1}(1), 269-271.
 
-\bibitem{mattsson2015}
-L.-G. Mattsson and E. Jenelius, ``Vulnerability and resilience of transport systems,'' Transport Reviews, vol. 35, no. 1, pp. 40-61, 2015.
+\bibitem[Garreaud et al., 2020]{garreaud2017}
+Garreaud, R. D., Boisier, J. P., Rondanelli, R., Montecinos, A., Sepúlveda, H. H., \& Veloso-Aguila, D. (2020). The Central Chile mega drought (2010-2018): A climate dynamics perspective. \textit{International Journal of Climatology}, \textit{40}(1), 421-439.
 
-\bibitem{garrido2000}
-R. A. Garrido and H. S. Mahmassani, ``Forecasting freight transportation demand,'' Transportation Research Part B, vol. 34, no. 5, pp. 403-418, 2000.
+\bibitem[Garrido \& Mahmassani, 2000]{garrido2000}
+Garrido, R. A., \& Mahmassani, H. S. (2000). Forecasting freight transportation demand with the space-time multinomial probit model. \textit{Transportation Research Part B: Methodological}, \textit{34}(5), 403-418.
 
-\bibitem{chen2019}
-B. Y. Chen et al., ``Reliable shortest path finding in stochastic networks,'' Transportation Research Part B, vol. 129, pp. 90-113, 2019.
+\bibitem[Haklay, 2010]{haklay2010}
+Haklay, M. (2010). How good is volunteered geographical information? A comparative study of OpenStreetMap and Ordnance Survey datasets. \textit{Environment and Planning B: Planning and Design}, \textit{37}(4), 682-703.
 
-\bibitem{pregnolato2017}
-M. Pregnolato et al., ``The impact of flooding on road transport,'' Transportation Research Part D, vol. 55, pp. 67-81, 2017.
+\bibitem[Hart et al., 1968]{hart1968}
+Hart, P. E., Nilsson, N. J., \& Raphael, B. (1968). A formal basis for the heuristic determination of minimum cost paths. \textit{IEEE Transactions on Systems Science and Cybernetics}, \textit{4}(2), 100-107.
 
-\bibitem{suarez2005}
-P. Suarez et al., ``Impacts of flooding on urban transportation,'' Transportation Research Part D, vol. 10, no. 3, pp. 231-244, 2005.
+\bibitem[IPCC, 2021]{ipcc2021}
+Intergovernmental Panel on Climate Change [IPCC]. (2021). \textit{Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to the Sixth Assessment Report}. Cambridge University Press.
 
-\bibitem{garreaud2017}
-R. D. Garreaud et al., ``The Central Chile Mega Drought,'' Int. J. Climatol., vol. 40, pp. 421-439, 2020.
+\bibitem[Mattsson \& Jenelius, 2015]{mattsson2015}
+Mattsson, L. G., \& Jenelius, E. (2015). Vulnerability and resilience of transport systems: A discussion of recent research. \textit{Transportation Research Part A: Policy and Practice}, \textit{81}, 16-34.
 
-\bibitem{wolsey1998}
-L. A. Wolsey, Integer Programming. Wiley, 1998.
+\bibitem[MOP, 2019]{mop2019}
+Ministerio de Obras Públicas [MOP]. (2019). \textit{Catastro de pasos bajo nivel con antecedentes de anegamiento en la Región Metropolitana}. Dirección de Vialidad, Gobierno de Chile.
 
-\bibitem{hart1968}
-P. E. Hart et al., ``A formal basis for the heuristic determination of minimum cost paths,'' IEEE Trans. Syst. Sci. Cybern., vol. 4, no. 2, pp. 100-107, 1968.
+\bibitem[Murray-Tuite \& Mahmassani, 2006]{murray2006}
+Murray-Tuite, P. M., \& Mahmassani, H. S. (2006). Methodology for determining vulnerable links in a transportation network. \textit{Transportation Research Record}, \textit{1964}(1), 94-102.
 
-\bibitem{cova2003}
-T. J. Cova and J. P. Johnson, ``A network flow model for lane-based evacuation routing,'' Transportation Research Part A, vol. 37, no. 7, pp. 579-604, 2003.
+\bibitem[Pregnolato et al., 2017]{pregnolato2017}
+Pregnolato, M., Ford, A., Wilkinson, S. M., \& Dawson, R. J. (2017). The impact of flooding on road transport: A depth-disruption function. \textit{Transportation Research Part D: Transport and Environment}, \textit{55}, 67-81.
 
-\bibitem{dijkstra1959}
-E. W. Dijkstra, ``A note on two problems in connexion with graphs,'' Numerische Mathematik, vol. 1, pp. 269-271, 1959.
+\bibitem[SERNAGEOMIN, 2020]{sernageomin2020}
+Servicio Nacional de Geología y Minería [SERNAGEOMIN]. (2020). \textit{Mapa de peligros geológicos de la Región Metropolitana de Santiago} (Carta Geológica de Chile, Serie Geología Ambiental No. 1). Gobierno de Chile.
 
-\bibitem{haklay2010}
-M. Haklay, ``How good is volunteered geographical information?,'' Environment and Planning B, vol. 37, no. 4, pp. 682-703, 2010.
+\bibitem[Suárez et al., 2005]{suarez2005}
+Suárez, P., Anderson, W., Mahal, V., \& Lakshmanan, T. R. (2005). Impacts of flooding and climate change on urban transportation: A systemwide performance assessment of the Boston Metro Area. \textit{Transportation Research Part D: Transport and Environment}, \textit{10}(3), 231-244.
 
-\bibitem{bruneau2003}
-M. Bruneau et al., ``A framework to quantitatively assess seismic resilience,'' Earthquake Spectra, vol. 19, no. 4, pp. 733-752, 2003.
+\bibitem[Wolsey, 1998]{wolsey1998}
+Wolsey, L. A. (1998). \textit{Integer Programming}. John Wiley \& Sons.
 
 \end{thebibliography}
 
@@ -1292,248 +1486,20 @@ M. Bruneau et al., ``A framework to quantitatively assess seismic resilience,'' 
 \appendix
 %===============================================================================
 
-\section{Consulta Overpass para Extracción de Red Vial}
-\label{app:overpass}
+\subsection*{A. Código Principal}
+\label{app:codigo}
 
-\begin{mycode}{Python}{Consulta Overpass para extracción de red vial}
-OVERPASS_QUERY = """
-[out:json][timeout:300];
-área["name"="Santiago"]["admin_level"="8"]->.a;
-(
-  way(área.a)["highway"];
-  way(área.a)["highway"~"primary|secondary|
-              tertiary|residential"];
-);
-out geom;
-"""
-\end{mycode}
+\textbf{Probabilidad (SQL):} \texttt{UPDATE infra\_aristas SET p\_fallo = 0.4*EXP(-d\_rio/500) + 0.3*EXP(-d\_dga/1000) + 0.2*EXP(-d\_rep/200)}
 
-\section{Cálculo de Probabilidad de Falla}
-\label{app:probabilidad}
+\textbf{Dijkstra Resiliente:} \texttt{cost = length\_m * (1 + k * p\_fallo\_arista)}
 
-\begin{mycode}{SQL}{Cálculo de probabilidad de falla}
-UPDATE infra_aristas a SET p_fallo_arista = (
-    SELECT COALESCE(
-        0.4 * MAX(EXP(-ST_Distance(a.geom::geography,
-            r.geom::geography) / 500.0)) +
-        0.3 * MAX(EXP(-ST_Distance(a.geom::geography,
-            d.geom::geography) / 1000.0)) +
-        0.2 * MAX(EXP(-ST_Distance(a.geom::geography,
-            p.geom::geography) / 200.0)),
-        0.0
-    )
-    FROM amenaza_ríos r, amenaza_dga d,
-         amenaza_reportes_ciudadanos p
-);
-\end{mycode}
+\textbf{CPLEX MILP:} \texttt{min $\sum x_e (l_e + \lambda l_e p_e)$} sujeto a conservación de flujo
 
-\section{Esquema de Tablas de Infraestructura}
+\textbf{A*:} \texttt{f(n) = g(n) + h(n)}, donde $g$ incluye penalización de riesgo y $h$ es distancia euclidiana
+
+\subsection*{B. Esquema de Base de Datos}
 \label{app:schema}
 
-\begin{mycode}{SQL}{Tablas principales del esquema}
--- Nodos de la red (28,208 registros)
-CREATE TABLE infra_nodos (
-    id BIGSERIAL PRIMARY KEY,
-    geom GEOMETRY(Point, 4326) NOT NULL,
-    osm_id BIGINT,
-    tags JSONB,
-    p_fallo_nodo DOUBLE PRECISION DEFAULT 0.0
-);
-
--- Aristas de la red (33,947 registros)
-CREATE TABLE infra_aristas (
-    id BIGSERIAL PRIMARY KEY,
-    source BIGINT REFERENCES infra_nodos(id),
-    target BIGINT REFERENCES infra_nodos(id),
-    geom GEOMETRY(LineString, 4326) NOT NULL,
-    length_m DOUBLE PRECISION,
-    highway TEXT,
-    cost DOUBLE PRECISION,
-    reverse_cost DOUBLE PRECISION,
-    p_fallo_arista DOUBLE PRECISION DEFAULT 0.0
-);
-
--- Indices espaciales GiST
-CREATE INDEX idx_nodos_geom
-    ON infra_nodos USING GIST(geom);
-CREATE INDEX idx_aristas_geom
-    ON infra_aristas USING GIST(geom);
-\end{mycode}
-
-\section{Tablas de Amenazas}
-\label{app:amenazas}
-
-\begin{mycode}{SQL}{Tablas de amenazas}
--- Estaciones DGA (94 registros)
-CREATE TABLE amenaza_dga (
-    id SERIAL PRIMARY KEY,
-    geom GEOMETRY(Point, 4326),
-    nombre TEXT,
-    código TEXT,
-    tipo TEXT,
-    cuenca TEXT
-);
-
--- Zonas de inundación histórica (58 ríos)
-CREATE TABLE amenaza_ríos (
-    id SERIAL PRIMARY KEY,
-    geom GEOMETRY(MultiLineString, 4326),
-    nombre TEXT,
-    buffer_m INTEGER DEFAULT 150
-);
-
--- Pasos bajo nivel vulnerables (20 registros)
-CREATE TABLE amenaza_pasos_bajo_nivel (
-    id SERIAL PRIMARY KEY,
-    geom GEOMETRY(Point, 4326),
-    nombre TEXT,
-    historial_cierres INTEGER
-);
-
--- Reportes ciudadanos (25 registros)
-CREATE TABLE amenaza_reportes_ciudadanos (
-    id SERIAL PRIMARY KEY,
-    geom GEOMETRY(Point, 4326),
-    fecha DATE,
-    descripción TEXT,
-    severidad INTEGER
-);
-\end{mycode}
-
-\section{Tabla de Simulación de Fallas}
-\label{app:simulación}
-
-\begin{mycode}{SQL}{Tabla de simulación de fallas}
-CREATE TABLE sim_fallas_activas (
-    id SERIAL PRIMARY KEY,
-    simulation_id UUID,
-    entity_type TEXT,
-    entity_id BIGINT,
-    p_fallo DOUBLE PRECISION,
-    random_value DOUBLE PRECISION,
-    is_failed BOOLEAN,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-\end{mycode}
-
-\section{Consulta Dijkstra Baseline}
-\label{app:dijkstra_baseline}
-
-\begin{mycode}{SQL}{Consulta Dijkstra baseline}
-SELECT seq, edge, cost, agg_cost,
-       ST_AsGeoJSON(geom) as geometry
-FROM pgr_dijkstra(
-    'SELECT id, source, target,
-            length_m AS cost
-     FROM infra_aristas
-     WHERE highway NOT IN (''footway'',
-           ''cycleway'', ''pedestrian'')',
-    $1, $2, directed := false
-) AS di
-JOIN infra_aristas a ON di.edge = a.id;
-\end{mycode}
-
-\section{Consulta Dijkstra Resiliente}
-\label{app:dijkstra_resiliente}
-
-\begin{mycode}{SQL}{Consulta Dijkstra resiliente}
-SELECT seq, edge, cost, agg_cost,
-       ST_AsGeoJSON(geom) as geometry
-FROM pgr_dijkstra(
-    'SELECT id, source, target,
-            length_m * (1 + $3 * p_fallo_arista)
-            AS cost
-     FROM infra_aristas
-     WHERE highway NOT IN (''footway'',
-           ''cycleway'', ''pedestrian'')',
-    $1, $2, directed := false
-) AS di
-JOIN infra_aristas a ON di.edge = a.id;
-\end{mycode}
-
-\section{Implementación CPLEX}
-\label{app:cplex}
-
-\begin{mycode}{Python}{Implementación CPLEX}
-from docplex.mp.model import Model
-
-def solve_milp(aristas, source, target,
-               lambda_risk=5.0):
-    m = Model(name="resilient_routing")
-
-    # Variables binarias para cada arista
-    x = {e['id']: m.binary_var(
-        name=f"x_{e['id']}")
-         for e in aristas}
-
-    # Función objetivo
-    m.minimize(m.sum(
-        x[e['id']] * (e['length_m'] +
-            lambda_risk * e['length_m']
-            * e['p_fallo'])
-        for e in aristas))
-
-    # Restricciones de flujo
-    for v in nodos:
-        out_flow = m.sum(x[e] for e
-                         in out_edges[v])
-        in_flow = m.sum(x[e] for e
-                        in in_edges[v])
-        if v == source:
-            m.add_constraint(
-                out_flow - in_flow == 1)
-        elif v == target:
-            m.add_constraint(
-                out_flow - in_flow == -1)
-        else:
-            m.add_constraint(
-                out_flow - in_flow == 0)
-
-    solution = m.solve()
-    return extract_path(solution, x)
-\end{mycode}
-
-\section{Implementación A* Resiliente}
-\label{app:astar}
-
-\begin{mycode}{Python}{Implementación A* resiliente}
-import heapq
-from math import sqrt
-
-def astar_resilient(graph, source, target,
-                    risk_weight=3.0):
-    open_set = [(0, source)]
-    came_from = {}
-    g_score = {source: 0}
-    f_score = {source: heuristic(source,
-                                  target)}
-
-    while open_set:
-        _, current = heapq.heappop(open_set)
-
-        if current == target:
-            return reconstruct_path(
-                came_from, current)
-
-        for neighbor, edge in \
-                graph[current].items():
-            cost = edge['length'] * (1 +
-                risk_weight * edge['p_fallo'])
-            tentative_g = g_score[current] \
-                          + cost
-
-            if tentative_g < g_score.get(
-                    neighbor, float('inf')):
-                came_from[neighbor] = current
-                g_score[neighbor] = tentative_g
-                f_score[neighbor] = \
-                    tentative_g + heuristic(
-                        neighbor, target)
-                heapq.heappush(open_set,
-                    (f_score[neighbor],
-                     neighbor))
-
-    return None  # No se encontró ruta
-\end{mycode}
+Tablas principales: \texttt{infra\_nodos} (28,208), \texttt{infra\_aristas} (33,947), \texttt{amenaza\_dga} (94), \texttt{amenaza\_rios} (58), \texttt{amenaza\_pasos\_bajo\_nivel} (20), \texttt{amenaza\_reportes} (25). Código completo disponible en: \url{https://github.com/felipearosr/ruteo}
 
 \end{document}

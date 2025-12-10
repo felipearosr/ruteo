@@ -23,25 +23,83 @@ except ImportError:
     print("⚠️  CPLEX/docplex no está instalado. El modelo de optimización no estará disponible.", file=sys.stderr)
 
 
-DB_CONFIG = {
-    'host': os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com'),
-    'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
-    'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
-    'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
-    'password': os.getenv('SUPABASE_DB_PASSWORD'),
-    # Keep connections from hanging forever when the DB is unreachable.
-    'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
+def is_local_host(host: str) -> bool:
+    """Detecta si el host es local (no requiere SSL)"""
+    if not host:
+        return False
+    local_patterns = ['localhost', '127.0.0.1', 'db', '192.168.', '172.', '10.']
+    return any(host.startswith(p) or host == p for p in local_patterns)
+
+def get_db_config():
+    host = os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com')
+    config = {
+        'host': host,
+        'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
+        'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
+        'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
+        'password': os.getenv('SUPABASE_DB_PASSWORD'),
+        'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
+    }
+    # Solo requerir SSL para conexiones remotas
+    if not is_local_host(host):
+        config['sslmode'] = 'require'
+    return config
+
+DB_CONFIG = get_db_config()
+
+# Velocidades por tipo de via (km/h)
+HIGHWAY_SPEEDS = {
+    'motorway': 80,
+    'motorway_link': 60,
+    'trunk': 80,
+    'trunk_link': 60,
+    'primary': 60,
+    'primary_link': 50,
+    'secondary': 60,
+    'secondary_link': 50,
+    'tertiary': 50,
+    'tertiary_link': 40,
+    'residential': 40,
+    'living_street': 20,
+    'unclassified': 40,
+    'service': 30,
 }
+DEFAULT_SPEED = 50  # km/h
+
+
+def calculate_travel_time_min(aristas: List[Dict]) -> float:
+    """
+    Calcula el tiempo de viaje en minutos basado en distancia y tipo de via.
+
+    Args:
+        aristas: Lista de aristas con 'length_m' y 'highway'
+
+    Returns:
+        Tiempo de viaje en minutos
+    """
+    total_time = 0.0
+    for arista in aristas:
+        length_m = arista.get('length_m', 0)
+        highway = arista.get('highway', '')
+        speed_kmh = HIGHWAY_SPEEDS.get(highway, DEFAULT_SPEED)
+        # tiempo = distancia / velocidad, convertir m a km y horas a minutos
+        time_min = (length_m / 1000) / speed_kmh * 60
+        total_time += time_min
+    return total_time
 
 
 def get_db_connection():
     host = DB_CONFIG['host']
-    try:
-        host_ip = socket.gethostbyname(host)
-    except Exception:
-        host_ip = host
     params = DB_CONFIG.copy()
-    params['host'] = host_ip
+
+    # Solo hacer resolución DNS para hosts remotos
+    if not is_local_host(host):
+        try:
+            host_ip = socket.gethostbyname(host)
+            params['host'] = host_ip
+        except Exception:
+            pass
+
     return psycopg2.connect(**params)
 
 
@@ -64,8 +122,8 @@ class CplexResilientRouter:
                 self.max_time_limit = parsed if parsed > 0 else None
             except ValueError:
                 self.max_time_limit = 120.0
-        # Subgrafo compacto por defecto (~2 km)
-        self.bbox_margin = float(os.getenv("CPLEX_BBOX_MARGIN", 0.02))
+        # Subgrafo compacto por defecto (~10 km)
+        self.bbox_margin = float(os.getenv("CPLEX_BBOX_MARGIN", 0.1))
         self.threads = int(os.getenv("CPLEX_THREADS", os.cpu_count() or 1))
         # 0 = auto, 1 = oportunista (rápido), 2 = determinista (reproducible)
         self.parallel_mode = int(os.getenv("CPLEX_PARALLEL", 1))
@@ -369,8 +427,15 @@ class CplexResilientRouter:
             arista['is_reversed'] = is_reversed
             result['route'].append(arista['id'])
             result['total_distance'] += arista['length_m']
-            result['total_risk'] += arista['p_fallo']
+            result['total_risk'] += arista['p_fallo'] * arista['length_m']  # Ponderado por distancia
             result['aristas_usadas'].append(arista)
+
+        # Calcular promedio ponderado por distancia (0-1)
+        if result['total_distance'] > 0:
+            result['total_risk'] = result['total_risk'] / result['total_distance']
+
+        # Calcular tiempo de viaje
+        result['travel_time_min'] = calculate_travel_time_min(result['aristas_usadas'])
 
         self._log(
             f"[CPLEX] Ruta recuperada en {time.time() - t0:.2f}s | "

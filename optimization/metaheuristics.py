@@ -21,16 +21,70 @@ import time
 
 import socket
 
-# Configuración de conexión a Supabase (usa el pooler por defecto)
-DB_CONFIG = {
-    'host': os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com'),
-    'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
-    'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
-    'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
-    'password': os.getenv('SUPABASE_DB_PASSWORD'),
-    'sslmode': 'require',
-    'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
+def is_local_host(host: str) -> bool:
+    """Detecta si el host es local (no requiere SSL)"""
+    if not host:
+        return False
+    local_patterns = ['localhost', '127.0.0.1', 'db', '192.168.', '172.', '10.']
+    return any(host.startswith(p) or host == p for p in local_patterns)
+
+# Configuración de conexión a base de datos
+def get_db_config():
+    host = os.getenv('SUPABASE_DB_HOST', 'aws-1-us-east-1.pooler.supabase.com')
+    config = {
+        'host': host,
+        'port': int(os.getenv('SUPABASE_DB_PORT', 6543)),
+        'database': os.getenv('SUPABASE_DB_NAME', 'postgres'),
+        'user': os.getenv('SUPABASE_DB_USER', 'postgres.eqjzlgbjgwbnvqzbomsn'),
+        'password': os.getenv('SUPABASE_DB_PASSWORD'),
+        'connect_timeout': int(os.getenv('SUPABASE_DB_CONNECT_TIMEOUT', 10)),
+    }
+    # Solo requerir SSL para conexiones remotas
+    if not is_local_host(host):
+        config['sslmode'] = 'require'
+    return config
+
+DB_CONFIG = get_db_config()
+
+# Velocidades por tipo de via (km/h)
+HIGHWAY_SPEEDS = {
+    'motorway': 80,
+    'motorway_link': 60,
+    'trunk': 80,
+    'trunk_link': 60,
+    'primary': 60,
+    'primary_link': 50,
+    'secondary': 60,
+    'secondary_link': 50,
+    'tertiary': 50,
+    'tertiary_link': 40,
+    'residential': 40,
+    'living_street': 20,
+    'unclassified': 40,
+    'service': 30,
 }
+DEFAULT_SPEED = 50  # km/h
+
+
+def calculate_travel_time_min(aristas: List[Dict]) -> float:
+    """
+    Calcula el tiempo de viaje en minutos basado en distancia y tipo de via.
+
+    Args:
+        aristas: Lista de aristas con 'length_m' y 'highway'
+
+    Returns:
+        Tiempo de viaje en minutos
+    """
+    total_time = 0.0
+    for arista in aristas:
+        length_m = arista.get('length_m', 0)
+        highway = arista.get('highway', '')
+        speed_kmh = HIGHWAY_SPEEDS.get(highway, DEFAULT_SPEED)
+        # tiempo = distancia / velocidad, convertir m a km y horas a minutos
+        time_min = (length_m / 1000) / speed_kmh * 60
+        total_time += time_min
+    return total_time
 
 def get_db_connection():
     """Establece y retorna una conexión a la base de datos."""
@@ -40,14 +94,15 @@ def get_db_connection():
         raise ValueError("SUPABASE_DB_PASSWORD no está definido en el entorno")
 
     host = params.get('host')
-    fallback_host = os.getenv("SUPABASE_DB_HOST_FALLBACK", "18.213.155.45")
 
-    # Resolver a IPv4; si falla, usa fallback explícito con hostaddr para saltar DNS
-    try:
-        params['host'] = socket.gethostbyname(host)
-    except Exception:
-        params['host'] = host  # mantiene SNI/ssl
-        params['hostaddr'] = fallback_host
+    # Solo hacer resolución DNS y fallback para hosts remotos
+    if not is_local_host(host):
+        fallback_host = os.getenv("SUPABASE_DB_HOST_FALLBACK", "18.213.155.45")
+        try:
+            params['host'] = socket.gethostbyname(host)
+        except Exception:
+            params['host'] = host
+            params['hostaddr'] = fallback_host
 
     return psycopg2.connect(**params)
 
@@ -358,12 +413,19 @@ class AStarResilientRouter:
                     
                     result['route'].append(edge_id)
                     result['total_distance'] += arista['length_m']
-                    result['total_risk'] += arista['p_fallo']
+                    result['total_risk'] += arista['p_fallo'] * arista['length_m']  # Ponderado por distancia
                     result['aristas_usadas'].append(arista)
-            
+
+            # Calcular promedio ponderado por distancia (0-1)
+            if result['total_distance'] > 0:
+                result['total_risk'] = result['total_risk'] / result['total_distance']
+
+            # Calcular tiempo de viaje
+            result['travel_time_min'] = calculate_travel_time_min(result['aristas_usadas'])
+
             print(f"✅ Solución encontrada:", file=sys.stderr)
             print(f"   Distancia total: {result['total_distance']:.2f}m", file=sys.stderr)
-            print(f"   Riesgo acumulado: {result['total_risk']:.4f}", file=sys.stderr)
+            print(f"   Riesgo promedio: {result['total_risk']:.4f}", file=sys.stderr)
             print(f"   Tiempo de cómputo: {result['computation_time']:.3f}s", file=sys.stderr)
             print(f"   Nodos explorados: {nodes_explored}", file=sys.stderr)
             print(f"   Aristas en ruta: {len(result['route'])}", file=sys.stderr)

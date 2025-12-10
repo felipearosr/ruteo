@@ -8,32 +8,21 @@
  * Query params:
  *   - source: nodo origen
  *   - target: nodo destino
- *   - risk_weight: peso del riesgo en el costo (default: 3.0)
+ *   - risk_weight: peso del riesgo en el costo (default: 10.0)
  *   - heuristic_weight: peso de la heurística (default: 1.0)
  */
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
-import pg from 'pg';
+import { pool } from '@/lib/db';
 import { resolveConnectedNodes } from '@/lib/connectedNodes';
-
-const { Pool } = pg;
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   
   const source = parseInt(searchParams.get('source') || '1');
   const target = parseInt(searchParams.get('target') || '100');
-  const riskWeight = parseFloat(searchParams.get('risk_weight') || '3.0');
+  const riskWeight = parseFloat(searchParams.get('risk_weight') || '10.0');
   const heuristicWeight = parseFloat(searchParams.get('heuristic_weight') || '1.0');
   const defaultBboxMargin = process.env.ASTAR_BBOX_MARGIN || process.env.NEXT_PUBLIC_ASTAR_BBOX_MARGIN || '0.02';
   const bboxMarginParam = searchParams.get('bbox_margin') || defaultBboxMargin || undefined;
@@ -49,7 +38,10 @@ export async function GET(request: Request) {
     const usedTarget = nodeResolution.adjustedTarget;
 
     // Ejecutar el script Python de A*
-    const scriptPath = path.join(process.cwd(), '..', 'optimization', 'astar_router_api.py');
+    // En Docker, optimization está en /app/optimization; en local, está en ../optimization
+    const scriptPath = process.env.OPTIMIZATION_PATH
+      ? path.join(process.env.OPTIMIZATION_PATH, 'astar_router_api.py')
+      : path.join(process.cwd(), '..', 'optimization', 'astar_router_api.py');
     
     const args = [
       scriptPath,
@@ -63,7 +55,8 @@ export async function GET(request: Request) {
       args.push('--bbox-margin', bboxMargin.toString());
     }
 
-    const pythonProcess = spawn('python', args);
+    const pythonBin = process.env.PYTHON_BIN || 'python3';
+    const pythonProcess = spawn(pythonBin, args);
 
     let outputData = '';
     let errorData = '';

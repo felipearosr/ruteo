@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.7.24)  3 DEC 2025 18:44
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.12.7)  7 DEC 2025 21:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -21,776 +21,66 @@ LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 5
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
-! Font OT1/ptm/m/n/10=ptmr7t at 10.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.503 \normalfont
-                 \selectfont
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 -- Using 8.5in x 11in (letter) paper.
 -- Using PDF output.
 \@IEEEnormalsizeunitybaselineskip=\dimen141
 -- This is a 10 point document.
-! Font OT1/ptm/m/n/9=ptmr7t at 9.0pt not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   relax 
-l.963 \small
-            \normalsize % make \baselinestretch take affect
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 \CLASSINFOnormalsizebaselineskip=\dimen142
 \CLASSINFOnormalsizeunitybaselineskip=\dimen143
 \IEEEnormaljot=\dimen144
-! Font OT1/ptm/m/n/5=ptmr7t at 5.0pt not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <5> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/5=ptmb7t at 5.0pt not loadable: Metric (TFM) file not found
-.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/5=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/5=ptmri7t at 5.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <5> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/5=ptmbi7t at 5.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/5=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/7=ptmr7t at 7.0pt not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/7=ptmb7t at 7.0pt not loadable: Metric (TFM) file not found
-.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/7=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/7=ptmri7t at 7.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <7> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/7=ptmbi7t at 7.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/7=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/8=ptmr7t at 8.0pt not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <8> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/8=ptmb7t at 8.0pt not loadable: Metric (TFM) file not found
-.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/8=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/8=ptmri7t at 8.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <8> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/8=ptmbi7t at 8.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/8=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/9=ptmb7t at 9.0pt not loadable: Metric (TFM) file not found
-.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/9=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/9=ptmri7t at 9.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <9> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/9=ptmbi7t at 9.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/9=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/10=ptmb7t at 10.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/10=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/10=ptmri7t at 10.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <10> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/10=ptmbi7t at 10.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/10=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/11=ptmr7t at 11.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <11> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/11=ptmb7t at 11.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/11=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/11=ptmri7t at 11.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <11> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/11=ptmbi7t at 11.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/11=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/12=ptmr7t at 12.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/12=ptmb7t at 12.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/12=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/12=ptmri7t at 12.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <12> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/12=ptmbi7t at 12.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/12=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/17=ptmr7t at 17.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <17> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/17=ptmb7t at 17.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/17=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/17=ptmri7t at 17.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <17> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/17=ptmbi7t at 17.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/17=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/20=ptmr7t at 20.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <20> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/20=ptmb7t at 20.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/20=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/20=ptmri7t at 20.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <20> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
 
-! Font OT1/ptm/bx/it/20=ptmbi7t at 20.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/20=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/n/24=ptmr7t at 24.0pt not loadable: Metric (TFM) file not foun
-d.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <24> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 1090.
-! Font OT1/ptm/bx/n/24=ptmb7t at 24.0pt not loadable: Metric (TFM) file not fou
-nd.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/n/24=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font OT1/ptm/m/it/24=ptmri7t at 24.0pt not loadable: Metric (TFM) file not fo
-und.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
 LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 (Font)              Font shape `OT1/ptm/b/it' tried instead on input line 1090.
-
-! Font OT1/ptm/bx/it/24=ptmbi7t at 24.0pt not loadable: Metric (TFM) file not f
-ound.
-<to be read again> 
-                   relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
-
-! Font \OT1/ptm/b/it/24=nullfont not loadable: Metric (TFM) file not found.
-<to be read again> 
-                   \relax 
-l.1090 \@IEEEtunefonts
-                      
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
 
 \IEEEquantizedlength=\dimen145
 \IEEEquantizedlengthdiff=\dimen146
 \IEEEquantizedtextheightdiff=\dimen147
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
-Missing character: There is no g in font nullfont!
-Missing character: There is no T in font nullfont!
 \IEEEilabelindentA=\dimen148
 \IEEEilabelindentB=\dimen149
 \IEEEilabelindent=\dimen150
@@ -1421,6 +711,26 @@ File: pgfmodulematrix.code.tex 2021/05/15 v3.1.9a (3.1.9a)
 zlibrarytopaths.code.tex
 File: tikzlibrarytopaths.code.tex 2021/05/15 v3.1.9a (3.1.9a)
 )))
+(/usr/share/texlive/texmf-dist/tex/latex/natbib/natbib.sty
+Package: natbib 2010/09/13 8.31b (PWD, AO)
+\bibhang=\skip58
+\bibsep=\skip59
+LaTeX Info: Redefining \cite on input line 694.
+\c@NAT@ctr=\count324
+)
+(/usr/share/texlive/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
+Package: fancyhdr 2021/01/28 v4.0.1 Extensive control of page headers and foote
+rs
+\f@nch@headwidth=\skip60
+\f@nch@O@elh=\skip61
+\f@nch@O@erh=\skip62
+\f@nch@O@olh=\skip63
+\f@nch@O@orh=\skip64
+\f@nch@O@elf=\skip65
+\f@nch@O@erf=\skip66
+\f@nch@O@olf=\skip67
+\f@nch@O@orf=\skip68
+)
 (/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
 zlibraryshapes.geometric.code.tex
 File: tikzlibraryshapes.geometric.code.tex 2021/05/15 v3.1.9a (3.1.9a)
@@ -1523,41 +833,485 @@ LaTeX Font Info:    Trying to load font information for T1+ptm on input line 11
 
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1ptm.fd
 File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
+))
+(/usr/share/texlive/texmf-dist/tex/latex/inconsolata/inconsolata.sty
+Package: inconsolata 2019/05/17 v1.12
+
+`inconsolata-zi4' v1.12, 2019/05/17 Text macros for Inconsolata (msharpe)
+(/usr/share/texlive/texmf-dist/tex/latex/base/textcomp.sty
+Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
 )
-! Font T1/ptm/m/n/10=ptmr8t at 10.0pt not loadable: Metric (TFM) file not found
+(/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2020/11/20 v2.8 package option processing (HA)
+
+(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
+(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks42
+\XKV@tempa@toks=\toks43
+)
+\XKV@depth=\count325
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+))
+\zifour@ocount=\count326
+)
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
+Package: tcolorbox 2022/01/07 version 5.0.2 text color boxes
+
+(/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty
+Package: verbatim 2020-07-07 v1.5u LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks44
+\verbatim@line=\toks45
+\verbatim@in@stream=\read3
+)
+(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
+Package: environ 2014/05/04 v0.3 A new way to define environments
+
+(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty
+Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
+))
+(/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count327
+)
+\tcb@titlebox=\box93
+\tcb@upperbox=\box94
+\tcb@lowerbox=\box95
+\tcb@phantombox=\box96
+\c@tcbbreakpart=\count328
+\c@tcblayer=\count329
+\c@tcolorbox@number=\count330
+\tcb@temp=\box97
+\tcb@temp=\box98
+\tcb@temp=\box99
+\tcb@temp=\box100
+)
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistings.code.tex
+Library (tcolorbox): 'tcblistings.code.tex' version '5.0.2'
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcblistingscore.code.tex
+Library (tcolorbox): 'tcblistingscore.code.tex' version '5.0.2'
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbprocessing.code.tex
+Library (tcolorbox): 'tcbprocessing.code.tex' version '5.0.2'
+(/usr/share/texlive/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2019/11/08 v1.0c unified shell escape interface for LaTeX
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+))
+\c@tcblisting=\count331
+))
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskins.code.tex
+Library (tcolorbox): 'tcbskins.code.tex' version '5.0.2'
+\tcb@waterbox=\box101
+(/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbskinsjigsaw.code.tex
+Library (tcolorbox): 'tcbskinsjigsaw.code.tex' version '5.0.2'
+)) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcbbreakable.code.tex
+Library (tcolorbox): 'tcbbreakable.code.tex' version '5.0.2'
+(/usr/share/texlive/texmf-dist/tex/generic/oberdiek/pdfcol.sty
+Package: pdfcol 2019/12/29 v1.6 Handle new color stacks for pdfTeX (HO)
+)
+Package pdfcol Info: New color stack `tcb@breakable' = 1 on input line 23.
+\tcb@testbox=\box102
+\tcb@totalupperbox=\box103
+\tcb@totallowerbox=\box104
+)
+\c@tcb@cnt@mycode=\count332
+
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count333
+\l__pdf_internal_box=\box105
+)
+(./fase4_paper_ieee.aux)
+\openout1 = `fase4_paper_ieee.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 99.
+LaTeX Font Info:    ... okay on input line 99.
+
+-- Lines per column: 56 (exact).
+(/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count334
+\scratchdimen=\dimen309
+\scratchbox=\box106
+\nofMPsegments=\count335
+\nofMParguments=\count336
+\everyMPshowfont=\toks46
+\MPscratchCnt=\count337
+\MPscratchDim=\dimen310
+\MPnumerator=\count338
+\makeMPintoPDFobject=\count339
+\everyMPtoPDFconversion=\toks47
+) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+Package hyperref Info: Link coloring OFF on input line 99.
+
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
+
+(/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+)
+\c@section@level=\count340
+)
+LaTeX Info: Redefining \ref on input line 99.
+LaTeX Info: Redefining \pageref on input line 99.
+LaTeX Info: Redefining \nameref on input line 99.
+
+(./fase4_paper_ieee.out) (./fase4_paper_ieee.out)
+\@outlinefile=\write4
+\openout4 = `fase4_paper_ieee.out'.
+
+\c@lstlisting=\count341
+
+(/usr/share/texlive/texmf-dist/tex/latex/upquote/upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+)
+Underfull \hbox (badness 1817) in paragraph at lines 131--132
+[]\T1/ptm/m/n/10 Los sis-temas de nave-gación ve-hic-u-lar ac-tuales, como
+ []
+
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
+
+
+]
+LaTeX Font Info:    Trying to load font information for U+msa on input line 144
 .
-<to be read again> 
-                   relax 
-l.112 ...\familydefault\seriesdefault\shapedefault
-                                                  
-I wasn't able to read the size data for this font,
-so I will ignore the font specification.
-[Wizards can fix TFM files using TFtoPL/PLtoTF.]
-You might try inserting a different font spec;
-e.g., type `I\font<same font id>=<substitute font name>'.
 
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
+LaTeX Font Info:    Trying to load font information for U+msb on input line 144
+.
 
-! LaTeX Error: File `inconsolata.sty' not found.
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+Underfull \hbox (badness 1371) in paragraph at lines 181--182
+[]\T1/ptm/m/n/10 Mattsson y Jenelius ([]Matts-son & Jenelius[], []2015[]) ex-
+ []
 
-Type X to quit or <RETURN> to proceed,
-or enter new name. (Default extension: sty)
+[2]
+Underfull \hbox (badness 1817) in paragraph at lines 220--221
+\T1/ptm/m/n/10 per-mi-tiendo agre-gar atrib-u-tos per-son-al-iza-dos (como
+ []
 
-Enter file name: 
-! Emergency stop.
-<read *> 
-         
-l.28 \usepackage
-                {xcolor}^^M
-*** (cannot \read from terminal in nonstop modes)
+[3]
+Underfull \hbox (badness 10000) in paragraph at lines 281--282
+ \T1/ptm/m/it/10 3) Mod-elo Ex-po-nen-cial (Se-lec-cionado): [][][] \T1/ptm/m/n
+/10 Uti-liza
+ []
 
- 
+
+Underfull \hbox (badness 10000) in paragraph at lines 292--293
+[]\T1/ptm/m/n/10 Diferenciabilidad con-tinua fa-cilita op-ti-mización
+ []
+
+
+Underfull \hbox (badness 2744) in paragraph at lines 341--342
+[]\T1/ptm/m/n/10 El Panel In-ter-gu-ber-na-men-tal so-bre Cam-bio Climático
+ []
+
+[4]
+Underfull \hbox (badness 3118) in paragraph at lines 352--353
+[]\T1/ptm/m/n/10 SERNAGEOMIN ha re-al-izado es-tu-dios de-tal-la-dos de
+ []
+
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+)
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 48
+5.
+
+(/usr/share/texlive/texmf-dist/tex/latex/inconsolata/t1zi4.fd
+File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
+)
+LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
+(Font)              scaled to size 5.0pt on input line 485.
+LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
+(Font)              scaled to size 10.0pt on input line 496.
+
+Underfull \hbox (badness 4913) in paragraph at lines 498--499
+[]\T1/ptm/b/n/10 Filtrado\T1/ptm/m/n/10 : Se ex-cluyen tipos de vía no ve-hic-u
+-
+ []
+
+[5]
+Underfull \hbox (badness 10000) in paragraph at lines 500--501
+[]\T1/ptm/b/n/10 Generación de ge-ometría\T1/ptm/m/n/10 : Se crean ob-je-tos
+ []
+
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+)
+LaTeX Font Info:    Font shape `T1/zi4/b/n' will be
+(Font)              scaled to size 5.0pt on input line 522.
+
+Overfull \hbox (12.94952pt too wide) in paragraph at lines 542--543
+[]\T1/ptm/m/n/10 Ejecutar \T1/zi4/m/n/10 sql/setup_and_calculate_probabilities.
+sql 
+ []
+
+[6pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
+has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.582 
+      ]
+Underfull \hbox (badness 5893) in paragraph at lines 591--592
+[]\T1/zi4/m/n/10 amenaza_reportes_ciudadanos\T1/ptm/m/n/10 : Re-portes de in-un
+-
+ []
+
+
+Underfull \hbox (badness 3919) in paragraph at lines 685--686
+[]\T1/ptm/m/n/10 Valores in-ter-me-dios gen-eran pe-nal-iza-ciones pro-por-
+ []
+
+
+Underfull \hbox (badness 1466) in paragraph at lines 690--691
+\T1/ptm/m/n/10 solu-ciones glob-al-mente óp-ti-mas con-siderando si-mul-tane-a-
+
+ []
+
+[7pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) 
+has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.699 \textbf{FunciÃ³n objetivo:}
+                                 pdfTeX warning (ext4): destination with the sa
+me identifier (name{figure.3}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.699 \textbf{FunciÃ³n objetivo:}
+                                 pdfTeX warning (ext4): destination with the sa
+me identifier (name{table.1}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.699 \textbf{FunciÃ³n objetivo:}
+                                 ]
+LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
+(Font)              scaled to size 8.0pt on input line 826.
+
+Overfull \hbox (14.2638pt too wide) in paragraph at lines 822--836
+ [][] 
+ []
+
+
+Underfull \vbox (badness 1521) has occurred while \output is active []
+
+ [8pdfTeX warning (ext4): destination with the same identifier (name{figure.4})
+ has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.915 \end{table}
+                 ]
+Overfull \hbox (47.09903pt too wide) in paragraph at lines 1005--1006
+ [][] 
+ []
+
+[9pdfTeX warning (ext4): destination with the same identifier (name{table.2}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{figure
+.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+3}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+4}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       pdfTeX warning (ext4): destination with the same identifier (name{figure
+.6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1034 
+       ] [10pdfTeX warning (ext4): destination with the same identifier (name{t
+able.8}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+9}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+10}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+11}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+12}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+13}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+14}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1174 
+       ]
+
+LaTeX Warning: Command \' invalid in math mode on input line 1225.
+
+
+LaTeX Warning: Command \' invalid in math mode on input line 1225.
+
+Missing character: There is no ó in font cmr10!
+Missing character: There is no ó in font cmr10!
+[11pdfTeX warning (ext4): destination with the same identifier (name{table.15})
+ has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1270 
+       pdfTeX warning (ext4): destination with the same identifier (name{table.
+16}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1270 
+       ] [12pdfTeX warning (ext4): destination with the same identifier (name{t
+able.17}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1338 
+       ] [13]
+Underfull \hbox (badness 3657) in paragraph at lines 1475--1476
+\T1/ptm/m/n/10 (2020). \T1/ptm/m/it/10 Mapa de peli-gros ge-ológi-cos de la Reg
+ión
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1492--1493
+[]\T1/ptm/b/n/10 Probabilidad (SQL): \T1/zi4/m/n/10 UPDATE infra_aristas
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1492--1493
+\T1/zi4/m/n/10 SET p_fallo = 0.4*EXP(-d_rio/500) +
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1503--1504
+[]\T1/ptm/m/n/10 Tablas prin-ci-pales: \T1/zi4/m/n/10 infra_nodos \T1/ptm/m/n/1
+0 (28,208),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1503--1504
+\T1/zi4/m/n/10 infra_aristas \T1/ptm/m/n/10 (33,947), \T1/zi4/m/n/10 amenaza_dg
+a \T1/ptm/m/n/10 (94),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1503--1504
+\T1/zi4/m/n/10 amenaza_rios \T1/ptm/m/n/10 (58), \T1/zi4/m/n/10 amenaza_pasos_b
+ajo_nivel \T1/ptm/m/n/10 (20),
+ []
+
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[14] (./fase4_paper_ieee.aux)
+Package rerunfilecheck Info: File `fase4_paper_ieee.out' has not changed.
+(rerunfilecheck)             Checksum: 25BB83560581AABB8BFE181BCE811A7A;13806.
+ ) 
 Here is how much of TeX's memory you used:
- 24026 strings out of 480247
- 469217 string characters out of 5896151
- 748371 words of memory out of 5000000
- 41607 multiletter control sequences out of 15000+600000
- 469259 words of font info for 28 fonts, out of 8000000 for 9000
- 14 hyphenation exceptions out of 8191
- 84i,1n,80p,483b,262s stack positions out of 5000i,500n,10000p,200000b,80000s
-!  ==> Fatal error occurred, no output PDF file produced!
+ 31249 strings out of 480171
+ 620974 string characters out of 5894489
+ 1147333 words of memory out of 5000000
+ 48439 multiletter control sequences out of 15000+600000
+ 587223 words of font info for 148 fonts, out of 8000000 for 9000
+ 59 hyphenation exceptions out of 8191
+ 84i,12n,80p,1534b,1391s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texlive/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-0.enc}{/usr/
+share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-
+dist/fonts/type1/public/inconsolata/Inconsolata-zi4b.pfb></usr/share/texlive/te
+xmf-dist/fonts/type1/public/inconsolata/Inconsolata-zi4r.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy1
+0.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb><
+/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/sh
+are/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/tex
+live/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/u
+rw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8
+a.pfb>
+Output written on fase4_paper_ieee.pdf (14 pages, 298970 bytes).
+PDF statistics:
+ 711 PDF objects out of 1000 (max. 8388607)
+ 654 compressed objects within 7 object streams
+ 242 named destinations out of 1000 (max. 500000)
+ 581 words of extra memory for PDF output out of 10000 (max. 10000000)
+

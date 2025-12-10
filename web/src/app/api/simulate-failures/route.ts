@@ -1,35 +1,28 @@
 /**
- * API Endpoint: Simulación de Fallas Dinámicas
- * 
+ * API Endpoint: Simulacion de Fallas Dinamicas
+ *
  * POST: Genera fallas aleatorias basadas en probabilidades
  * DELETE: Limpia simulaciones activas
- * GET: Obtiene estado de simulación activa
+ * GET: Obtiene estado de simulacion activa
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { pool } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 /**
- * POST - Generar nueva simulación de fallas
+ * POST - Generar nueva simulacion de fallas
  */
 export async function POST(request: NextRequest) {
+  const client = await pool.connect();
   try {
     const body = await request.json();
-    const { seed, min_probability = 0.01, propagation_probability = 0.8, max_steps = 50 } = body;
+    const { seed, initial_failures = 200, propagation_probability = 1.0, max_steps = 50, decay_rate = 0.99 } = body;
 
-    // Generar ID único para esta simulación
     const simulationId = uuidv4();
 
-    // Implementar random con seed si se proporciona
     let random = Math.random;
     if (seed !== undefined && seed !== null) {
-      // Seeded random usando algoritmo simple
       let seedValue = seed;
       random = () => {
         seedValue = (seedValue * 9301 + 49297) % 233280;
@@ -39,74 +32,69 @@ export async function POST(request: NextRequest) {
 
     console.log(`[PROPAGATION] Starting simulation ${simulationId}`);
 
-    // 1. Obtener nodos semilla (initial failures based on probability)
-    const { data: nodos, error: nodosError } = await supabase
-      .from('infra_nodos')
-      .select('id, p_fallo_nodo')
-      .gt('p_fallo_nodo', min_probability);
-
-    if (nodosError) {
-      throw new Error(`Error al obtener nodos: ${nodosError.message}`);
-    }
+    // 1. Obtener nodos semilla - seleccionar exactamente N nodos aleatorios
+    // Ordenados por p_fallo para priorizar zonas de riesgo, pero con componente aleatorio
+    const nodosResult = await client.query(
+      `SELECT id, p_fallo_nodo FROM infra_nodos_cleaned
+       WHERE p_fallo_nodo > 0.05
+       ORDER BY RANDOM()
+       LIMIT $1`,
+      [initial_failures]
+    );
+    const nodos = nodosResult.rows;
 
     const failedNodeIds = new Set<number>();
     const failedEdgeIds = new Set<number>();
     const processedEdgeIds = new Set<number>();
     const queue: number[] = [];
-    const simulaciones = [];
+    const simulaciones: any[] = [];
 
-    // 2. Determinar fallas iniciales (Semillas)
+    // 2. Todos los nodos seleccionados son semillas iniciales
     let nodosFailedCount = 0;
-    for (const nodo of nodos || []) {
-      const randomValue = random();
-      const isFailed = randomValue < nodo.p_fallo_nodo;
+    for (const nodo of nodos) {
+      nodosFailedCount++;
+      failedNodeIds.add(nodo.id);
+      queue.push(nodo.id);
 
-      if (isFailed) {
-        nodosFailedCount++;
-        failedNodeIds.add(nodo.id);
-        queue.push(nodo.id);
-
-        simulaciones.push({
-          simulation_id: simulationId,
-          entity_type: 'nodo',
-          entity_id: nodo.id,
-          p_fallo: nodo.p_fallo_nodo,
-          random_value: randomValue,
-          is_failed: true
-        });
-      }
+      simulaciones.push({
+        simulation_id: simulationId,
+        entity_type: 'nodo',
+        entity_id: nodo.id,
+        p_fallo: nodo.p_fallo_nodo,
+        random_value: 0,
+        is_failed: true
+      });
     }
 
     console.log(`[PROPAGATION] Initial seeds: ${nodosFailedCount}`);
 
-    // 3. Propagación tipo "agua" (BFS con fetch on-demand)
+    // 3. Propagacion tipo "agua" (BFS) con probabilidad decreciente
+    // step 1: 95%, step 2: 47.5%, step 3: 23.75%, etc.
     let propagatedCount = 0;
     let step = 0;
 
     while (queue.length > 0 && step < max_steps) {
       step++;
-      const batchSize = Math.min(queue.length, 10); // Process up to 10 nodes at a time
+      // Probabilidad decae exponencialmente: p * decay^(step-1)
+      const currentProbability = propagation_probability * Math.pow(decay_rate, step - 1);
+
+      // Si la probabilidad es muy baja, parar
+      if (currentProbability < 0.05) break;
+
+      const batchSize = Math.min(queue.length, 10);
       const currentBatch = queue.splice(0, batchSize);
 
-      console.log(`[PROPAGATION] Step ${step}: Processing ${currentBatch.length} nodes, queue size: ${queue.length}`);
+      console.log(`[PROPAGATION] Step ${step}: Processing ${currentBatch.length} nodes, probability: ${(currentProbability * 100).toFixed(1)}%`);
 
-      // Fetch neighbors for this batch of nodes
-      // We query edges where source OR target is in currentBatch
-      const { data: edges, error: edgesError } = await supabase
-        .from('infra_aristas')
-        .select('id, source, target')
-        .or(`source.in.(${currentBatch.join(',')}),target.in.(${currentBatch.join(',')})`);
+      const edgesResult = await client.query(
+        `SELECT id, source, target FROM infra_aristas_cleaned WHERE source = ANY($1) OR target = ANY($1)`,
+        [currentBatch]
+      );
+      const edges = edgesResult.rows;
 
-      if (edgesError) {
-        console.error(`Error fetching neighbors:`, edgesError);
-        throw new Error(`Error al obtener vecinos: ${edgesError.message}`);
-      }
+      edges.forEach((edge: any) => processedEdgeIds.add(edge.id));
 
-      edges?.forEach(edge => processedEdgeIds.add(edge.id));
-
-      // Process each edge to find neighbors
-      for (const edge of edges || []) {
-        // Determine which end is the neighbor
+      for (const edge of edges) {
         for (const currentId of currentBatch) {
           let neighborId: number | null = null;
 
@@ -117,9 +105,8 @@ export async function POST(request: NextRequest) {
           }
 
           if (neighborId && !failedNodeIds.has(neighborId)) {
-            // Evaluar propagación
             const randomValue = random();
-            if (randomValue < propagation_probability) {
+            if (randomValue < currentProbability) {
               failedNodeIds.add(neighborId);
               queue.push(neighborId);
               propagatedCount++;
@@ -128,12 +115,11 @@ export async function POST(request: NextRequest) {
                 simulation_id: simulationId,
                 entity_type: 'nodo',
                 entity_id: neighborId,
-                p_fallo: propagation_probability,
+                p_fallo: currentProbability,
                 random_value: randomValue,
                 is_failed: true
               });
 
-              // Fail the connecting edge
               if (!failedEdgeIds.has(edge.id)) {
                 failedEdgeIds.add(edge.id);
                 simulaciones.push({
@@ -153,54 +139,51 @@ export async function POST(request: NextRequest) {
 
     console.log(`[PROPAGATION] Completed: ${propagatedCount} nodes propagated in ${step} steps`);
 
-    // 4. Guardar en BD (en lotes de 1000)
+    // 4. Guardar en BD (en lotes)
     const batchSize = 1000;
     for (let i = 0; i < simulaciones.length; i += batchSize) {
       const batch = simulaciones.slice(i, i + batchSize);
-      const { error: insertError } = await supabase
-        .from('sim_fallas_activas')
-        .insert(batch);
+      const values = batch.map((s, idx) => {
+        const offset = i + idx;
+        return `($${offset * 6 + 1}, $${offset * 6 + 2}, $${offset * 6 + 3}, $${offset * 6 + 4}, $${offset * 6 + 5}, $${offset * 6 + 6})`;
+      });
 
-      if (insertError) {
-        throw new Error(`Error al insertar simulaciones: ${insertError.message}`);
+      // Simplify: insert one by one for smaller batches
+      for (const sim of batch) {
+        await client.query(
+          `INSERT INTO sim_fallas_activas (simulation_id, entity_type, entity_id, p_fallo, random_value, is_failed)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [sim.simulation_id, sim.entity_type, sim.entity_id, sim.p_fallo, sim.random_value, sim.is_failed]
+        );
       }
     }
-
-    const totalNodesChecked = nodos?.length ?? 0;
-    const totalEntitiesFailed = failedNodeIds.size + failedEdgeIds.size;
-    const totalEdgesProcessed = processedEdgeIds.size;
 
     return NextResponse.json({
       success: true,
       simulation_id: simulationId,
       summary: {
-        total_nodos_checked: totalNodesChecked,
+        total_nodos_checked: nodos.length,
         initial_seeds: nodosFailedCount,
         propagated_nodes: propagatedCount,
         total_nodes_failed: failedNodeIds.size,
         total_edges_failed: failedEdgeIds.size,
-        total_failed: totalEntitiesFailed,
-        total_entities: totalEntitiesFailed,
+        total_failed: failedNodeIds.size + failedEdgeIds.size,
+        total_entities: failedNodeIds.size + failedEdgeIds.size,
         nodos_failed: failedNodeIds.size,
-        total_nodos: totalNodesChecked,
+        total_nodos: nodos.length,
         aristas_failed: failedEdgeIds.size,
-        total_aristas: totalEdgesProcessed,
-        steps: step,
-        note: 'Simulación con propagación tipo agua completada'
+        total_aristas: failedEdgeIds.size,
+        steps: step
       },
       timestamp: new Date().toISOString(),
-      seed: seed
+      seed
     });
 
   } catch (error: any) {
-    console.error('Error en simulación:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message
-      },
-      { status: 500 }
-    );
+    console.error('Error en simulacion:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } finally {
+    client.release();
   }
 }
 
@@ -213,46 +196,15 @@ export async function DELETE(request: NextRequest) {
     const simulationId = searchParams.get('simulation_id');
 
     if (simulationId) {
-      // Eliminar simulación específica
-      const { error } = await supabase
-        .from('sim_fallas_activas')
-        .delete()
-        .eq('simulation_id', simulationId);
-
-      if (error) {
-        throw new Error(`Error al eliminar simulación: ${error.message}`);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: `Simulación ${simulationId} eliminada`
-      });
+      await pool.query(`DELETE FROM sim_fallas_activas WHERE simulation_id = $1`, [simulationId]);
+      return NextResponse.json({ success: true, message: `Simulacion ${simulationId} eliminada` });
     } else {
-      // Eliminar todas las simulaciones
-      const { error } = await supabase
-        .from('sim_fallas_activas')
-        .delete()
-        .neq('id', 0); // Truco para borrar todas las filas
-
-      if (error) {
-        throw new Error(`Error al limpiar simulaciones: ${error.message}`);
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Todas las simulaciones eliminadas'
-      });
+      await pool.query(`DELETE FROM sim_fallas_activas`);
+      return NextResponse.json({ success: true, message: 'Todas las simulaciones eliminadas' });
     }
-
   } catch (error: any) {
-    console.error('Error al eliminar simulación:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message
-      },
-      { status: 500 }
-    );
+    console.error('Error al eliminar simulacion:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -265,96 +217,67 @@ export async function GET(request: NextRequest) {
     const simulationId = searchParams.get('simulation_id');
 
     if (simulationId) {
-      // Obtener simulación específica
-      const { data: simulationData, error: simulationError } = await supabase
-        .from('sim_fallas_activas')
-        .select('*')
-        .eq('simulation_id', simulationId);
+      // Limitar entidades para evitar congelar el navegador (max 2000 total)
+      const maxNodos = 1500;
+      const maxAristas = 500;
 
-      if (simulationError) {
-        throw new Error(`Error al obtener simulación: ${simulationError.message}`);
-      }
+      // Obtener nodos fallidos con geometria
+      const nodosResult = await pool.query(
+        `SELECT
+          s.entity_type,
+          s.entity_id,
+          s.p_fallo,
+          s.is_failed,
+          ST_AsGeoJSON(n.geom) as geom
+        FROM sim_fallas_activas s
+        JOIN infra_nodos_cleaned n ON s.entity_id = n.id
+        WHERE s.simulation_id = $1 AND s.entity_type = 'nodo' AND s.is_failed = true
+        ORDER BY s.p_fallo DESC
+        LIMIT $2`,
+        [simulationId, maxNodos]
+      );
 
-      const nodosData = simulationData?.filter(s => s.entity_type === 'nodo') || [];
-      const aristasData = simulationData?.filter(s => s.entity_type === 'arista') || [];
+      // Obtener aristas fallidas con geometria
+      const aristasResult = await pool.query(
+        `SELECT
+          s.entity_type,
+          s.entity_id,
+          s.p_fallo,
+          s.is_failed,
+          ST_AsGeoJSON(a.geom) as geom
+        FROM sim_fallas_activas s
+        JOIN infra_aristas_cleaned a ON s.entity_id = a.id
+        WHERE s.simulation_id = $1 AND s.entity_type = 'arista' AND s.is_failed = true
+        ORDER BY s.p_fallo DESC
+        LIMIT $2`,
+        [simulationId, maxAristas]
+      );
 
-      // Obtener geometrías de nodos
-      let nodesWithGeom = [];
-      if (nodosData.length > 0) {
-        const nodeIds = nodosData.map(n => n.entity_id);
-        const { data: nodesGeom } = await supabase
-          .from('infra_nodos')
-          .select('id, geom')
-          .in('id', nodeIds);
-
-        // Map geometries to simulation data
-        const geomMap = new Map(nodesGeom?.map(n => [n.id, n.geom]));
-        nodesWithGeom = nodosData.map(n => ({
-          ...n,
-          geom: geomMap.get(n.entity_id)
-        }));
-      }
-
-      // Obtener geometrías de aristas
-      let edgesWithGeom = [];
-      if (aristasData.length > 0) {
-        const edgeIds = aristasData.map(a => a.entity_id);
-        const { data: edgesGeom } = await supabase
-          .from('infra_aristas')
-          .select('id, geom')
-          .in('id', edgeIds);
-
-        // Map geometries to simulation data
-        const geomMap = new Map(edgesGeom?.map(e => [e.id, e.geom]));
-        edgesWithGeom = aristasData.map(a => ({
-          ...a,
-          geom: geomMap.get(a.entity_id)
-        }));
-      }
-
-      const allEntities = [...nodesWithGeom, ...edgesWithGeom];
+      const entities = [...nodosResult.rows, ...aristasResult.rows];
 
       return NextResponse.json({
         success: true,
         simulation_id: simulationId,
+        entities: entities,
         summary: {
-          total_nodos: nodosData.length,
-          nodos_failed: nodosData.filter(n => n.is_failed).length,
-          total_aristas: aristasData.length,
-          aristas_failed: aristasData.filter(a => a.is_failed).length
-        },
-        entities: allEntities
+          total_nodos: nodosResult.rows.length,
+          nodos_failed: nodosResult.rows.length,
+          total_aristas: aristasResult.rows.length,
+          aristas_failed: aristasResult.rows.length
+        }
       });
     } else {
-      // Listar todas las simulaciones (solo IDs únicos)
-      const { data, error } = await supabase
-        .from('sim_fallas_activas')
-        .select('simulation_id, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(`Error al listar simulaciones: ${error.message}`);
-      }
-
-      // Agrupar por simulation_id
-      const uniqueSimulations = Array.from(
-        new Map(data?.map(item => [item.simulation_id, item])).values()
+      const result = await pool.query(
+        `SELECT DISTINCT simulation_id, created_at FROM sim_fallas_activas ORDER BY created_at DESC`
       );
 
       return NextResponse.json({
         success: true,
-        simulations: uniqueSimulations
+        simulations: result.rows
       });
     }
-
   } catch (error: any) {
-    console.error('Error al obtener simulación:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message
-      },
-      { status: 500 }
-    );
+    console.error('Error al obtener simulacion:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

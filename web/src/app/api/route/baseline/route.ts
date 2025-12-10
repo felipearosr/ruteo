@@ -8,20 +8,8 @@
  * Query params: ?source=X&target=Y
  */
 import { NextResponse } from 'next/server';
-import pg from 'pg';
+import { pool } from '@/lib/db';
 import { resolveConnectedNodes } from '@/lib/connectedNodes';
-
-const { Pool } = pg;
-
-// Crear pool de conexiones para PostgreSQL directo
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
 
 type AristaTable = 'infra_aristas_cleaned' | 'infra_aristas';
 
@@ -56,7 +44,7 @@ export async function GET(request: Request) {
                 'edge_id', r.edge,
                 'cost', r.cost,
                 'length_m', a.length_m,
-                'p_fallo', 0.0,
+                'p_fallo', COALESCE(a.p_fallo_arista, 0.0),
                 'highway', a.highway
               )
             ) ORDER BY r.seq
@@ -99,11 +87,15 @@ export async function GET(request: Request) {
 
     const features = routeData.features || [];
     let totalDistance = 0;
-    let totalRisk = 0;
+    let weightedRisk = 0;
     for (const feature of features) {
-      totalDistance += feature.properties.length_m || 0;
-      totalRisk += feature.properties.p_fallo || 0;
+      const length = feature.properties.length_m || 0;
+      const pFallo = feature.properties.p_fallo || 0;
+      totalDistance += length;
+      weightedRisk += pFallo * length;
     }
+    // Promedio ponderado por distancia (0-1)
+    const avgRisk = totalDistance > 0 ? weightedRisk / totalDistance : 0;
 
     if (!features.length) {
       return NextResponse.json({
@@ -126,7 +118,7 @@ export async function GET(request: Request) {
       metrics: {
         distance_m: totalDistance,
         computation_time_ms: computationTime,
-        risk_score: totalRisk,
+        risk_score: avgRisk,
         num_segments: features.length,
         method: 'baseline',
         source_table: usedTable

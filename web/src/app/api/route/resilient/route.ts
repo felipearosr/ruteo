@@ -13,19 +13,8 @@
  *   - max_distance: distancia máxima permitida en metros (opcional)
  */
 import { NextResponse } from 'next/server';
-import pg from 'pg';
+import { pool } from '@/lib/db';
 import { resolveConnectedNodes } from '@/lib/connectedNodes';
-
-const { Pool } = pg;
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
 
 type AristaTable = 'infra_aristas_cleaned' | 'infra_aristas';
 
@@ -61,23 +50,21 @@ export async function GET(request: Request) {
 
     // A. Penalización por Fallas (Simulación)
     if (simulationId) {
+      // Simple penalty: edges directly marked as failed or connected to failed nodes
       const createFailureTempTable = `
         CREATE TEMP TABLE temp_edge_penalties ON COMMIT DROP AS
-        WITH active_failures AS (
-          SELECT 
-            CASE 
-              WHEN entity_type = 'nodo' THEN (SELECT geom FROM infra_nodos_cleaned WHERE id = entity_id)
-              WHEN entity_type = 'arista' THEN (SELECT geom FROM infra_aristas_cleaned WHERE id = entity_id)
-            END as geom_sim
-          FROM sim_fallas_activas 
-          WHERE simulation_id = $1 AND is_failed = true
-        )
-        SELECT 
-          a.id as edge_id,
-          SUM(5.0 / (ST_Distance(a.geom::geography, f.geom_sim::geography) + 1.0)) as penalty
-        FROM infra_aristas_cleaned a
-        JOIN active_failures f ON ST_DWithin(a.geom, f.geom_sim, 0.001)
-        GROUP BY a.id
+        SELECT DISTINCT edge_id, 1.0 as penalty FROM (
+          -- Edges directly marked as failed
+          SELECT entity_id as edge_id
+          FROM sim_fallas_activas
+          WHERE simulation_id = $1 AND is_failed = true AND entity_type = 'arista'
+          UNION
+          -- Edges connected to failed nodes
+          SELECT a.id as edge_id
+          FROM sim_fallas_activas s
+          JOIN infra_aristas_cleaned a ON (a.source = s.entity_id OR a.target = s.entity_id)
+          WHERE s.simulation_id = $1 AND s.is_failed = true AND s.entity_type = 'nodo'
+        ) sub
       `;
 
       await client.query(createFailureTempTable, [simulationId]);
@@ -195,14 +182,18 @@ export async function GET(request: Request) {
 
     const features = routeData.features || [];
     let totalDistance = 0;
-    let totalRisk = 0;
+    let weightedRisk = 0;
     let totalAdjustedCost = 0;
 
     for (const feature of features) {
-      totalDistance += feature.properties.length_m || 0;
-      totalRisk += feature.properties.p_fallo || 0;
+      const length = feature.properties.length_m || 0;
+      const pFallo = feature.properties.p_fallo || 0;
+      totalDistance += length;
+      weightedRisk += pFallo * length;
       totalAdjustedCost += feature.properties.adjusted_cost || 0;
     }
+    // Promedio ponderado por distancia (0-1)
+    const avgRisk = totalDistance > 0 ? weightedRisk / totalDistance : 0;
 
     if (!features.length) {
       return NextResponse.json({
@@ -226,7 +217,7 @@ export async function GET(request: Request) {
       metrics: {
         distance_m: totalDistance,
         computation_time_ms: computationTime,
-        risk_score: totalRisk,
+        risk_score: avgRisk,
         adjusted_cost: totalAdjustedCost,
         num_segments: features.length,
         method: 'resilient',

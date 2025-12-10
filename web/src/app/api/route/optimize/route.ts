@@ -15,19 +15,8 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
-import pg from 'pg';
+import { pool } from '@/lib/db';
 import { resolveConnectedNodes } from '@/lib/connectedNodes';
-
-const { Pool } = pg;
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,7 +40,10 @@ export async function GET(request: Request) {
     const usedSource = nodeResolution.adjustedSource;
     const usedTarget = nodeResolution.adjustedTarget;
 
-    const scriptPath = path.join(process.cwd(), '..', 'optimization', 'cplex_router_api.py');
+    // En Docker, optimization está en /app/optimization; en local, está en ../optimization
+    const scriptPath = process.env.OPTIMIZATION_PATH
+      ? path.join(process.env.OPTIMIZATION_PATH, 'cplex_router_api.py')
+      : path.join(process.cwd(), '..', 'optimization', 'cplex_router_api.py');
     const pythonBin = process.env.PYTHON_BIN || 'python3';
 
     const args = [

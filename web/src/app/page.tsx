@@ -10,7 +10,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useMapEvents } from 'react-leaflet';
-import { createClient } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -51,15 +50,25 @@ const Polygon = dynamic(() => import('react-leaflet').then(mod => mod.Polygon), 
 const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 const Tooltip = dynamic(() => import('react-leaflet').then(mod => mod.Tooltip), { ssr: false });
 
-// Cliente de Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Cliente de Supabase se inicializa solo en cliente
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let supabaseInstance: any = null;
+async function getSupabase(): Promise<any> {
+  if (typeof window === 'undefined') return null;
+  if (supabaseInstance) return supabaseInstance;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    const { createClient } = await import('@supabase/supabase-js');
+    supabaseInstance = createClient(url, key);
+  }
+  return supabaseInstance;
+}
 
 // Tipos de datos
 interface RouteMetrics {
   distance_m: number;
+  travel_time_min?: number;
   computation_time_ms: number;
   risk_score: number;
   num_segments: number;
@@ -102,6 +111,7 @@ interface ComparisonResult {
     total_time_ms: number;
     summary: {
       shortest_distance: number;
+      shortest_travel_time: number;
       lowest_risk: number;
       fastest_computation: number;
     };
@@ -161,7 +171,7 @@ export default function HomePage() {
   // Nodos de ejemplo (se dejan vacíos al cargar; usar o seleccionar)
   const [sourceNode, setSourceNode] = useState<string>('');
   const [targetNode, setTargetNode] = useState<string>('');
-  const [k, setK] = useState(5.0);
+  const [k, setK] = useState(15.0);
   const [maxRisk, setMaxRisk] = useState<number | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
   const [maxTimeMinutes, setMaxTimeMinutes] = useState<number | null>(null);
@@ -179,10 +189,31 @@ export default function HomePage() {
   const [targetMarker, setTargetMarker] = useState<{ lat: number; lon: number; label?: string; distance?: number } | null>(null);
   const markerUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  // Funcion para cargar todas las amenazas desde API local
+  const loadAmenazasFromAPI = async () => {
+    try {
+      const response = await fetch('/api/amenazas?type=all');
+      if (!response.ok) throw new Error('API error');
+      const result = await response.json();
+      if (result.success && result.data) {
+        if (result.data.rios) setInundaciones(result.data.rios);
+        if (result.data.pasos_bajo_nivel) setPasosBajoNivel(result.data.pasos_bajo_nivel);
+        if (result.data.reportes) setReportes(result.data.reportes);
+        if (result.data.dga) setDgaStations(result.data.dga);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error loading amenazas from API:', error);
+    }
+    return false;
+  };
+
   // Funciones para cargar datos de amenazas
   const loadInundaciones = async () => {
+    const supabase = await getSupabase();
+    if (!supabase) return;
     // Cargar rios con buffers desde la nueva tabla amenaza_rios
-    const { data, error } = await supabase.rpc('get_rios_geojson');
+    const { data, error } = await (supabase as any).rpc('get_rios_geojson');
     if (error) {
       // Fallback si no existe la funcion RPC
       console.error('Error loading rios:', error);
@@ -194,7 +225,9 @@ export default function HomePage() {
   };
 
   const loadReportes = async () => {
-    const { data, error } = await supabase.rpc('get_reportes_geojson');
+    const supabase = await getSupabase();
+    if (!supabase) return;
+    const { data, error } = await (supabase as any).rpc('get_reportes_geojson');
     if (error) {
       const { data: fallbackData } = await supabase.from('amenaza_reportes_ciudadanos').select('*');
       if (fallbackData) setReportes(fallbackData);
@@ -204,7 +237,9 @@ export default function HomePage() {
   };
 
   const loadPasosBajoNivel = async () => {
-    const { data, error } = await supabase.rpc('get_pasos_bajo_nivel_geojson');
+    const supabase = await getSupabase();
+    if (!supabase) return;
+    const { data, error } = await (supabase as any).rpc('get_pasos_bajo_nivel_geojson');
     if (error) {
       const { data: fallbackData } = await supabase.from('amenaza_pasos_bajo_nivel').select('*');
       if (fallbackData) setPasosBajoNivel(fallbackData);
@@ -215,7 +250,9 @@ export default function HomePage() {
 
   // Funciones para cargar informacion (no amenazas)
   const loadDgaStations = async () => {
-    const { data, error } = await supabase.rpc('get_dga_geojson');
+    const supabase = await getSupabase();
+    if (!supabase) return;
+    const { data, error } = await (supabase as any).rpc('get_dga_geojson');
     if (error) {
       const { data: fallbackData } = await supabase.from('amenaza_dga').select('*');
       if (fallbackData) setDgaStations(fallbackData);
@@ -226,16 +263,22 @@ export default function HomePage() {
 
   // Funciones para cargar metadata
   const loadElevaciones = async () => {
+    const supabase = await getSupabase();
+    if (!supabase) return;
     const { data } = await supabase.from('meta_elevacion').select('*');
     if (data) setElevaciones(data);
   };
 
   const loadLluvias = async () => {
+    const supabase = await getSupabase();
+    if (!supabase) return;
     const { data } = await supabase.from('meta_lluvia').select('*');
     if (data) setLluvias(data);
   };
 
   const loadLandcover = async () => {
+    const supabase = await getSupabase();
+    if (!supabase) return;
     const { data } = await supabase.from('meta_landcover').select('*');
     if (data) setLandcover(data);
   };
@@ -254,12 +297,18 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // Cargar amenazas al montar el componente
-    loadInundaciones();
-    loadReportes();
-    loadPasosBajoNivel();
-    // Cargar informacion (no amenazas)
-    loadDgaStations();
+    // Cargar amenazas - primero intenta API local, luego Supabase
+    const loadAllAmenazas = async () => {
+      const loadedFromAPI = await loadAmenazasFromAPI();
+      if (!loadedFromAPI) {
+        // Fallback a Supabase si API falla
+        loadInundaciones();
+        loadReportes();
+        loadPasosBajoNivel();
+        loadDgaStations();
+      }
+    };
+    loadAllAmenazas();
     // Cargar metadata
     loadElevaciones();
     loadLluvias();
@@ -532,18 +581,16 @@ export default function HomePage() {
         const { latitude, longitude } = position.coords;
 
         try {
-          // Encontrar nodo más cercano usando función de Supabase
-          const { data, error } = await supabase.rpc('find_nearest_node', {
-            lat: latitude,
-            lon: longitude
-          });
+          // Encontrar nodo mas cercano usando API local
+          const response = await fetch(`/api/node/nearest?lat=${latitude}&lon=${longitude}`);
+          const result = await response.json();
 
-          if (error) {
-            throw new Error(error.message);
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Error al buscar nodo cercano');
           }
 
-          if (data && data.length > 0) {
-            const nearestNode = data[0];
+          if (result.data && result.data.length > 0) {
+            const nearestNode = result.data[0];
             setSourceNode(nearestNode.node_id.toString());
             setSourceMarker({
               lat: nearestNode.node_lat ?? latitude,
@@ -603,9 +650,7 @@ export default function HomePage() {
     // Configurar parámetros del caso de ejemplo (~50km de distancia, extremos del mapa)
     setSourceNode('1');
     setTargetNode('130517');
-    setK(5.0);
-
-
+    setK(15.0);
 
     // Habilitar todas las rutas para comparación
     setShowBaseline(true);
@@ -613,13 +658,8 @@ export default function HomePage() {
     setShowCplex(true);
     setShowAstar(true);
 
-    // Ejecutar comparación después de actualizar estados
-    setTimeout(() => {
-      compareRoutes();
-    }, 300);
-
     toast.info('Ejemplo cargado', {
-      description: 'Origen: Nodo 55110, Destino: Nodo 59764. Ejecutando comparacion de rutas...',
+      description: 'Origen: Nodo 1, Destino: Nodo 130517. Presiona "Comparar Rutas" para ejecutar.',
       duration: 3000,
     });
   };
@@ -788,6 +828,13 @@ function MapEventBridge({
   // Formatear métricas
   const formatDistance = (m: number) => (m / 1000).toFixed(2) + ' km';
   const formatTime = (ms: number) => ms < 1000 ? ms.toFixed(0) + 'ms' : (ms / 1000).toFixed(2) + 's';
+  const formatTravelTime = (min: number) => {
+    if (min < 1) return (min * 60).toFixed(0) + ' seg';
+    if (min < 60) return min.toFixed(1) + ' min';
+    const hours = Math.floor(min / 60);
+    const mins = Math.round(min % 60);
+    return `${hours}h ${mins}m`;
+  };
   const formatRisk = (r: number) => (r * 100).toFixed(1) + '%';
   const fitToData = () => setShouldFitBounds(true);
 
@@ -945,7 +992,9 @@ function MapEventBridge({
 
   const setDestinationFromPosition = async (lat: number, lon: number, label?: string) => {
     try {
-      const { data, error } = await supabase.rpc('find_nearest_node', {
+      const supabase = await getSupabase();
+      if (!supabase) throw new Error('Supabase no configurado');
+      const { data, error } = await (supabase as any).rpc('find_nearest_node', {
         p_lat: lat,
         p_lon: lon
       });
@@ -1093,7 +1142,7 @@ function MapEventBridge({
                   type="number"
                   step="0.1"
                   value={k}
-                  onChange={(e) => setK(parseFloat(e.target.value) || 5.0)}
+                  onChange={(e) => setK(parseFloat(e.target.value) || 15.0)}
                 />
               </div>
 
@@ -1418,23 +1467,7 @@ function MapEventBridge({
                 </Label>
               </div>
 
-              {simulationActive && (
-                <div className="flex items-start space-x-3 pt-2 border-t">
-                  <Checkbox
-                    id="onlySimulated"
-                    checked={onlySimulatedThreats}
-                    onCheckedChange={(checked) => setOnlySimulatedThreats(checked as boolean)}
-                  />
-                  <div className="space-y-1">
-                    <Label htmlFor="onlySimulated" className="text-sm">
-                      Mostrar solo amenazas simuladas
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Oculta capas base y muestra fallas activas de la simulacion.
-                    </p>
-                  </div>
-                </div>
-              )}
+{/* Boton de amenazas simuladas oculto */}
             </CardContent>
           </Card>
 
@@ -1548,37 +1581,40 @@ function MapEventBridge({
                     <TableRow>
                       <TableHead>Método</TableHead>
                       <TableHead>Distancia</TableHead>
-                      <TableHead>Tiempo</TableHead>
+                      <TableHead>T. Viaje</TableHead>
                       <TableHead>Riesgo</TableHead>
+                      <TableHead>Cómputo</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
                       <TableCell className="font-medium">Baseline</TableCell>
                       <TableCell>{formatDistance(comparisonData.baseline.metrics.distance_m)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.baseline.metrics.computation_time_ms)}</TableCell>
+                      <TableCell>{formatTravelTime(comparisonData.baseline.metrics.travel_time_min || 0)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.baseline.metrics.risk_score)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.baseline.metrics.computation_time_ms)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">Resiliente</TableCell>
                       <TableCell>{formatDistance(comparisonData.resilient.metrics.distance_m)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.resilient.metrics.computation_time_ms)}</TableCell>
+                      <TableCell>{formatTravelTime(comparisonData.resilient.metrics.travel_time_min || 0)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.resilient.metrics.risk_score)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.resilient.metrics.computation_time_ms)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell className="font-medium">MILP (CPLEX)</TableCell>
                       <TableCell>{formatDistance(comparisonData.cplex?.metrics?.distance_m || 0)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.cplex?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatTravelTime(comparisonData.cplex?.metrics?.travel_time_min || 0)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.cplex?.metrics?.risk_score || 0)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.cplex?.metrics?.computation_time_ms || 0)}</TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="font-medium">A* (Metaheurística)</TableCell>
+                      <TableCell className="font-medium">A* (Metaheur.)</TableCell>
                       <TableCell>{formatDistance(comparisonData.astar?.metrics?.distance_m || 0)}</TableCell>
-                      <TableCell>{formatTime(comparisonData.astar?.metrics?.computation_time_ms || 0)}</TableCell>
+                      <TableCell>{formatTravelTime(comparisonData.astar?.metrics?.travel_time_min || 0)}</TableCell>
                       <TableCell>{formatRisk(comparisonData.astar?.metrics?.risk_score || 0)}</TableCell>
+                      <TableCell>{formatTime(comparisonData.astar?.metrics?.computation_time_ms || 0)}</TableCell>
                     </TableRow>
-
-
                   </TableBody>
                 </Table>
 
@@ -1590,13 +1626,19 @@ function MapEventBridge({
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Viaje más rápido:</span>
+                    <Badge variant="secondary">
+                      {formatTravelTime(comparisonData.comparison.summary.shortest_travel_time || 0)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Menor riesgo:</span>
                     <Badge variant="secondary">
                       {formatRisk(comparisonData.comparison.summary.lowest_risk)}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Más rápido:</span>
+                    <span className="text-muted-foreground">Cómputo más rápido:</span>
                     <Badge variant="secondary">
                       {formatTime(comparisonData.comparison.summary.fastest_computation)}
                     </Badge>
@@ -1609,19 +1651,21 @@ function MapEventBridge({
       </div>
 
       {/* Mapa */}
-      <div className="flex-1 relative bg-[#191919]">
+      <div className="flex-1 relative bg-[#191919]" style={{ minHeight: '100vh' }}>
         <MapContainer
           center={[-33.45, -70.65]}
           zoom={13}
           className="w-full h-full bg-[#191919]"
-          style={{ backgroundColor: '#191919' }}
-          whenCreated={(mapInstance) => {
-            mapRef.current = mapInstance;
-            setMapReady(true);
-            setCurrentZoom(mapInstance.getZoom?.() ?? null);
-            mapInstance.on('mousemove', (e: any) => {
-              setLastMouseLatLng({ lat: e.latlng.lat, lon: e.latlng.lng });
-            });
+          style={{ backgroundColor: '#191919', height: '100%', width: '100%' }}
+          ref={(mapInstance) => {
+            if (mapInstance && !mapRef.current) {
+              mapRef.current = mapInstance;
+              setMapReady(true);
+              setCurrentZoom(mapInstance.getZoom?.() ?? null);
+              mapInstance.on('mousemove', (e: any) => {
+                setLastMouseLatLng({ lat: e.latlng.lat, lon: e.latlng.lng });
+              });
+            }
           }}
         >
           {/* Bridge to listen map events reliably */}

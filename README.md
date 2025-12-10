@@ -1,348 +1,484 @@
-# 🚀 Sistema de Ruteo Resiliente ante Inundaciones Urbanas — Fase 3
+# Sistema de Ruteo Resiliente ante Inundaciones Urbanas
 
-**Sistema avanzado de ruteo con optimización multi-algoritmo, simulación de fallas y geocodificación**
+**Sistema de navegación inteligente que calcula rutas seguras considerando riesgos de inundación en Santiago de Chile**
 
 [![Estado](https://img.shields.io/badge/Estado-Producción-success)]()
-[![Progreso](https://img.shields.io/badge/Progreso-94%25-brightgreen)]()
 [![Licencia](https://img.shields.io/badge/Licencia-MIT-blue)]()
+[![Python](https://img.shields.io/badge/Python-3.11+-blue)]()
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)]()
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue)]()
 
-Aplicación web completa para calcular rutas resilientes en entornos urbanos con riesgo de inundación.
-Compara 4 algoritmos diferentes (Dijkstra, Optimización MILP, A*, Resiliente) considerando probabilidades
-de falla dinámicas basadas en amenazas reales.
+## Video Demo - Tarea 3
 
----
-
-## ✨ Features Principales
-
-### 🗺️ Entrada de Ubicación (3 opciones)
-- **📍 Geolocalización GPS:** Usa tu ubicación actual con HTML5 Geolocation
-- **🔍 Geocodificación:** Escribe "Av. Providencia 1234, Santiago" con autocomplete
-- **🔢 ID Manual:** Ingresa directamente el ID del nodo en la red
-
-### 🛣️ Algoritmos de Ruteo
-- **Baseline:** Dijkstra clásico (ruta más corta)
-- **Resiliente:** Dijkstra con costos ajustados por riesgo
-- **GUROBI:** Optimización MILP (ruta óptima global)
-- **A\*:** Metaheurística con heurística de riesgo
-
-### 💥 Simulación de Fallas
-- Activar/desactivar amenazas aleatoriamente
-- Tasas configurables (10%, 30%, 50%)
-- Visualización de estadísticas de fallas
-- Comparar rutas con y sin fallas
-
-### 📊 Visualización Avanzada
-- Mapa interactivo Leaflet con 4 rutas simultáneas
-- Tabla comparativa de métricas (distancia, tiempo, riesgo)
-- Badges de resumen (shortest, fastest, lowest risk)
-- Capas de amenazas (inundaciones, DGA, reportes)
-
-### ⚙️ Controles Avanzados
-- Botón "Cargar Ejemplo" para demo rápida
-- Restricciones opcionales (max_risk, max_distance)
-- Parámetros configurables (k, λ, risk_weight)
-- Toggle de capas de visualización
+[![Video Demo Tarea 3](https://img.youtube.com/vi/jiYTzVdZzk0/maxresdefault.jpg)](https://youtu.be/jiYTzVdZzk0)
 
 ---
 
-## 🎬 Quick Start
+## Descripción
+
+Este proyecto implementa un sistema de ruteo vehicular que integra datos de amenazas hidrometeorológicas para calcular rutas que minimicen simultáneamente la distancia recorrida y la exposición a zonas de riesgo de inundación.
+
+El sistema compara **4 algoritmos de ruteo**:
+- **Dijkstra Baseline**: Ruta más corta tradicional
+- **Dijkstra Resiliente**: Considera probabilidades de falla
+- **CPLEX MILP**: Optimización global con programación lineal
+- **A* Resiliente**: Metaheurística con heurística de riesgo
+
+### Características Principales
+
+- Integración de datos de OpenStreetMap, DGA, SERNAGEOMIN
+- Modelo de probabilidad de falla basado en proximidad a amenazas
+- Simulación de escenarios de falla dinámica
+- Interfaz web interactiva con mapas Leaflet
+- API REST para integración con otros sistemas
+- Geocodificación de direcciones con Nominatim
+
+---
+
+## Inicio Rapido con Docker
+
+La forma mas sencilla de ejecutar el proyecto es usando Docker. Solo necesitas tener Docker instalado.
 
 ### Prerequisitos
 
-- **Node.js 18+** y npm
-- **Python 3.11+**
-- **PostgreSQL 15+** con PostGIS 3.3+ y pgRouting 3.4+
-- **Supabase** (o PostgreSQL local)
-- **GUROBI 11.0+** (opcional, para optimización MILP)
+- [Docker](https://docs.docker.com/get-docker/) y Docker Compose
 
-### Instalación Rápida
+### Pasos
 
-```zsh
+```bash
+# 1. Clonar repositorio
+git clone https://github.com/felipearosr/ruteo.git
+cd ruteo
+
+# 2. Iniciar servicios (base de datos + aplicacion web)
+cd docker
+docker compose -f docker-compose.full.yml up -d
+
+# 3. Esperar ~30 segundos a que la base de datos inicie, luego inicializar
+./init-db.sh
+```
+
+**Listo!** Abrir http://localhost:3000
+
+### Comandos Utiles
+
+```bash
+# Ver logs de la aplicacion
+docker logs -f ruteo_web
+
+# Detener servicios
+docker compose -f docker-compose.full.yml down
+
+# Detener y eliminar datos (reinicio completo)
+docker compose -f docker-compose.full.yml down -v
+```
+
+---
+
+## Instalacion Manual (Alternativa)
+
+Si prefieres no usar Docker, puedes instalar manualmente:
+
+### Prerequisitos
+
+- Node.js 18+
+- Python 3.11+
+- PostgreSQL 15+ con PostGIS 3.3+ y pgRouting 3.4+
+- IBM CPLEX (opcional, para optimizacion MILP)
+
+### Pasos
+
+```bash
 # 1. Clonar repositorio
 git clone https://github.com/felipearosr/ruteo.git
 cd ruteo
 
 # 2. Configurar variables de entorno
 cp .env.example .env
-# Edita .env con tus credenciales de Supabase
+# Editar .env con credenciales de base de datos
 
 # 3. Instalar dependencias Python
 pip install -r requirements.txt
 
 # 4. Crear esquema de base de datos
-psql "postgresql://postgres:PASSWORD@HOST:5432/DATABASE" -f sql/schema.sql
+psql "$SUPABASE_DB_URL" -f sql/schema.sql
 
-# 5. Ejecutar ETL para generar datos
+# 5. Ejecutar pipeline ETL
 python main.py
 
-# 6. Cargar datos a Supabase
+# 6. Cargar datos a la base de datos
 python load_to_supabase.py
 
-# 7. Configurar frontend
+# 7. Calcular probabilidades de falla
+psql "$SUPABASE_DB_URL" -f sql/setup_and_calculate_probabilities.sql
+
+# 8. Configurar e iniciar frontend
 cd web
-cp .env.local.example .env.local
-# Edita .env.local con credenciales
-
-# 8. Instalar dependencias frontend
 npm install
-
-# 9. Iniciar servidor de desarrollo
 npm run dev
 ```
 
-Abre http://localhost:3000 🎉
+Abrir http://localhost:3000
 
 ---
 
-## 📚 Documentación
-
-### 📖 Guías de Usuario
-- **[Guía Completa de la Interfaz](docs/guia_usuario_interfaz.md)** - Tutorial paso a paso (534 líneas)
-- **[Inicio Rápido (15 min)](docs/INICIO_RAPIDO.md)** - Comienza a usar la app en 15 minutos
-- **[Caso de Ejemplo Detallado](docs/caso_ejemplo_fase3.md)** - Ruta Providencia → Las Condes
-
-### 🔧 Documentación Técnica
-- **[Instalación de GUROBI](docs/instalacion_gurobi.md)** - Guía para configurar optimizador MILP
-- **[Resumen de Implementación Fase 3](docs/RESUMEN_IMPLEMENTACION_FASE3.md)** - Arquitectura completa (678 líneas)
-- **[Esquemas de Datos](amenazas/)** - Definición de tablas y campos
-
-### 🎉 Features Implementadas
-- **[Simulación de Fallas](docs/SIMULACION_COMPLETADA.md)** - Cómo funciona la simulación dinámica
-- **[Geolocalización GPS](docs/GEOLOCALIZACION_COMPLETADA.md)** - Integración con HTML5 Geolocation
-- **[Geocodificación](docs/GEOCODIFICACION_COMPLETADA.md)** - Búsqueda de direcciones con Nominatim
-- **[Botón Cargar Ejemplo](docs/CARGAR_EJEMPLO_COMPLETADO.md)** - Demo en 1 clic
-- **[Resumen Completo Sesión](docs/RESUMEN_SESION_FASE3.md)** - Todo lo implementado en Fase 3
-
----
-
-## 🏗️ Arquitectura
+## Arquitectura
 
 ### Stack Tecnológico
 
-**Backend:**
-- PostgreSQL 15+ con PostGIS 3.3+ y pgRouting 3.4+
-- Supabase (hosting cloud)
-- Python 3.11 (ETL y algoritmos)
+| Capa | Tecnología |
+|------|------------|
+| **Frontend** | Next.js 14, React 18, TypeScript, Tailwind CSS, shadcn/ui |
+| **Backend** | PostgreSQL 15, PostGIS 3.3, pgRouting 3.4 |
+| **Base de Datos** | Supabase (PostgreSQL gestionado) |
+| **Optimización** | IBM CPLEX con docplex |
+| **ETL** | Python 3.11, GeoPandas, Shapely |
 
-**Frontend:**
-- Next.js 14 + React 18 + TypeScript 5
-- shadcn/ui + Radix UI
-- Tailwind CSS 3.3
-- Leaflet 1.9.4
+### Estructura del Proyecto
 
-**APIs:**
-- Nominatim OpenStreetMap (geocodificación gratuita)
-- GUROBI 11.0+ (optimización MILP opcional)
-
-### Diagrama de Base de Datos
-
-Ver esquema completo en [`sql/diagram.svg`](sql/diagram.svg)
-
-**Tablas principales:**
-- `infra_nodos` (42,534 nodos)
-- `infra_aristas` (89,021 aristas con geometría)
-- `meta_elevacion`, `meta_lluvia`, `meta_landcover`
-- `amenaza_dga`, `amenaza_inundaciones_hist`, `amenaza_reportes_ciudadanos`
-- `sim_fallas_activas` (estado de simulaciones)
+```
+ruteo/
+├── web/                    # Aplicación Next.js
+│   ├── src/
+│   │   ├── app/           # Páginas y API routes
+│   │   │   ├── api/       # Endpoints REST
+│   │   │   │   ├── route/
+│   │   │   │   │   ├── baseline/
+│   │   │   │   │   ├── resilient/
+│   │   │   │   │   ├── optimize/
+│   │   │   │   │   ├── metaheuristic/
+│   │   │   │   │   └── compare/
+│   │   │   │   ├── geocode/
+│   │   │   │   └── simulate-failures/
+│   │   │   └── page.tsx   # Interfaz principal
+│   │   ├── components/    # Componentes React
+│   │   └── lib/           # Utilidades
+│   └── package.json
+├── sql/                    # Scripts SQL
+│   ├── schema.sql         # Esquema de base de datos
+│   └── setup_and_calculate_probabilities.sql
+├── infraestructura/        # ETL de red vial
+│   └── osm_infra_etl.py
+├── amenazas/               # ETL de amenazas
+│   ├── dga_etl.py
+│   ├── inundaciones_hist_etl.py
+│   └── reportes_ciudadanos_etl.py
+├── metadata/               # ETL de metadatos
+│   ├── elevacion_etl.py
+│   ├── lluvia_etl.py
+│   └── landcover_etl.py
+├── optimization/           # Algoritmos de optimización
+│   └── cplex_model.py
+├── model/                  # Modelo de probabilidad
+│   └── actualizar_probabilidades.py
+├── docker/                 # Configuración Docker
+├── docs/                   # Documentación adicional
+├── main.py                 # Orquestador ETL
+├── load_to_supabase.py     # Carga de datos
+└── requirements.txt        # Dependencias Python
+```
 
 ---
 
-## 📡 API Reference
+## Base de Datos
 
-### Rutas
+### Esquema Principal
+
+#### Tablas de Infraestructura
+
+| Tabla | Descripción | Registros |
+|-------|-------------|-----------|
+| `infra_nodos` | Nodos de la red vial (intersecciones) | ~28,000 |
+| `infra_aristas` | Aristas con geometría y probabilidad de falla | ~34,000 |
+
+#### Tablas de Amenazas
+
+| Tabla | Descripción | Registros |
+|-------|-------------|-----------|
+| `amenaza_dga` | Estaciones de monitoreo hidrológico | 94 |
+| `amenaza_rios` | Zonas de inundación histórica (buffer 150m) | 58 |
+| `amenaza_pasos_bajo_nivel` | Pasos bajo nivel vulnerables | 20 |
+| `amenaza_reportes_ciudadanos` | Reportes de inundación geolocalizados | 25 |
+
+#### Tablas de Metadatos
+
+| Tabla | Descripción |
+|-------|-------------|
+| `meta_elevacion` | Datos de elevación SRTM |
+| `meta_lluvia` | Datos de precipitación CHIRPS |
+| `meta_landcover` | Cobertura de suelo |
+
+### Modelo de Probabilidad de Falla
+
+La probabilidad de falla de cada arista se calcula como:
+
+```
+p_fallo = Σ (w_i × exp(-d_i / r_i))
+```
+
+Donde:
+- `w_i`: Peso del factor (inundación: 0.4, DGA: 0.3, reportes: 0.2, lluvia: 0.1)
+- `d_i`: Distancia a la amenaza más cercana de tipo i
+- `r_i`: Radio de influencia del factor i
+
+---
+
+## API Reference
+
+### Endpoints de Ruteo
 
 | Endpoint | Método | Descripción |
 |----------|--------|-------------|
 | `/api/route/baseline` | GET | Dijkstra clásico (ruta más corta) |
-| `/api/route/resilient` | GET | Dijkstra con costos ajustados (k factor) |
-| `/api/route/optimize` | GET | GUROBI MILP (óptimo global con λ) |
+| `/api/route/resilient` | GET | Dijkstra con costos ajustados por riesgo |
+| `/api/route/optimize` | GET | CPLEX MILP (óptimo global) |
 | `/api/route/metaheuristic` | GET | A* con heurística de riesgo |
-| `/api/route/compare` | GET | Ejecuta las 4 rutas simultáneamente |
+| `/api/route/compare` | GET | Ejecuta los 4 algoritmos simultáneamente |
 
-### Utilidades
+### Parámetros de Ruteo
+
+| Parámetro | Tipo | Descripción | Default |
+|-----------|------|-------------|---------|
+| `source` | number | ID del nodo origen | requerido |
+| `target` | number | ID del nodo destino | requerido |
+| `k` | number | Factor de penalización (Dijkstra resiliente) | 5.0 |
+| `lambda_risk` | number | Factor de riesgo (CPLEX) | 5.0 |
+| `risk_weight` | number | Peso de riesgo (A*) | 3.0 |
+| `max_risk` | number | Restricción de riesgo máximo (0-1) | null |
+| `max_distance` | number | Restricción de distancia máxima (metros) | null |
+
+### Endpoints Auxiliares
 
 | Endpoint | Método | Descripción |
 |----------|--------|-------------|
 | `/api/geocode` | GET | Geocodifica dirección a coordenadas |
-| `/api/simulate-failures` | POST | Genera simulación de fallas aleatoria |
+| `/api/simulate-failures` | POST | Genera simulación de fallas |
 | `/api/simulate-failures` | DELETE | Elimina simulación activa |
 
-**Ejemplo:**
+### Ejemplo de Uso
 
 ```bash
-# Comparar 4 rutas con parámetros personalizados
-curl "http://localhost:3000/api/route/compare?\
-source=1&\
-target=100&\
-k=5.0&\
-lambda_risk=5.0&\
-risk_weight=3.0&\
-max_risk=0.3&\
-max_distance=10000"
-```
+# Comparar 4 rutas entre dos puntos
+curl "http://localhost:3000/api/route/compare?source=1&target=100&k=5.0"
 
-Ver documentación completa de cada endpoint en el código fuente de cada API route.
+# Geocodificar una dirección
+curl "http://localhost:3000/api/geocode?address=Av.%20Providencia%201234,%20Santiago"
+
+# Simular 30% de fallas
+curl -X POST "http://localhost:3000/api/simulate-failures?rate=0.3"
+```
 
 ---
 
-## 🐳 Docker
+## Docker
 
-### Desarrollo con Docker Compose
+El proyecto incluye configuracion Docker para desarrollo local con base de datos incluida.
 
-```zsh
-# Construir imagen
-docker compose -f docker/docker-compose.yml build
+### Archivos Docker
 
-# Iniciar servicios
-docker compose -f docker/docker-compose.yml up
+| Archivo | Descripcion |
+|---------|-------------|
+| `docker/docker-compose.full.yml` | Stack completo (DB + Web) - **Recomendado** |
+| `docker/docker-compose.local-db.yml` | Solo base de datos |
+| `docker/init-db.sh` | Script de inicializacion de datos |
+| `backup_supabase.dump` | Dump de la base de datos con todos los datos |
+
+### Iniciar Stack Completo
+
+```bash
+cd docker
+
+# Iniciar base de datos y aplicacion web
+docker compose -f docker-compose.full.yml up -d
+
+# Inicializar datos (primera vez)
+./init-db.sh
+
+# Ver logs
+docker logs -f ruteo_web
 
 # Detener
-docker compose -f docker/docker-compose.yml down
+docker compose -f docker-compose.full.yml down
 ```
 
-El contenedor ejecuta automáticamente:
-1. ETL (genera archivos JSON/GeoJSON)
-2. Servidor web Next.js en http://localhost:3000
-
-### Variables de Entorno para Docker
-
-Crear archivo `.env` en la raíz:
+### Solo Base de Datos (para desarrollo local)
 
 ```bash
-SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_ANON_KEY=tu_anon_key
-SUPABASE_DB_HOST=db.tu-proyecto.supabase.co
-SUPABASE_DB_PORT=6543
+# 1. Iniciar PostgreSQL con pgRouting
+docker compose -f docker/docker-compose.local-db.yml up -d
+
+# 2. Esperar ~10 segundos, luego restaurar datos
+docker exec ruteo_local_db pg_restore -U postgres -d ruteo --no-owner --no-acl /backup.dump
+
+# 3. Habilitar extension pgRouting
+docker exec ruteo_local_db psql -U postgres -d ruteo -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"
+
+# 4. Configurar variables de entorno para la app web
+cd web
+cat > .env.local << EOF
+SUPABASE_DB_HOST=localhost
+SUPABASE_DB_PORT=5432
+SUPABASE_DB_NAME=ruteo
 SUPABASE_DB_USER=postgres
-SUPABASE_DB_PASSWORD=tu_password
+SUPABASE_DB_PASSWORD=postgres
+EOF
+
+# 5. Instalar dependencias e iniciar
+npm install
+npm run dev
+```
+
+Abrir http://localhost:3000
+
+### Conexion a la Base de Datos Local
+
+```
+Host: localhost
+Puerto: 5432
+Base de datos: ruteo
+Usuario: postgres
+Password: postgres
 ```
 
 ---
 
-## 🧪 Testing
+## Algoritmos Implementados
 
-### Casos de Prueba Esenciales
+### 1. Dijkstra Baseline
 
-**1. Ruta básica:**
-- Cargar ejemplo (botón 📚)
-- Verificar 4 rutas en mapa
-- Comparar métricas en tabla
+Algoritmo clásico de camino más corto. Utiliza `pgr_dijkstra` de pgRouting.
 
-**2. Simulación de fallas:**
-- Simular 30% de fallas
-- Ejecutar rutas
-- Ver diferencias en tabla
+```sql
+SELECT * FROM pgr_dijkstra(
+    'SELECT id, source, target, length_m AS cost FROM infra_aristas',
+    origen, destino, directed := false
+);
+```
 
-**3. Geolocalización:**
-- Clic en botón GPS (📍)
-- Aceptar permiso
-- Verificar nodo seleccionado
+### 2. Dijkstra Resiliente
 
-**4. Geocodificación:**
-- Buscar "Av. Providencia 1234"
-- Seleccionar de dropdown
-- Verificar nodo encontrado
+Modifica el costo incorporando la probabilidad de falla:
 
-**5. Restricciones:**
-- Ingresar max_risk = 0.3
-- Ejecutar GUROBI
-- Verificar riesgo < 30%
+```
+cost = length × (1 + k × p_fallo)
+```
 
-Ver guía completa en `docs/guia_usuario_interfaz.md`
+Donde `k` es el factor de penalización (default: 5.0).
 
----
+### 3. CPLEX MILP
 
-## 🗺️ Roadmap
+Formulación como problema de programación lineal entera mixta:
 
-### ✅ Completado (94%)
+**Función objetivo:**
+```
+min Σ x_e × (length_e + λ × length_e × p_e)
+```
 
-- [x] 4 algoritmos de ruteo (Baseline, Resiliente, GUROBI, A*)
-- [x] 6 API endpoints funcionales
-- [x] Frontend profesional con shadcn/ui
-- [x] Mapa interactivo con 4 rutas simultáneas
-- [x] Tabla comparativa de métricas
-- [x] Simulación de fallas dinámica
-- [x] Geolocalización HTML5 con GPS
-- [x] Geocodificación con Nominatim autocomplete
-- [x] Botón "Cargar Ejemplo" para demo
-- [x] Inputs de restricciones opcionales
-- [x] Documentación completa (~3,500 líneas)
+**Restricciones de flujo:**
+```
+Σ x_out - Σ x_in = b_v  ∀v ∈ V
+```
 
-### 🔄 Próximos Pasos (6%)
+Donde b_v = 1 (origen), -1 (destino), 0 (otros).
 
-- [ ] Testing exhaustivo de features
-- [ ] Screenshots para README
-- [ ] Configuración Docker final
-- [ ] Deploy a producción
+### 4. A* Resiliente
 
-### 🎯 Futuro (Post-100%)
+Extiende Dijkstra con heurística euclidiana:
 
-- [ ] Cache de geocodificación
-- [ ] Historial de búsquedas
-- [ ] Self-hosted Nominatim
-- [ ] Tests unitarios automatizados
-- [ ] CI/CD con GitHub Actions
+```
+f(n) = g(n) + h(n)
+g(n) = costo acumulado con penalización de riesgo
+h(n) = distancia euclidiana al destino
+```
 
 ---
 
-## 🤝 Contribuir
+## Resultados Experimentales
 
-¡Contribuciones son bienvenidas!
+### Comparación de Algoritmos
+
+| Algoritmo | Red. Riesgo | Aum. Distancia | Tiempo Cómputo |
+|-----------|-------------|----------------|----------------|
+| Baseline | - | - | ~50 ms |
+| Resiliente | 50.8% | 8.1% | ~50 ms |
+| CPLEX | 58.3% | 5.2% | ~8,000 ms |
+| A* | 49.2% | 6.9% | ~500 ms |
+
+### Disponibilidad bajo Fallas (30% tasa de falla)
+
+| Algoritmo | Disponibilidad |
+|-----------|----------------|
+| Baseline | 67% |
+| Resiliente | 86% |
+| CPLEX | 90% |
+| A* | 85% |
+
+---
+
+## Documentación Adicional
+
+- [Guía de Usuario de la Interfaz](docs/guia_usuario_interfaz.md)
+- [Configuración de CPLEX](docs/cplex_config.md)
+- [Implementación de Simulación de Fallas](docs/implementacion_simulacion_fallas.md)
+- [Caso de Ejemplo Detallado](docs/caso_ejemplo_fase3.md)
+
+---
+
+## Contribuir
+
+Las contribuciones son bienvenidas. Por favor:
 
 1. Fork del repositorio
-2. Crear branch (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add: amazing feature'`)
-4. Push a branch (`git push origin feature/AmazingFeature`)
+2. Crear branch para la feature (`git checkout -b feature/nueva-feature`)
+3. Commit de cambios (`git commit -m 'Agregar nueva feature'`)
+4. Push al branch (`git push origin feature/nueva-feature`)
 5. Abrir Pull Request
 
-**Guidelines:**
-- Seguir convenciones de código (TypeScript/Python)
-- Agregar documentación para nuevas features
-- Incluir tests cuando sea posible
+### Guías de Estilo
+
+- **Python**: PEP 8, comentarios en español
+- **TypeScript**: ESLint configurado en el proyecto
+- **Commits**: Mensajes descriptivos en español
 
 ---
 
-## 📄 Licencia
+## Licencia
 
-MIT License - Ver [LICENSE](LICENSE)
+Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
 
 ---
 
-## 👤 Autor
+## Autor
 
 **Felipe Aros**
 - GitHub: [@felipearosr](https://github.com/felipearosr)
-- Proyecto: [ruteo](https://github.com/felipearosr/ruteo)
+- Email: felipe.aros1@mail.udp.cl
+- Universidad Diego Portales, Santiago, Chile
 
 ---
 
-## 🙏 Agradecimientos
+## Agradecimientos
 
 - **OpenStreetMap** - Datos de infraestructura vial
-- **Nominatim** - API de geocodificación gratuita
-- **Supabase** - Hosting PostgreSQL cloud
-- **GUROBI** - Solver de optimización
-- **shadcn/ui** - Componentes UI profesionales
+- **Supabase** - Hosting de base de datos PostgreSQL
+- **IBM** - Licencia académica de CPLEX
+- **DGA Chile** - Datos de estaciones hidrológicas
+- **SERNAGEOMIN** - Datos de zonas de inundación
+- **Nominatim** - API de geocodificación
 
 ---
 
-## 📊 Estadísticas del Proyecto
+## Citar este Proyecto
 
-| Métrica | Valor |
-|---------|-------|
-| **Líneas de código** | ~4,000 |
-| **Líneas de documentación** | ~3,500 |
-| **Commits** | 100+ |
-| **Tiempo de desarrollo** | ~40 horas |
-| **Features implementadas** | 20+ |
-| **API endpoints** | 7 |
-| **Componentes UI** | 8 |
-| **Algoritmos** | 4 |
+```bibtex
+@software{aros2024ruteo,
+  author = {Aros, Felipe},
+  title = {Sistema de Ruteo Resiliente ante Inundaciones Urbanas},
+  year = {2024},
+  url = {https://github.com/felipearosr/ruteo}
+}
+```
 
 ---
 
-**⭐ Si te gusta este proyecto, dale una estrella en GitHub!**
-
----
-
-*Última actualización: 17 de Noviembre, 2025 — Fase 3 (94% completada)*
+*Desarrollado como proyecto de investigación en la Universidad Diego Portales, Santiago de Chile.*

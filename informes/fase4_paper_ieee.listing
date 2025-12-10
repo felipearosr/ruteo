@@ -1,0 +1,37 @@
+import heapq
+from math import sqrt
+
+def astar_resilient(graph, source, target,
+                    risk_weight=3.0):
+    open_set = [(0, source)]
+    came_from = {}
+    g_score = {source: 0}
+    f_score = {source: heuristic(source,
+                                  target)}
+
+    while open_set:
+        _, current = heapq.heappop(open_set)
+
+        if current == target:
+            return reconstruct_path(
+                came_from, current)
+
+        for neighbor, edge in \
+                graph[current].items():
+            cost = edge['length'] * (1 +
+                risk_weight * edge['p_fallo'])
+            tentative_g = g_score[current] \
+                          + cost
+
+            if tentative_g < g_score.get(
+                    neighbor, float('inf')):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score[neighbor] = \
+                    tentative_g + heuristic(
+                        neighbor, target)
+                heapq.heappush(open_set,
+                    (f_score[neighbor],
+                     neighbor))
+
+    return None  # No se encontró ruta

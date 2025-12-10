@@ -8,8 +8,8 @@
  * Query params:
  *   - source: nodo origen (requerido)
  *   - target: nodo destino (requerido)
- *   - k: factor de penalización Dijkstra resiliente (default: 5.0)
- *   - risk_weight: peso A* (default: 3.0)
+ *   - k: factor de penalización Dijkstra resiliente (default: 15.0)
+ *   - risk_weight: peso A* (default: 10.0)
  *   - max_risk: restricción de riesgo (opcional)
  *   - max_distance: restricción de distancia (opcional)
  *   - simulation_id: ID de simulación activa (opcional)
@@ -17,21 +17,10 @@
  */
 import { NextResponse } from 'next/server';
 import pg from 'pg';
+import { pool } from '@/lib/db';
 import { resolveConnectedNodes } from '@/lib/connectedNodes';
 
-const { Pool } = pg;
-
 const DEFAULT_TIMEOUT_MS = parseInt(process.env.COMPARE_ROUTE_TIMEOUT_MS || '60000', 10);
-
-// Pool compartido para evitar crear conexiones por ruta
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
-  port: parseInt(process.env.SUPABASE_DB_PORT || '6543'),
-  database: process.env.SUPABASE_DB_NAME || 'postgres',
-  user: process.env.SUPABASE_DB_USER || 'postgres.eqjzlgbjgwbnvqzbomsn',
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false }
-});
 
 const FLOOD_BUFFER_METERS = 150;
 const EXCLUDED_HIGHWAYS = [
@@ -48,6 +37,39 @@ const EXCLUDED_HIGHWAYS_LIST = EXCLUDED_HIGHWAYS.map((h) => `'${h}'`).join(', ')
 const HIGHWAY_FILTER_CORE = `coalesce(highway, '') NOT IN (${EXCLUDED_HIGHWAYS_LIST})`;
 const highwayFilterAliasA = ` AND coalesce(a.highway, '') NOT IN (${EXCLUDED_HIGHWAYS_LIST})`;
 const highwayFilterExpression = ` AND ${HIGHWAY_FILTER_CORE}`;
+
+// Velocidades por tipo de via (km/h)
+const HIGHWAY_SPEEDS: Record<string, number> = {
+  motorway: 80,
+  motorway_link: 60,
+  trunk: 80,
+  trunk_link: 60,
+  primary: 60,
+  primary_link: 50,
+  secondary: 60,
+  secondary_link: 50,
+  tertiary: 50,
+  tertiary_link: 40,
+  residential: 40,
+  living_street: 20,
+  unclassified: 40,
+  service: 30,
+  default: 50
+};
+
+// Calcula tiempo de viaje en minutos basado en distancia y tipo de via
+function calculateTravelTime(features: any[]): number {
+  let totalTimeMinutes = 0;
+  for (const feature of features) {
+    const lengthM = feature.properties?.length_m || 0;
+    const highway = feature.properties?.highway || 'default';
+    const speedKmh = HIGHWAY_SPEEDS[highway] || HIGHWAY_SPEEDS.default;
+    // tiempo = distancia / velocidad, convertir m a km y horas a minutos
+    const timeMinutes = (lengthM / 1000) / speedKmh * 60;
+    totalTimeMinutes += timeMinutes;
+  }
+  return totalTimeMinutes;
+}
 
 async function fetchFloodBlockedEdgeIds(client: pg.PoolClient, simulationId: string, radiusMeters = FLOOD_BUFFER_METERS) {
   if (!simulationId) {
@@ -98,12 +120,9 @@ async function fetchFloodBlockedEdgeIds(client: pg.PoolClient, simulationId: str
 async function runBaselineForTable(
   tableName: 'infra_aristas_cleaned' | 'infra_aristas',
   source: number,
-  target: number,
-  maxDistance: number | null,
-  avoidFlood: boolean,
-  blockedEdgeIds: number[]
+  target: number
 ) {
-  const floodFilter = avoidFlood ? ' AND coalesce(p_fallo_arista, 0) < 0.3' : '';
+  // Baseline: ruta mas corta pura, sin considerar riesgo, inundaciones, ni restricciones
   const startTime = performance.now();
 
   let edgesSubquery = `
@@ -112,22 +131,18 @@ async function runBaselineForTable(
     FROM ${tableName}
     WHERE length_m IS NOT NULL AND length_m > 0
   `;
-  edgesSubquery += floodFilter;
   edgesSubquery += highwayFilterExpression;
-  if (blockedEdgeIds.length) {
-    edgesSubquery += ` AND id NOT IN (${blockedEdgeIds.join(',')})`;
-  }
 
   const safeEdgesSubquery = edgesSubquery.replace(/'/g, "''");
 
   const query = `
-    SELECT 
+    SELECT
       json_build_object(
         'type', 'FeatureCollection',
         'features', COALESCE(json_agg(
           json_build_object(
             'type', 'Feature',
-            'geometry', CASE 
+            'geometry', CASE
               WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
               ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
             END,
@@ -136,7 +151,7 @@ async function runBaselineForTable(
               'edge_id', r.edge,
               'cost', r.cost,
               'length_m', a.length_m,
-              'p_fallo', 0.0,
+              'p_fallo', COALESCE(a.p_fallo_arista, 0.0),
               'highway', a.highway
             )
           ) ORDER BY r.seq
@@ -149,11 +164,9 @@ async function runBaselineForTable(
       true
     ) r
     JOIN ${tableName} a ON r.edge = a.id
-    ${maxDistance !== null ? 'WHERE a.length_m <= $3' : ''}
   `;
 
   const params: (number | bigint)[] = [source, target];
-  if (maxDistance !== null) params.push(maxDistance);
 
   const result = await pool.query(query, params);
   const endTime = performance.now();
@@ -162,16 +175,24 @@ async function runBaselineForTable(
   const features = routeData.features || [];
 
   let totalDistance = 0;
+  let weightedRisk = 0;
   for (const feature of features) {
-    totalDistance += feature.properties.length_m || 0;
+    const length = feature.properties.length_m || 0;
+    const pFallo = feature.properties.p_fallo || 0;
+    totalDistance += length;
+    weightedRisk += pFallo * length;
   }
+  // Promedio ponderado por distancia (0-1)
+  const avgRisk = totalDistance > 0 ? weightedRisk / totalDistance : 0;
+  const travelTimeMin = calculateTravelTime(features);
 
   return {
     route: routeData,
     metrics: {
       distance_m: totalDistance,
+      travel_time_min: travelTimeMin,
       computation_time_ms: endTime - startTime,
-      risk_score: 0,
+      risk_score: avgRisk,
       num_segments: features.length,
       method: 'baseline',
       source_table: tableName
@@ -179,11 +200,12 @@ async function runBaselineForTable(
   };
 }
 
-async function runBaseline(source: number, target: number, maxDistance: number | null, avoidFlood: boolean, blockedEdgeIds: number[]) {
+async function runBaseline(source: number, target: number) {
+  // Baseline: ruta mas corta pura, sin considerar riesgo, simulaciones ni restricciones
   const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
   for (let i = 0; i < tables.length; i++) {
     const tableName = tables[i];
-    const result = await runBaselineForTable(tableName, source, target, maxDistance, avoidFlood, blockedEdgeIds);
+    const result = await runBaselineForTable(tableName, source, target);
     if (result.metrics.num_segments > 0 || i === tables.length - 1) {
       if (result.metrics.num_segments === 0 && i < tables.length - 1) {
         console.warn(`[baseline] Sin segmentos usando ${tableName}, probando tabla alternativa`);
@@ -202,7 +224,8 @@ async function runResilientForTable(
   maxRisk: number | null,
   maxDistance: number | null,
   avoidFlood: boolean,
-  blockedEdgeIds: number[]
+  blockedEdgeIds: number[],
+  simulationId: string | null
 ) {
   const client = await pool.connect();
   const startTime = performance.now();
@@ -210,14 +233,45 @@ async function runResilientForTable(
   try {
     await client.query('BEGIN');
 
+    // Create temp table with graduated penalties based on proximity to simulation failures
+    let penaltyJoin = '';
+    let penaltyCost = '0.0';
+
+    if (simulationId) {
+      // Simple penalty: edges directly marked as failed in simulation get high penalty
+      // Also penalize edges connected to failed nodes
+      const createPenaltyTable = `
+        CREATE TEMP TABLE temp_sim_penalties ON COMMIT DROP AS
+        SELECT DISTINCT edge_id, 1.0 as sim_penalty FROM (
+          -- Edges directly marked as failed
+          SELECT entity_id as edge_id
+          FROM sim_fallas_activas
+          WHERE simulation_id = $1 AND is_failed = true AND entity_type = 'arista'
+          UNION
+          -- Edges connected to failed nodes
+          SELECT a.id as edge_id
+          FROM sim_fallas_activas s
+          JOIN ${tableName} a ON (a.source = s.entity_id OR a.target = s.entity_id)
+          WHERE s.simulation_id = $1 AND s.is_failed = true AND s.entity_type = 'nodo'
+        ) sub
+      `;
+
+      await client.query(createPenaltyTable, [simulationId]);
+      penaltyJoin = `LEFT JOIN temp_sim_penalties sp ON a.id = sp.edge_id`;
+      penaltyCost = `COALESCE(sp.sim_penalty, 0.0)`;
+    }
+
+    // Cost formula: length * (1 + k * (base_risk + simulation_penalty))
+    // This makes edges near failures much more expensive without blocking them entirely
     let edgesQuery = `
-      SELECT 
-        a.id, 
-        a.source, 
-        a.target, 
-        a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0)) as cost,
-        a.length_m * (1.0 + ${k} * coalesce(a.p_fallo_arista, 0.0)) as reverse_cost
+      SELECT
+        a.id,
+        a.source,
+        a.target,
+        a.length_m * (1.0 + ${k} * (coalesce(a.p_fallo_arista, 0.0) + ${penaltyCost})) as cost,
+        a.length_m * (1.0 + ${k} * (coalesce(a.p_fallo_arista, 0.0) + ${penaltyCost})) as reverse_cost
       FROM ${tableName} a
+      ${penaltyJoin}
       WHERE a.length_m IS NOT NULL
     `;
     edgesQuery += highwayFilterAliasA;
@@ -231,9 +285,7 @@ async function runResilientForTable(
     if (avoidFlood) {
       edgesQuery += ` AND coalesce(a.p_fallo_arista, 0) < 0.3`;
     }
-    if (blockedEdgeIds.length) {
-      edgesQuery += ` AND a.id NOT IN (${blockedEdgeIds.join(',')})`;
-    }
+    // Note: we no longer use blockedEdgeIds for resilient - graduated penalties instead
 
     const safeEdgesQuery = edgesQuery.replace(/'/g, "''");
 
@@ -246,13 +298,13 @@ async function runResilientForTable(
           true
         )
       )
-      SELECT 
+      SELECT
         json_build_object(
           'type', 'FeatureCollection',
           'features', COALESCE(json_agg(
             json_build_object(
               'type', 'Feature',
-              'geometry', CASE 
+              'geometry', CASE
                 WHEN r.node = a.source THEN ST_AsGeoJSON(a.geom)::json
                 ELSE ST_AsGeoJSON(ST_Reverse(a.geom))::json
               END,
@@ -279,11 +331,16 @@ async function runResilientForTable(
     const features = routeData.features || [];
 
     let totalDistance = 0;
-    let totalRisk = 0;
+    let weightedRisk = 0;
     for (const feature of features) {
-      totalDistance += feature.properties.length_m || 0;
-      totalRisk += feature.properties.p_fallo || 0;
+      const length = feature.properties.length_m || 0;
+      const pFallo = feature.properties.p_fallo || 0;
+      totalDistance += length;
+      weightedRisk += pFallo * length;
     }
+    // Promedio ponderado por distancia (0-1)
+    const avgRisk = totalDistance > 0 ? weightedRisk / totalDistance : 0;
+    const travelTimeMin = calculateTravelTime(features);
 
     const endTime = performance.now();
 
@@ -291,8 +348,9 @@ async function runResilientForTable(
       route: routeData,
       metrics: {
         distance_m: totalDistance,
+        travel_time_min: travelTimeMin,
         computation_time_ms: endTime - startTime,
-        risk_score: totalRisk,
+        risk_score: avgRisk,
         num_segments: features.length,
         method: 'resilient',
         parameters: { k, max_risk: maxRisk, max_distance: maxDistance },
@@ -314,12 +372,13 @@ async function runResilient(
   maxRisk: number | null,
   maxDistance: number | null,
   avoidFlood: boolean,
-  blockedEdgeIds: number[]
+  blockedEdgeIds: number[],
+  simulationId: string | null
 ) {
   const tables: ('infra_aristas_cleaned' | 'infra_aristas')[] = ['infra_aristas_cleaned', 'infra_aristas'];
   for (let i = 0; i < tables.length; i++) {
     const tableName = tables[i];
-    const result = await runResilientForTable(tableName, source, target, k, maxRisk, maxDistance, avoidFlood, blockedEdgeIds);
+    const result = await runResilientForTable(tableName, source, target, k, maxRisk, maxDistance, avoidFlood, blockedEdgeIds, simulationId);
     if (result.metrics.num_segments > 0 || i === tables.length - 1) {
       if (result.metrics.num_segments === 0 && i < tables.length - 1) {
         console.warn(`[resilient] Sin segmentos usando ${tableName}, probando tabla alternativa`);
@@ -335,6 +394,7 @@ function fallbackResult(method: string, message: string) {
     route: { type: 'FeatureCollection', features: [] },
     metrics: {
       distance_m: 0,
+      travel_time_min: 0,
       computation_time_ms: 0,
       risk_score: 0,
       num_segments: 0,
@@ -376,9 +436,9 @@ export async function GET(request: Request) {
     );
   }
 
-  const k = searchParams.get('k') || '5.0';
+  const k = searchParams.get('k') || '15.0';
 
-  const riskWeight = searchParams.get('risk_weight') || '3.0';
+  const riskWeight = searchParams.get('risk_weight') || '10.0';
   const maxRisk = searchParams.get('max_risk');
   const maxDistance = searchParams.get('max_distance');
   const simulationId = searchParams.get('simulation_id');
@@ -424,11 +484,11 @@ export async function GET(request: Request) {
 
     const [baselineResult, resilientResult, astarResult, cplexResult] = await Promise.all([
       withTimeout(
-        runBaseline(usedSource, usedTarget, maxDistanceNum, avoidFlood, blockedEdgeIds),
+        runBaseline(usedSource, usedTarget),
         'baseline'
       ),
       withTimeout(
-        runResilient(usedSource, usedTarget, kNum, maxRiskNum, maxDistanceNum, avoidFlood, blockedEdgeIds),
+        runResilient(usedSource, usedTarget, kNum, maxRiskNum, maxDistanceNum, avoidFlood, blockedEdgeIds, simulationId),
         'resilient'
       ),
       withTimeout(
@@ -473,6 +533,12 @@ export async function GET(request: Request) {
             resilientResult?.metrics?.distance_m || Infinity,
             astarResult?.metrics?.distance_m || Infinity,
             cplexResult?.metrics?.distance_m || Infinity
+          ),
+          shortest_travel_time: Math.min(
+            baselineResult?.metrics?.travel_time_min || Infinity,
+            resilientResult?.metrics?.travel_time_min || Infinity,
+            astarResult?.metrics?.travel_time_min || Infinity,
+            cplexResult?.metrics?.travel_time_min || Infinity
           ),
           lowest_risk: Math.min(
             baselineResult?.metrics?.risk_score || Infinity,
